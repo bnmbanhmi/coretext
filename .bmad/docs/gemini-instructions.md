@@ -2,12 +2,12 @@
 
 ## Activating Agents
 
-BMAD agents are concatenated in `.gemini/bmad-method/GEMINI.md`.
+BMAD agents are defined in their respective `.md` files (e.g., within `.bmad/bmm/agents/`, `.bmad/cis/agents/`, `.bmad/core/agents/`) and are configured for the Gemini CLI via `.toml` files in `.gemini/commands/`.
 
 ### How to Use
 
 1. **Type Trigger**: Use `*{agent-name}` in your prompt
-2. **Activate**: Agent persona activates from the concatenated file
+2. **Activate**: Agent persona activates based on its configuration
 3. **Continue**: Agent remains active for conversation
 
 ### Examples
@@ -20,6 +20,6 @@ BMAD agents are concatenated in `.gemini/bmad-method/GEMINI.md`.
 
 ### Notes
 
-- All agents loaded from single GEMINI.md file
+- Agents are loaded individually based on their configuration.
 - Triggers with asterisk: `*{agent-name}`
-- Context includes all agents (may be large)
+- Context for an agent includes its specific configuration.
