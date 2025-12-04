@@ -2296,3 +2296,303 @@
 │  » Tip: For a full token breakdown, run `/stats model`.                                                                                         │
 │                                                                                                                                                 │
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+> /bmad-agent-bmm-pm I need to make a Critical Correction to the PRD regarding the Data Protocol before we hand off to the Architect.
+
+  The Change: We are NOT using Obsidian-style WikiLinks ([[Link]]). We ARE using Standard Markdown Links ([Label](./path/to/file.md)) exclusively.
+
+  Reason: To ensure native compatibility with VS Code and precise file-path identity in SurrealDB.
+
+  Action Required: Please review docs/PRD.md and rewrite any sections mentioning 'WikiLinks' or 'Obsidian style' to specify 'Standard Markdown
+  Links' and 'Relative File Paths' instead. Confirm when the file is updated."
+
+╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ✓  ReadFile .bmad/bmm/agents/pm.md                                                                                                              │
+│                                                                                                                                                 │
+│                                                                                                                                                 │
+│ ✓  ReadFile docs/PRD.md                                                                                                                         │
+│                                                                                                                                                 │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ✓  ReadFile .bmad/bmm/config.yaml                                                                                                               │
+│                                                                                                                                                 │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ✓  Edit docs/PRD.md: ---... => ---...                                                                                                           │
+│                                                                                                                                                 │
+│ 146   *   **Mechanism:** We use the Git Commit Hash as the version stamp. For identical file content (same hash), the system must produce a     │
+│       mathematically identical Graph structure (Merkle Tree logic).                                                                             │
+│ 147                                                                                                                                             │
+│ 148   **2. Strict Schema, Loud Failures**                                                                                                       │
+│ 149 - *   **Requirement:** No "fuzzy" parsing of structural elements. A `## Header` is a Node. A `[[WikiLink]]` is an Edge.                     │
+│ 149 + *   **Requirement:** No "fuzzy" parsing of structural elements. A `## Header` is a Node. A Standard Markdown Link (`[Label](./path)`) is  │
+│     an Edge.                                                                                                                                    │
+│ 150   *   **Constraint:** Malformed Markdown (broken syntax) must result in a **"Parsing Error" Node** and a rejected update, rather than a     │
+│       "best guess" by the parser. The failure must be visible to the Agent and User.                                                            │
+│ 151                                                                                                                                             │
+│ 152   ### Industry Standards & Best Practices                                                                                                   │
+│                                                                                                                                                 │
+│ ✓  Edit docs/PRD.md: *   **Interaction:** coretext ... => *   **Interaction:** coretext ...                                                     │
+│                                                                                                                                                 │
+│ 199                                                                                                                                             │
+│ 200   #### Package Managers & Distribution                                                                                                      │
+│ 201   *   **Distribution:** `coretext` will be distributed via `pip` (Python Package Index) or as a standalone binary via **Homebrew**,         │
+│       reflecting its local-first and command-line utility nature.                                                                               │
+│ 202 - *   **Interaction:** `coretext` explicitly avoids replacing existing package managers (npm, pip, cargo). Instead, it relies on **Explicit │
+│     Metadata in BMAD Markdown** (e.g., `**Dependencies:** [[pkg:react]]`). This enforces the "Executable Documentation" philosophy: if a        │
+│     dependency is not explicitly defined in the Markdown (and thus in the Graph), the Agent should not assume its existence.                    │
+│ 202 + *   **Interaction:** coretext explicitly avoids replacing existing package managers (npm, pip, cargo). Instead, it relies on **Explicit   │
+│     Metadata in BMAD Markdown** (e.g., `**Dependencies:** [pkg:react](./deps/react.md)`). This enforces the "Executable Documentation"          │
+│     philosophy: if a dependency is not explicitly defined in the Markdown (and thus in the Graph), the Agent should not assume its existence.   │
+│ 203                                                                                                                                             │
+│ 204   ### IDE Integration (Loose Coupling, Tight Feedback)                                                                                      │
+│ 205   *   **MVP (Git-Native):** The primary integration point is the **Terminal**, with "invisible" functionality provided by **pre-commit Git  │
+│       hooks**.                                                                                                                                  │
+│                                                                                                                                                 │
+│ ✓  Edit docs/PRD.md:     *   **Phase 2 (Growth):** ... =>     *   **Phase 2 (Growth):** ...                                                     │
+│                                                                                                                                                 │
+│ 205   *   **MVP (Git-Native):** The primary integration point is the **Terminal**, with "invisible" functionality provided by **pre-commit Git  │
+│       hooks**.                                                                                                                                  │
+│ 206   *   **Visual Studio Code (Frontend for Authors):**                                                                                        │
+│ 207       *   **Phase 1:** Provision of a `coretext.json` tasks configuration for VS Code users to easily run `sync` and `check` commands.      │
+│ 208 -     *   **Phase 2 (Growth):** Development of a dedicated **VS Code Extension** to enable "Loud Failures" through real-time linting for    │
+│     BMAD files (e.g., red squiggly lines for broken `[[WikiLinks]]` or missing required headers), allowing architects to fix graph integrity    │
+│     issues before committing.                                                                                                                   │
+│ 208 +     *   **Phase 2 (Growth):** Development of a dedicated **VS Code Extension** to enable "Loud Failures" through real-time linting for    │
+│     BMAD files (e.g., red squiggly lines for broken Standard Markdown Links or missing required headers), allowing architects to fix graph      │
+│     integrity issues before committing.                                                                                                         │
+│ 209                                                                                                                                             │
+│ 210   ### API Surface & Documentation                                                                                                           │
+│ 211   *   **Primary API Surface (Machine User):** The **MCP Server (Model Context Protocol)** serves as the interface for "Machine Users"       │
+│       (i.e., the Gemini CLI Coding Agent) to query the `coretext` knowledge graph.                                                              │
+│                                                                                                                                                 │
+│ ✓  Edit docs/PRD.md: *   FR6: The system can enforc... => *   FR6: The system can enforc...                                                     │
+│                                                                                                                                                 │
+│ 224   *   FR3: The system can synchronize detected Markdown file changes into the Knowledge Graph.                                              │
+│ 225   *   FR4: The system can store a Knowledge Graph in SurrealDB.                                                                             │
+│ 226   *   FR5: The system can version the Knowledge Graph state based on Git commit hashes.                                                     │
+│ 227 - *   FR6: The system can enforce referential integrity within the Knowledge Graph (e.g., verifying `[[WikiLinks]]`).                       │
+│ 227 + *   FR6: The system can enforce referential integrity within the Knowledge Graph (e.g., verifying Standard Markdown Links).               │
+│ 228   *   FR7: The system can detect and report malformed Markdown syntax that prevents successful parsing.                                     │
+│ 229   *   FR8: The system can output a text-based dependency tree for a given node.                                                             │
+│ 230                                                                                                                                             │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+✦ Hello Minh. I am John, your Product Manager.
+
+  I have updated docs/PRD.md to enforce Standard Markdown Links ([Label](./path)) instead of Obsidian-style WikiLinks.
+
+  WHY?
+  Because ambiguity is the enemy of execution. Standardizing on native Markdown links ensures our graph parser (AST) remains deterministic and VS
+  Code navigation works out-of-the-box without custom extensions. This reduces tooling friction for the engineering team, which directly supports
+  our MVP efficiency goals.
+
+  The PRD is now compliant with this data protocol.
+
+  Here is your menu. What is our next move?
+
+   1. [M] Redisplay Menu Options
+   2. Get workflow status or initialize a workflow (optional)
+   3. Create Product Requirements Document (PRD) (Required for BMad Method flow)
+   4. Validate PRD (Highly Recommended, use fresh context and different LLM for best results)
+   5. Create Epics and User Stories from PRD (Required for BMad Method flow AFTER the Architecture is completed)
+   6. Course Correction Analysis (optional during implementation when things go off track)
+   7. Bring the whole team in to chat with other expert agents
+   8. [D] Dismiss Agent
+
+> /quit
+
+╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                                                                 │
+│  Agent powering down. Goodbye!                                                                                                                  │
+│                                                                                                                                                 │
+│  Interaction Summary                                                                                                                            │
+│  Session ID:                 1711946b-c618-408e-8322-f2b556ef25c9                                                                               │
+│  Tool Calls:                 7 ( ✓ 7 x 0 )                                                                                                      │
+│  Success Rate:               100.0%                                                                                                             │
+│  User Agreement:             100.0% (7 reviewed)                                                                                                │
+│  Code Changes:               +4 -4                                                                                                              │
+│                                                                                                                                                 │
+│  Performance                                                                                                                                    │
+│  Wall Time:                  8m 46s                                                                                                             │
+│  Agent Active:               1m 45s                                                                                                             │
+│    » API Time:               57.6s (54.6%)                                                                                                      │
+│    » Tool Time:              47.8s (45.4%)                                                                                                      │
+│                                                                                                                                                 │
+│                                                                                                                                                 │
+│  Model Usage                  Reqs   Input Tokens  Output Tokens                                                                                │
+│  ───────────────────────────────────────────────────────────────                                                                                │
+│  gemini-2.5-flash-lite           1          4,198            127                                                                                │
+│  gemini-3-pro-preview            4         69,964            898                                                                                │
+│  gemini-2.5-flash                1          6,602            252                                                                                │
+│                                                                                                                                                 │
+│  Savings Highlight: 40,689 (50.4%) of input tokens were served from the cache, reducing costs.                                                  │
+│                                                                                                                                                 │
+│  » Tip: For a full token breakdown, run `/stats model`.                                                                                         │
+│                                                                                                                                                 │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+> /bmad-agent-bmm-pm I need to refine the System Architecture and Definitions section of the PRD to be precise about the integration model.
+
+  Please UPDATE the PRD with these specific definitions and structural decisions:
+
+  1. The Integration Model: Gemini CLI Extension Instead of just a standalone script, Coretext must be designed as a Gemini CLI Extension.
+
+  Definition: A packaged extension that extends the Gemini CLI capabilities via the gemini command and registers an MCP Server.
+
+  Why: To allow users to run commands like gemini coretext status or gemini coretext index directly from their workflow.
+
+  Ref: Follows the pattern at https://geminicli.com/docs/extensions/.
+
+  2. The Workspace Structure (Separation of Concerns) We must define a strict folder separation to avoid conflicts with BMAD:
+
+  /.bmad/ (Managed by BMAD): Contains Agent definitions, Personas, and Workflow prompts. Coretext READS this but does not own it.
+
+  /.coretext/ (Managed by Coretext): A new hidden directory to store:
+
+  The local Knowledge Graph (surreal.db).
+
+  Sync logs and lockfiles.
+
+  config.yaml for the sync.py hook.
+
+  /docs/ (Shared): The Markdown Source of Truth.
+
+  3. Updated Tool Definitions (for Context)
+
+  Gemini CLI: The orchestration engine. It loads the coretext extension to gain "Topology Awareness."
+
+  BMAD: The Data Protocol. It provides the Schema (Epics, Stories) that Coretext indexes. Coretext is the Engine that makes BMAD "executable."
+
+  MCP (Model Context Protocol): The standard communication layer. Coretext exposes a Custom MCP Server (Python-based) that wraps SurrealDB queries
+  into semantic tools like get_related_nodes().
+
+  4. Installation Flow Update Change the distribution model description:
+
+  From: "Just a pip install."
+
+  To: "Hybrid Distribution. The Core Engine (sync.py) is Python/pip. The Interface is a Gemini CLI Extension that wraps the engine."
+
+  Please confirm these architectural updates.
+
+╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ✓  ReadFile .bmad/bmm/agents/pm.md                                                                                                              │
+│                                                                                                                                                 │
+│                                                                                                                                                 │
+│ ✓  ReadFile docs/prd.md                                                                                                                         │
+│                                                                                                                                                 │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ✓  Edit docs/prd.md: ---... => ---...                                                                                                           │
+│                                                                                                                                                 │
+│ 190   ### Project-Type Overview                                                                                                                 │
+│ 191   `coretext` is fundamentally a developer tool designed to enhance the agent-assisted software development workflow. Its core functionality │
+│       revolves around transforming human-readable Markdown specifications (BMAD flavor) into a machine-actionable Knowledge Graph. It           │
+│       prioritizes a "Markdown-First" strategy, where the structured text acts as the primary source of truth for architectural and project      │
+│       topology.                                                                                                                                 │
+│ 192                                                                                                                                             │
+│ 193 - ### Technical Architecture Considerations                                                                                                 │
+│ 193 + ### System Architecture and Definitions                                                                                                   │
+│ 194                                                                                                                                             │
+│ 195 - #### Language Support (The "Markdown-First" Strategy)                                                                                     │
+│ 196 - *   **Primary Target (DSL):** The core language `coretext` must understand natively is **Markdown (BMAD Flavor)**. This is achieved       │
+│     through AST parsing (e.g., using `mistune` or `markdown-it-py`), treating Markdown as a structured language, not just raw text.             │
+│ 197 - *   **Code Languages (Payload):** For the MVP, `coretext` treats code files (`.ts`, `.py`, `.rs`, etc.) primarily as "Content Nodes"      │
+│     within the graph. It does not perform deep AST parsing on the code itself (deferring that to the Coding Agent). The system relies on the    │
+│     Markdown-derived Graph to define topology, not implicitly from code import statements.                                                      │
+│ 198 - *   **Runtime Environment:** The `sync.py` engine requires **Python 3.10+**, leveraging its robust ecosystem for AST parsing and vector   │
+│     libraries.                                                                                                                                  │
+│ 195 + #### 1. The Integration Model: Gemini CLI Extension                                                                                       │
+│ 196 + Instead of just a standalone script, Coretext must be designed as a Gemini CLI Extension.                                                 │
+│ 197                                                                                                                                             │
+│ 200 - #### Package Managers & Distribution                                                                                                      │
+│ 201 - *   **Distribution:** `coretext` will be distributed via `pip` (Python Package Index) or as a standalone binary via **Homebrew**,         │
+│     reflecting its local-first and command-line utility nature.                                                                                 │
+│ 202 - *   **Interaction:** coretext explicitly avoids replacing existing package managers (npm, pip, cargo). Instead, it relies on **Explicit   │
+│     Metadata in BMAD Markdown** (e.g., `**Dependencies:** [pkg:react](./deps/react.md)`). This enforces the "Executable Documentation"          │
+│     philosophy: if a dependency is not explicitly defined in the Markdown (and thus in the Graph), the Agent should not assume its existence.   │
+│ 198 + *   **Definition:** A packaged extension that extends the Gemini CLI capabilities via the `gemini` command and registers an MCP Server.   │
+│ 199 + *   **Why:** To allow users to run commands like `gemini coretext status` or `gemini coretext index` directly from their workflow.        │
+│ 200 + *   **Ref:** Follows the pattern at https://geminicli.com/docs/extensions/.                                                               │
+│ 201                                                                                                                                             │
+│ 202 + #### 2. The Workspace Structure (Separation of Concerns)                                                                                  │
+│ 203 + We must define a strict folder separation to avoid conflicts with BMAD:                                                                   │
+│ 204 +                                                                                                                                           │
+│ 205 + *   **`/.bmad/` (Managed by BMAD):** Contains Agent definitions, Personas, and Workflow prompts. Coretext READS this but does not own it. │
+│ 206 + *   **`/.coretext/` (Managed by Coretext):** A new hidden directory to store:                                                             │
+│ 207 +     *   The local Knowledge Graph (`surreal.db`).                                                                                         │
+│ 208 +     *   Sync logs and lockfiles.                                                                                                          │
+│ 209 +     *   `config.yaml` for the `sync.py` hook.                                                                                             │
+│ 210 + *   **`/docs/` (Shared):** The Markdown Source of Truth.                                                                                  │
+│ 211 +                                                                                                                                           │
+│ 212 + #### 3. Updated Tool Definitions (for Context)                                                                                            │
+│ 213 +                                                                                                                                           │
+│ 214 + *   **Gemini CLI:** The orchestration engine. It loads the coretext extension to gain "Topology Awareness."                               │
+│ 215 + *   **BMAD:** The Data Protocol. It provides the Schema (Epics, Stories) that Coretext indexes. Coretext is the Engine that makes BMAD    │
+│     "executable."                                                                                                                               │
+│ 216 + *   **MCP (Model Context Protocol):** The standard communication layer. Coretext exposes a Custom MCP Server (Python-based) that wraps    │
+│     SurrealDB queries into semantic tools like `get_related_nodes()`.                                                                           │
+│ 217 +                                                                                                                                           │
+│ 218 + #### 4. Installation Flow Update                                                                                                          │
+│ 219 + Change the distribution model description:                                                                                                │
+│ 220 +                                                                                                                                           │
+│ 221 + *   **Hybrid Distribution:** The Core Engine (`sync.py`) is Python/pip. The Interface is a Gemini CLI Extension that wraps the engine.    │
+│ 222 +                                                                                                                                           │
+│ 223   ### IDE Integration (Loose Coupling, Tight Feedback)                                                                                      │
+│ 224   *   **MVP (Git-Native):** The primary integration point is the **Terminal**, with "invisible" functionality provided by **pre-commit Git  │
+│       hooks**.                                                                                                                                  │
+│ 225   *   **Visual Studio Code (Frontend for Authors):**                                                                                        │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+✦ I have successfully UPDATED the docs/prd.md with the new System Architecture and Definitions.
+
+  Analysis of Changes:
+   1. Integration Model: Pivoting to a Gemini CLI Extension is the right move. It reduces context switching for the developer. Why? Because if it's
+      not in their terminal loop, they won't use it.
+   2. Workspace Structure: The strict separation between /.bmad/ (Schema/User Intent) and /.coretext/ (Engine/DB State) is critical. Why? It
+      prevents the "Engine" from accidentally overwriting the "Source of Truth."
+   3. Tooling & Distribution: The Hybrid Distribution model (pip for engine, CLI for interface) balances performance with usability.
+
+  The PRD now reflects these structural decisions.
+
+  ---
+
+  [M] Main Menu
+
+   1. *menu - [M] Redisplay Menu Options
+   2. *workflow-status - Get workflow status or initialize a workflow if not already done (optional)
+   3. *create-prd - Create Product Requirements Document (PRD) (Required for BMad Method flow)
+   4. *validate-prd - Validate PRD (Highly Recommended, use fresh context and different LLM for best results)
+   5. *create-epics-and-stories - Create Epics and User Stories from PRD (Required for BMad Method flow AFTER the Architecture is completed)
+   6. *correct-course - Course Correction Analysis (optional during implementation when things go off track)
+   7. *party-mode - Bring the whole team in to chat with other expert agents from the party
+   8. *dismiss - [D] Dismiss Agent
+
+  What is your next move?
+
+> /quit
+
+╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                                                                 │
+│  Agent powering down. Goodbye!                                                                                                                  │
+│                                                                                                                                                 │
+│  Interaction Summary                                                                                                                            │
+│  Session ID:                 5a310197-0748-4aa2-a5eb-847d9dd504a3                                                                               │
+│  Tool Calls:                 3 ( ✓ 3 x 0 )                                                                                                      │
+│  Success Rate:               100.0%                                                                                                             │
+│  User Agreement:             100.0% (3 reviewed)                                                                                                │
+│  Code Changes:               +27 -8                                                                                                             │
+│                                                                                                                                                 │
+│  Performance                                                                                                                                    │
+│  Wall Time:                  5m 36s                                                                                                             │
+│  Agent Active:               1m 33s                                                                                                             │
+│    » API Time:               54.9s (58.7%)                                                                                                      │
+│    » Tool Time:              38.6s (41.3%)                                                                                                      │
+│                                                                                                                                                 │
+│                                                                                                                                                 │
+│  Model Usage                  Reqs   Input Tokens  Output Tokens                                                                                │
+│  ───────────────────────────────────────────────────────────────                                                                                │
+│  gemini-2.5-flash-lite           1          4,480            131                                                                                │
+│  gemini-3-pro-preview            3         53,758          1,256                                                                                │
+│                                                                                                                                                 │
+│  Savings Highlight: 23,909 (41.1%) of input tokens were served from the cache, reducing costs.                                                  │
+│                                                                                                                                                 │
+│  » Tip: For a full token breakdown, run `/stats model`.                                                                                         │
+│                                                                                                                                                 │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯

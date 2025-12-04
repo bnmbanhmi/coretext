@@ -146,7 +146,7 @@ Since `coretext` acts as the "Brain" for an autonomous coding agent, it operates
 *   **Mechanism:** We use the Git Commit Hash as the version stamp. For identical file content (same hash), the system must produce a mathematically identical Graph structure (Merkle Tree logic).
 
 **2. Strict Schema, Loud Failures**
-*   **Requirement:** No "fuzzy" parsing of structural elements. A `## Header` is a Node. A `[[WikiLink]]` is an Edge.
+*   **Requirement:** No "fuzzy" parsing of structural elements. A `## Header` is a Node. A Standard Markdown Link (`[Label](./path)`) is an Edge.
 *   **Constraint:** Malformed Markdown (broken syntax) must result in a **"Parsing Error" Node** and a rejected update, rather than a "best guess" by the parser. The failure must be visible to the Agent and User.
 
 ### Industry Standards & Best Practices
@@ -190,22 +190,41 @@ Since `coretext` acts as the "Brain" for an autonomous coding agent, it operates
 ### Project-Type Overview
 `coretext` is fundamentally a developer tool designed to enhance the agent-assisted software development workflow. Its core functionality revolves around transforming human-readable Markdown specifications (BMAD flavor) into a machine-actionable Knowledge Graph. It prioritizes a "Markdown-First" strategy, where the structured text acts as the primary source of truth for architectural and project topology.
 
-### Technical Architecture Considerations
+### System Architecture and Definitions
 
-#### Language Support (The "Markdown-First" Strategy)
-*   **Primary Target (DSL):** The core language `coretext` must understand natively is **Markdown (BMAD Flavor)**. This is achieved through AST parsing (e.g., using `mistune` or `markdown-it-py`), treating Markdown as a structured language, not just raw text.
-*   **Code Languages (Payload):** For the MVP, `coretext` treats code files (`.ts`, `.py`, `.rs`, etc.) primarily as "Content Nodes" within the graph. It does not perform deep AST parsing on the code itself (deferring that to the Coding Agent). The system relies on the Markdown-derived Graph to define topology, not implicitly from code import statements.
-*   **Runtime Environment:** The `sync.py` engine requires **Python 3.10+**, leveraging its robust ecosystem for AST parsing and vector libraries.
+#### 1. The Integration Model: Gemini CLI Extension
+Instead of just a standalone script, Coretext must be designed as a Gemini CLI Extension.
 
-#### Package Managers & Distribution
-*   **Distribution:** `coretext` will be distributed via `pip` (Python Package Index) or as a standalone binary via **Homebrew**, reflecting its local-first and command-line utility nature.
-*   **Interaction:** `coretext` explicitly avoids replacing existing package managers (npm, pip, cargo). Instead, it relies on **Explicit Metadata in BMAD Markdown** (e.g., `**Dependencies:** [[pkg:react]]`). This enforces the "Executable Documentation" philosophy: if a dependency is not explicitly defined in the Markdown (and thus in the Graph), the Agent should not assume its existence.
+*   **Definition:** A packaged extension that extends the Gemini CLI capabilities via the `gemini` command and registers an MCP Server.
+*   **Why:** To allow users to run commands like `gemini coretext status` or `gemini coretext index` directly from their workflow.
+*   **Ref:** Follows the pattern at https://geminicli.com/docs/extensions/.
+
+#### 2. The Workspace Structure (Separation of Concerns)
+We must define a strict folder separation to avoid conflicts with BMAD:
+
+*   **`/.bmad/` (Managed by BMAD):** Contains Agent definitions, Personas, and Workflow prompts. Coretext READS this but does not own it.
+*   **`/.coretext/` (Managed by Coretext):** A new hidden directory to store:
+    *   The local Knowledge Graph (`surreal.db`).
+    *   Sync logs and lockfiles.
+    *   `config.yaml` for the `sync.py` hook.
+*   **`/docs/` (Shared):** The Markdown Source of Truth.
+
+#### 3. Updated Tool Definitions (for Context)
+
+*   **Gemini CLI:** The orchestration engine. It loads the coretext extension to gain "Topology Awareness."
+*   **BMAD:** The Data Protocol. It provides the Schema (Epics, Stories) that Coretext indexes. Coretext is the Engine that makes BMAD "executable."
+*   **MCP (Model Context Protocol):** The standard communication layer. Coretext exposes a Custom MCP Server (Python-based) that wraps SurrealDB queries into semantic tools like `get_related_nodes()`.
+
+#### 4. Installation Flow Update
+Change the distribution model description:
+
+*   **Hybrid Distribution:** The Core Engine (`sync.py`) is Python/pip. The Interface is a Gemini CLI Extension that wraps the engine.
 
 ### IDE Integration (Loose Coupling, Tight Feedback)
 *   **MVP (Git-Native):** The primary integration point is the **Terminal**, with "invisible" functionality provided by **pre-commit Git hooks**.
 *   **Visual Studio Code (Frontend for Authors):**
     *   **Phase 1:** Provision of a `coretext.json` tasks configuration for VS Code users to easily run `sync` and `check` commands.
-    *   **Phase 2 (Growth):** Development of a dedicated **VS Code Extension** to enable "Loud Failures" through real-time linting for BMAD files (e.g., red squiggly lines for broken `[[WikiLinks]]` or missing required headers), allowing architects to fix graph integrity issues before committing.
+    *   **Phase 2 (Growth):** Development of a dedicated **VS Code Extension** to enable "Loud Failures" through real-time linting for BMAD files (e.g., red squiggly lines for broken Standard Markdown Links or missing required headers), allowing architects to fix graph integrity issues before committing.
 
 ### API Surface & Documentation
 *   **Primary API Surface (Machine User):** The **MCP Server (Model Context Protocol)** serves as the interface for "Machine Users" (i.e., the Gemini CLI Coding Agent) to query the `coretext` knowledge graph.
@@ -224,7 +243,7 @@ Since `coretext` acts as the "Brain" for an autonomous coding agent, it operates
 *   FR3: The system can synchronize detected Markdown file changes into the Knowledge Graph.
 *   FR4: The system can store a Knowledge Graph in SurrealDB.
 *   FR5: The system can version the Knowledge Graph state based on Git commit hashes.
-*   FR6: The system can enforce referential integrity within the Knowledge Graph (e.g., verifying `[[WikiLinks]]`).
+*   FR6: The system can enforce referential integrity within the Knowledge Graph (e.g., verifying Standard Markdown Links).
 *   FR7: The system can detect and report malformed Markdown syntax that prevents successful parsing.
 *   FR8: The system can output a text-based dependency tree for a given node.
 
