@@ -1,6 +1,6 @@
 # Story 1.1: Project Initialization & Core Scaffolding
 
-Status: Ready for Review
+Status: Done
 
 ## Story
 

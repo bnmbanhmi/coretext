@@ -30,6 +30,8 @@
 
 ### Testing Rules
 
+*   **Framework:** MANDATORY usage of `pytest`. Do not write ad-hoc Python test scripts with `sys.exit()`.
+*   **Execution:** Run tests via `poetry run pytest`.
 *   **Location:** `tests/` folder at root.
 *   **Async:** Use `@pytest.mark.asyncio` for async tests.
 *   **Structure:** Mirrors source (e.g., `tests/unit/core/graph/test_manager.py`).
