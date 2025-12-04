@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "coretext"
+version = "0.1.0"
+description = "CoreText Project"
+authors = ["Minh"]
+readme = "README.md"
+packages = [{include = "coretext"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = {extras = ["standard"], version = "^0.115.0"}
+typer = "^0.12.0"
+pydantic = "^2.9.0"
+surrealdb = "^1.0.0"
+python-multipart = "^0.0.12"
+uvicorn = "^0.32.0"
+gitpython = "^3.1.43"
+sentence-transformers = "^3.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,6 +1,6 @@
 # Story 1.1: Project Initialization & Core Scaffolding
 
-Status: ready-for-dev
+Status: Ready for Review
 
 ## Story
 
@@ -19,11 +19,11 @@ so that I have the core scaffold and dependencies in place to begin development.
 
 ## Tasks / Subtasks
 
-- [ ] Create new Poetry project named `coretext`
-- [ ] Add core dependencies: `fastapi[standard]`, `typer`, `pydantic`, `surrealdb`, `python-multipart`, `uvicorn`, `gitpython`, `sentence-transformers`
-- [ ] Create basic project structure: `cli/`, `server/`, `core/`, `db/` with `__init__.py` files
-- [ ] Setup `pyproject.toml` with basic project metadata
-- [ ] Create `extension.yaml` for Gemini CLI integration
+- [x] Create new Poetry project named `coretext`
+- [x] Add core dependencies: `fastapi[standard]`, `typer`, `pydantic`, `surrealdb`, `python-multipart`, `uvicorn`, `gitpython`, `sentence-transformers`
+- [x] Create basic project structure: `cli/`, `server/`, `core/`, `db/` with `__init__.py` files
+- [x] Setup `pyproject.toml` with basic project metadata
+- [x] Create `extension.yaml` for Gemini CLI integration
 
 ## Dev Notes
 
@@ -76,6 +76,33 @@ gemini-2.5-flash
 
 ### Completion Notes List
 
+- Implemented core scaffolding including Poetry project setup, dependency definition, directory structure (cli, server, core, db), and extension.yaml.
+- Added verification tests for structure and configuration.
+- Validated all Acceptance Criteria.
+- **Review Fix:** Refactored ad-hoc test scripts to standard `pytest` format per project context rules.
+- **Review Fix:** Enforced strict `pytest` usage in project context.
+
 Ultimate context engine analysis completed - comprehensive developer guide created
 
 ### File List
+
+- pyproject.toml
+- coretext/__init__.py
+- coretext/main.py
+- coretext/config.py
+- coretext/cli/__init__.py
+- coretext/cli/main.py
+- coretext/cli/commands.py
+- coretext/server/__init__.py
+- coretext/server/app.py
+- coretext/core/__init__.py
+- coretext/core/graph/__init__.py
+- coretext/core/sync/__init__.py
+- coretext/core/parser/__init__.py
+- coretext/core/vector/__init__.py
+- coretext/db/__init__.py
+- extension.yaml
+- tests/__init__.py
+- tests/test_scaffolding.py
+- tests/test_dependencies.py
+- docs/sprint-artifacts/sprint-status.yaml
