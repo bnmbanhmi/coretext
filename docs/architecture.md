@@ -36,7 +36,15 @@ The system is built upon the BMAD Method for data protocol, using file paths as 
 
 ### Cross-Cutting Concerns Identified
 
-Key cross-cutting concerns include ensuring **State Determinism** (Knowledge Graph as a deterministic projection of the file system), maintaining **Strict Schema, Loud Failures** (no fuzzy parsing, clear error reporting for malformed input), ensuring **Referential Integrity** (validating links and dependencies), optimizing **Performance** (sync and query latencies), managing **Resource Caps** (memory and CPU usage), implementing **Security** (local-first data handling), and handling **AST-Based Parsing** for semantic chunking.
+Key cross-cutting concerns include ensuring **State Determinism** (Knowledge Graph as a deterministic projection of the file system), maintaining **Strict Schema, Loud Failures** (no fuzzy parsing, clear error reporting for malformed input), ensuring **Referential Integrity** (validating links and dependencies), optimizing **Performance** (sync and query latencies), managing **Resource Caps** (memory and CPU usage), implementing **Security** (local-first data handling), - handling **Semantic Chunking via Header-Node Topology**:
+
+    **Root Node:** The File itself (id = file_path).
+    **Child Nodes:** Every Markdown Header (#, ##, ###) creates a distinct Graph Node.
+    **Relationships:**
+        - `CONTAINS`: File -> Header.
+        - `PARENT_OF`: H1 -> H2.
+    **Content Storage:** Text under a header belongs to that Header Node.
+    This explicit strategy allows agents to retrieve specific sections (e.g., 'Section 3.1') without processing the entire file, directly preventing implementation errors related to context retrieval.
 
 ## Starter Template Evaluation
 
@@ -112,6 +120,7 @@ poetry add "fastapi[standard]" typer pydantic surrealdb python-multipart uvicorn
 - **Decision:** `nomic-embed-text-v1.5` (Local/ONNX version).
 - **Version:** v1.5
 - **Rationale:** Provides Matryoshka Representation Learning (MRL) natively, allowing optimization of storage and retrieval flexibility without cloud dependency (Project Constraint: Local-First/Offline).
+- **Implementation Note:** Embeddings are generated in the Python Daemon using `sentence-transformers` and `nomic`, not SurrealDB's built-in SurrealML engine. This approach enables dynamic Matryoshka (MRL) truncation in Python before storage and simplifies local binary dependency management.
 - **Reference:** [Nomic Embed Text v1.5](https://blog.nomic.ai/posts/nomic-embed-text-v1-5)
 
 **Graph Schema Strategy ("Schema Projection")**
