@@ -1,0 +1,90 @@
+@startuml
+!theme plain
+autonumber
+
+box "Human Context (Files)" #e3f2fd
+    actor "Developer\n(Sarah/Leo)" as User
+    participant "Git System" as Git
+    participant "Sync Hook\n(sync.py)" as Hook
+end box
+
+box "The Coretext Engine" #fff3e0
+    participant "Core Daemon\n(Python/FastAPI)" as Daemon
+    participant "Parser & Embedder\n(AST + Nomic)" as Brain
+    database "SurrealDB\n(Knowledge Graph)" as DB
+end box
+
+box "Machine Context (Graph)" #e8f5e9
+    participant "MCP Server\n(Middleware)" as MCP
+    actor "Gemini Agent\n(Unit-734)" as Agent
+end box
+
+== Flow 1: The Invisible Sync (Write Path) ==
+
+User -> Git: git commit -m "Update payment logic"
+activate Git
+
+    Git -> Hook: Trigger Pre-commit Hook
+    activate Hook
+    
+    note right of Hook
+      **Constraint:** Latency < 1s
+      Checks list of changed files.
+    end note
+
+    alt Small Commit (< 10 files)
+        Hook -> Brain: Parse AST & Extract Links
+        Brain -> DB: UPSERT Nodes (Synchronous)
+    else Large Commit (Async Mode)
+        Hook -> Daemon: Queue Sync Task (Background)
+        activate Daemon
+    end
+
+    Hook --> Git: Exit 0 (Success)
+    deactivate Hook
+
+Git --> User: Commit Accepted
+deactivate Git
+
+    group Async Processing (If needed)
+        Daemon -> Brain: Semantic Chunking (Headers)
+        activate Brain
+        Brain -> Brain: Generate Vectors (Nomic MRL)
+        Brain -> DB: UPSERT Graph Nodes & Edges
+        deactivate Brain
+        deactivate Daemon
+    end
+
+== Flow 2: The Context Pull (Read Path) ==
+
+Agent -> MCP: Call Tool: search_topology("payment logic")
+activate MCP
+
+    MCP -> Daemon: Query Request
+    activate Daemon
+    
+    Daemon -> DB: Execute SurrealQL (Hybrid Search)
+    note right of Daemon
+      SELECT * FROM file
+      WHERE embedding <|5|> $vector
+      FETCH ->depends_on->file
+    end note
+    activate DB
+    
+    DB --> Daemon: Return Nodes + Linked Dependencies
+    deactivate DB
+
+    Daemon -> Daemon: Assemble Context Packet
+    
+    Daemon --> MCP: Return JSON (Topology Aware)
+    deactivate Daemon
+
+MCP --> Agent: "Found payment.ts AND compliance-policy.md"
+deactivate MCP
+
+note over Agent
+  **Success:** Agent sees the code
+  AND the hidden dependencies.
+end note
+
+@enduml

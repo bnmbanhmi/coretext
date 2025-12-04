@@ -1,0 +1,93 @@
+@startuml Coretext_GraphDataModel
+
+' --- Cấu hình giao diện ---
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName "Helvetica Neue, Arial, sans-serif"
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+
+' --- Định nghĩa các kiểu Node (Entities) ---
+
+' Node cơ sở, mọi thứ trong SurrealDB đều kế thừa từ đây
+abstract class "BaseNode\n<<SurrealDB Record>>" as BaseNode {
+    + id: string {PK} (File Path tương đối. VD: docs/epics/login.md)
+    + created_at: datetime
+    + updated_at: datetime
+    + content_hash: string (Merkle hash để sync)
+}
+
+' Node chứa Vector Embedding (cho Semantic Search)
+abstract class "VectorizedNode\n<<MRL Embedding>>" as VectorizedNode {
+    + embedding: vector<float, 768> (Nomic Embed v1.5)
+    + plain_text: string (Nội dung thô để search lexical)
+}
+
+' FileNode: Đại diện cho một file vật lý trên ổ cứng
+class "FileNode\n(File Markdown gốc)" as FileNode {
+    + file_type: string (VD: 'bm_epic', 'bm_story', 'code')
+    + git_commit: string
+}
+
+' SectionNode: Đại diện cho một đoạn nhỏ trong file (Chunking theo Header)
+class "SectionNode\n(Đoạn văn theo Header)" as SectionNode {
+    + header_level: int (H1, H2, H3)
+    + title: string
+    + anchor_id: string (VD: file.md#header-title)
+}
+
+' Các Node đặc thù của BMAD (Projection từ Markdown)
+class "EpicNode\n<<BMAD>>" as Epic {
+    + status: string
+    + target_date: date
+}
+
+class "StoryNode\n<<BMAD>>" as Story {
+    + status: string
+    + points: int
+    + acceptance_criteria: list<string>
+}
+
+' --- Quan hệ kế thừa (Inheritance) ---
+BaseNode <|-- VectorizedNode
+VectorizedNode <|-- FileNode
+VectorizedNode <|-- SectionNode
+
+FileNode <|-- Epic
+FileNode <|-- Story
+
+' --- Định nghĩa các loại Cạnh (Edges/Relationships) ---
+
+' Cấu trúc nội bộ file (Structural Edges)
+FileNode "1" *-- "many" SectionNode : <<CONTAINS>>\n(File chứa các mục) >
+SectionNode "1" *-- "many" SectionNode : <<PARENT_OF>>\n(H1 chứa H2) >
+
+' Quan hệ ngữ nghĩa giữa các file (Semantic Edges - The "Brain")
+' Được tạo ra khi parser gặp link dạng: [Label](./path/to/another_file.md)
+
+Epic "1" --> "many" Story : <<DECOMPOSED_INTO>>\n(Link trong mục Children Stories) >
+Story "many" --> "1" Epic : <<BELONGS_TO>>\n(Link trong metadata Header) >
+
+Story "many" --> "many" Story : <<DEPENDS_ON>>\n(Link trong metadata Dependencies) >
+BaseNode "many" ..> "many" BaseNode : <<REFERENCES>>\n(Link bất kỳ trong nội dung text) >
+
+
+note right of BaseNode
+  <b>Nguyên tắc cốt lõi:</b>
+  ID của Node luôn là <b>File Path</b> tương đối.
+  Điều này đảm bảo mapping 1-1 giữa
+  Git và Database.
+end note
+
+note bottom of SectionNode
+  <b>Chiến lược Chunking:</b>
+  Thay vì cắt theo số từ, chúng ta cắt
+  theo cấu trúc Header (H1, H2...).
+  Mỗi Header trở thành một node con
+  để giữ trọn vẹn ngữ nghĩa.
+end note
+
+@enduml

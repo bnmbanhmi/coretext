@@ -1,0 +1,33 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' LAYOUT_TOP_DOWN()
+LAYOUT_LEFT_RIGHT()
+
+title C4 Container Diagram for Coretext System
+
+Person(developer, "Developer (Human)", "Author of Markdown specs (BMAD) and code. Uses CLI tools.")
+System_Ext(gemini_cli, "Gemini CLI (AI Agent)", "The external orchestration engine running the Coding Agent.")
+System_Ext(local_git, "Local Git Repository", "File system acts as the Source of Truth for Markdown/Code.")
+
+System_Boundary(c1, "Coretext System") {
+    Container(cli_extension, "Gemini CLI Extension", "Python / Typer", "The client adapter. Registers 'gemini coretext' commands and facilitates MCP connection discovery.")
+    
+    Container(daemon, "Core Daemon (Python Monolith)", "Python 3.10+ / FastAPI", "The long-running background process. Hosts the MCP Middleware server, runs the Async Sync Engine (AST parsing), and handles embedding generation (Nomic).")
+    
+    ContainerDb(surrealdb, "SurrealDB (Embedded)", "Local Binary", "Stores the Knowledge Graph: Nodes (Files/Headers), Edges (Links), and Vector Embeddings.")
+}
+
+Rel(developer, local_git, "1. Edits Markdown files via VS Code/Editor")
+Rel(developer, cli_extension, "2. Runs commands (init, status, lint)", "Terminal/stdio")
+
+Rel(gemini_cli, cli_extension, "3. Loads extension & discovers MCP")
+Rel(gemini_cli, daemon, "4. Queries semantic context (e.g., search_topology)", "MCP Protocol (stdio/HTTP)")
+
+Rel_R(local_git, daemon, "5. Git Hook triggers Sync Engine on commit")
+Rel_U(daemon, local_git, "6. Reads file content for AST Parsing")
+
+Rel(cli_extension, daemon, "Checks health/status", "HTTP (localhost)")
+Rel(daemon, surrealdb, "7. Reads/Writes Graph Data (SurrealQL)", "WebSocket")
+
+@enduml

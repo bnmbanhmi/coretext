@@ -1,0 +1,82 @@
+@startuml
+skinparam style strictuml
+skinparam ActivityBackgroundColor #ffffff
+skinparam ActivityBorderColor #333333
+skinparam ActivityDiamondBackgroundColor #ffffff
+skinparam ActivityDiamondBorderColor #333333
+skinparam ArrowColor #333333
+
+title Coretext Process: From Markdown to Autonomous Coding
+
+|#e3f2fd|Human (Developer)|
+start
+:Edit **BMAD Markdown** Files
+(e.g., Update docs/architecture.md);
+:Run **git commit**;
+
+|#f5f5f5|Git & Environment|
+:Trigger **pre-commit hook**;
+
+|#fff9c4|Coretext Engine (Sync)|
+if (Changes Detected?) then (yes)
+  :**Parse AST** of Markdown files;
+  note right
+    Extract Headers as Nodes
+    Extract Links as Edges
+  end note
+  
+  if (Valid Structure?) then (yes)
+    :**Generate Embeddings**
+    (using nomic-embed-text);
+    :**Upsert Nodes & Edges**
+    to SurrealDB;
+  else (no)
+    :Reject Commit &
+    Report "Loud Failure";
+    stop
+  endif
+else (no)
+  :Skip Sync;
+endif
+
+|#e8f5e9|Knowledge Graph (SurrealDB)|
+:Update Graph State
+(Nodes, Edges, Vectors);
+
+|Human (Developer)|
+:Ask AI Agent
+(e.g., "Scaffold User Service");
+
+|#f3e5f5|AI Agent (Gemini CLI)|
+:Analyze Request;
+:Call **MCP Tool**
+(search_topology / get_context);
+
+|Coretext Engine (Sync)|
+:Receive MCP Query;
+:Construct Hybrid Query
+(Vector + Graph Traversal);
+
+|Knowledge Graph (SurrealDB)|
+:Execute **SurrealQL**;
+:Return Structured Context
+(Dependencies, Constraints);
+
+|AI Agent (Gemini CLI)|
+:Receive Context
+(e.g., "Use Service-Repo pattern");
+:Generate Code
+(Respecting Architecture);
+
+|Human (Developer)|
+:Review Generated Code;
+if (Code Correct?) then (yes)
+  :Approve & Commit;
+  stop
+else (no)
+  :Refine Specs (Docs)
+  or Prompt;
+  stop
+endif
+
+@enduml
