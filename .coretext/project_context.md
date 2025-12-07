@@ -35,6 +35,7 @@
 *   **Location:** `tests/` folder at root.
 *   **Async:** Use `@pytest.mark.asyncio` for async tests.
 *   **Structure:** Mirrors source (e.g., `tests/unit/core/graph/test_manager.py`).
+*   **Pragmatism:** If a test fails due to *framework limitations* (e.g., `CliRunner` with async), explicitly mark it as `@pytest.mark.skip` with a reason. DO NOT refactor working code to satisfy a broken test harness.
 
 ### Code Quality & Style Rules
 
@@ -49,3 +50,12 @@
 *   **UPSERT ONLY:** Always upsert nodes by `file_path` ID. Never create random UUIDs for file nodes.
 *   **LOCAL ONLY:** Do not try to connect to remote SurrealDB instances.
 *   **Gemini Manifest:** Always verify `extension.yaml` is updated when adding new CLI commands.
+
+
+## Workflow & Pragmatism (Critical for Token Efficiency)
+* **The "Stop-Loss" Rule:** If a specific test or bug fix fails **3 times** despite valid attempts, STOP. Do not loop endlessly. Evaluate if it is a tooling/harness limitation rather than a logic bug.
+* **Technical Debt Protocol:**
+    * **File:** `docs/technical_debt.md` (Source of Truth for known issues).
+    * **Action:** If a non-critical issue (like a test harness quirk) blocks progress, **Log it** in `docs/technical_debt.md`, mark the test as `@pytest.mark.skip` or `@pytest.mark.xfail` with a comment referencing the issue, and **MOVE ON**.
+    * **Check First:** Before attempting to fix a stubborn bug, check `docs/technical_debt.md` to see if it's a known "Won't Fix" or "Deferred" item.
+* **Documentation First:** Update `docs/sprint-status.yaml` and related Markdown files *before* writing code to ensure context alignment.
