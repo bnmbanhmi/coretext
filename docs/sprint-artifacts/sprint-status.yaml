@@ -38,7 +38,7 @@ story_location: docs/sprint-artifacts
 development_status:
   epic-1: in-progress
   1-1-project-initialization-core-scaffolding: done
-  1-2-surrealdb-management-schema-application: backlog
+  1-2-surrealdb-management-schema-application: in-progress
   1-3-bmad-markdown-parsing-to-graph-nodes: backlog
   1-4-git-repository-change-detection-synchronization: backlog
   1-5-referential-integrity-link-validation: backlog

@@ -1,0 +1,30 @@
+# Default schema mapping for CoreText project
+# Maps external concepts (e.g., BMAD Markdown headers) to internal DB properties and types.
+
+node_types:
+  file:
+    db_table: node
+    properties:
+      path: str
+      title: str
+      summary: str
+  header:
+    db_table: node
+    properties:
+      path: str
+      level: int
+      title: str
+      content_hash: str
+
+edge_types:
+  contains:
+    db_table: contains
+    source_type: file
+    target_type: header
+    properties:
+      order: int
+  parent_of:
+    db_table: parent_of
+    source_type: header
+    target_type: header
+    properties: {}
