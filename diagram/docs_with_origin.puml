@@ -1,0 +1,137 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam linetype polyline
+skinparam nodesep 100
+skinparam ranksep 80
+skinparam handwritten false
+skinparam shadowing false
+
+' --- Colors ---
+!define SpecColor E1F5FE
+!define ReportColor F3E5F5
+!define ImplColor E8F5E9
+!define TrackColor FFF3E0
+!define WorkflowColor FCE4EC
+!define AgentColor E0F7FA
+
+' --- 1. PRODUCERS (Agents) - Top Layer ---
+package "Agents" {
+    actor "Product Manager" as PM #AgentColor
+    actor "Architect" as ArchAgent #AgentColor
+    actor "Test Architect (TEA)" as TEA #AgentColor
+    actor "Scrum Master" as SM #AgentColor
+}
+
+' --- 2. PROCESSES (Workflows) - Middle Layer ---
+package "BMad Workflows" {
+    ' Planning Group
+    component "PRD Workflow" as WF_PRD #WorkflowColor
+    
+    ' Architecture Group
+    component "Architecture\nWorkflow" as WF_Arch #WorkflowColor
+    component "Create Epics" as WF_Epics #WorkflowColor
+    component "Impl.\nReadiness" as WF_Ready #WorkflowColor
+    
+    ' Testing Group
+    component "Test Design" as WF_Test #WorkflowColor
+    
+    ' Sprint Group
+    component "Sprint\nPlanning" as WF_Sprint #WorkflowColor
+    component "Create Story" as WF_Story #WorkflowColor
+    component "Workflow\nStatus" as WF_Status #WorkflowColor
+}
+
+' --- 3. OUTPUTS (Artifacts) - Bottom Layer ---
+package "Artifacts & Outputs" {
+    
+    package "Specifications" {
+        file "docs/prd.md" as PRD #SpecColor
+        file "docs/architecture.md" as Arch #SpecColor
+        file "docs/epics.md" as Epics #SpecColor
+    }
+
+    package "Quality & Reports" {
+        file "implementation-readiness-report.md" as ReadyReport #ReportColor
+        file "Test Design:\nEpic 1" as TestDesign #ReportColor
+    }
+
+    package "Implementation (Stories)" {
+        file "Story 1.1:\nScaffolding" as Story1_1 #ImplColor
+        file "Story 1.2:\nSurrealDB" as Story1_2 #ImplColor
+    }
+
+    package "Tracking" {
+        file "sprint-status.yaml" as SprintStatus #TrackColor
+        file "bmm-workflow-status.yaml" as BMMStatus #TrackColor
+        file "technical_debt.md" as TechDebt #TrackColor
+    }
+}
+
+' --- FORCING LAYOUT ORDER (Invisible Lines) ---
+' This forces the Left-to-Right chronological flow
+PM -[hidden]- ArchAgent
+ArchAgent -[hidden]- TEA
+TEA -[hidden]- SM
+
+WF_PRD -[hidden]- WF_Arch
+WF_Arch -[hidden]- WF_Epics
+WF_Epics -[hidden]- WF_Ready
+WF_Ready -[hidden]- WF_Test
+WF_Test -[hidden]- WF_Sprint
+WF_Sprint -[hidden]- WF_Story
+
+' --- CONNECTIONS ---
+
+' 1. Planning Phase (Left)
+PM --> WF_PRD : executes
+WF_PRD --> PRD : creates
+
+' 2. Solutioning Phase (Center-Left)
+ArchAgent --> WF_Arch : executes
+ArchAgent --> WF_Epics : executes
+ArchAgent --> WF_Ready : executes
+
+WF_Arch --> Arch : creates
+WF_Epics --> Epics : creates
+WF_Ready --> ReadyReport : creates
+
+' 3. Test Architecture (Center)
+TEA --> WF_Test : executes
+WF_Test --> TestDesign : creates
+
+' 4. Implementation Phase (Right)
+SM --> WF_Sprint : executes
+SM --> WF_Story : executes
+
+WF_Sprint --> SprintStatus : creates
+WF_Story --> Story1_1 : creates
+WF_Story --> Story1_2 : creates
+
+' 5. System Status (Far Right)
+WF_Status --> BMMStatus : updates
+
+' --- DEPENDENCIES (Cross-Linking) ---
+
+' Spec Dependencies
+Arch .left.> PRD : input
+Epics .up.> Arch : structure
+
+' Verification Flows
+ReadyReport .up.> PRD : verifies
+ReadyReport .up.> Arch : verifies
+ReadyReport .up.> Epics : verifies
+
+TestDesign .up.> Epics : verifies logic
+TestDesign ..> Story1_1 : tests
+TestDesign ..> Story1_2 : tests
+
+' Implementation Context
+Epics ..> Story1_1 : implements
+Epics ..> Story1_2 : implements
+
+' Tracking Links
+SprintStatus .up.> Story1_1 : tracks
+SprintStatus .up.> Story1_2 : tracks
+TechDebt .left.> Story1_1 : logs issues
+
+@enduml
