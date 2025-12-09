@@ -1,9 +1,9 @@
 import typer
 import asyncio
 from pathlib import Path
+from surrealdb import Surreal
 from coretext.db.client import SurrealDBClient
 from coretext.db.migrations import SchemaManager
-# from surrealdb import Surreal # Not needed for init, only for actual DB interaction
 
 app = typer.Typer()
 
@@ -81,3 +81,47 @@ edge_types:
         typer.echo("schema_map.yaml already exists. Skipping creation.")
 
     typer.echo("CoreText project initialized successfully.")
+
+@app.command()
+def apply_schema(
+    project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p", help="Root directory of the project.")
+):
+    """
+    Applies the schema from .coretext/schema_map.yaml to the local SurrealDB.
+    Starts the DB temporarily if not running.
+    """
+    typer.echo("Applying database schema...")
+    
+    async def _run_apply():
+        client = SurrealDBClient(project_root=project_root)
+        
+        # Ensure DB is up
+        started_by_us = False
+        if not client.process: # Simple check, ideally we check if port is open
+             # For now, let's just try to start it. client.start_surreal_db handles "already running" logic 
+             # but check is internal. We rely on the client.
+             await client.start_surreal_db()
+             # We give it a moment or loop check health (TODO: health check in client)
+             await asyncio.sleep(1) # temporary wait for startup
+             started_by_us = True
+
+        try:
+            # Connect
+            async with Surreal("ws://localhost:8000/rpc") as db:
+                await db.signin({"user": "root", "pass": "root"})
+                await db.use("coretext", "coretext") # Namespace, Database
+                
+                migration = SchemaManager(db, project_root)
+                await migration.apply_schema()
+                typer.echo("Schema applied successfully.")
+        except Exception as e:
+            typer.echo(f"Error applying schema: {e}", err=True)
+            raise
+        finally:
+            if started_by_us:
+                await client.stop_surreal_db()
+
+    try:
+        asyncio.run(_run_apply())
+    except Exception:
+        raise typer.Exit(code=1)

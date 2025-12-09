@@ -98,3 +98,12 @@ gemini-2.5-flash
 ### Completion Notes List
 
 ### File List
+
+- `coretext/db/client.py`
+- `coretext/db/migrations.py`
+- `coretext/core/graph/models.py`
+- `coretext/core/graph/manager.py`
+- `coretext/cli/commands.py`
+- `.coretext/schema_map.yaml`
+- `tests/unit/core/graph/test_manager.py`
+- `tests/unit/db/test_client.py`
