@@ -1,0 +1,71 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam linetype ortho
+' Drastically increased spacing for readability
+skinparam nodesep 150
+skinparam ranksep 100
+skinparam pathHoverColor blue
+
+' Defined Colors
+!define SpecColor E1F5FE
+!define ReportColor F3E5F5
+!define ImplColor E8F5E9
+!define TrackColor FFF3E0
+
+package "1. Specifications" {
+    file "docs/prd.md" as PRD #SpecColor
+    file "docs/architecture.md" as Arch #SpecColor
+    file "docs/epics.md" as Epics #SpecColor
+}
+
+package "2. Implementation (Stories)" {
+    file "Story 1.1: Scaffolding" as Story1_1 #ImplColor
+    file "Story 1.2: SurrealDB" as Story1_2 #ImplColor
+}
+
+package "3. Quality & Reports" {
+    file "implementation-readiness-report.md" as ReadyReport #ReportColor
+    file "Test Design: Epic 1" as TestDesign #ReportColor
+}
+
+package "4. Tracking & Management" {
+    file "bmm-workflow-status.yaml" as BMMStatus #TrackColor
+    file "sprint-status.yaml" as SprintStatus #TrackColor
+    file "technical_debt.md" as TechDebt #TrackColor
+}
+
+' --- Relationships ---
+
+' Specification Flow (Vertical)
+PRD <-- Arch : inputDocuments
+Arch <-- Epics : patterns & structure
+
+' Implementation Flow (Specs -> Stories)
+' Using explicit directions to guide lines around boxes
+Epics -down-> Story1_1 : implements
+Epics -down-> Story1_2 : implements
+Arch -down-> Story1_1 : structure def
+Arch -down-> Story1_2 : schema def
+PRD -down-> Story1_1 : context
+PRD -down-> Story1_2 : context
+
+' Quality Verification (Reports -> Specs/Stories)
+ReadyReport -left-> PRD : verifies
+ReadyReport -left-> Arch : verifies
+ReadyReport -left-> Epics : verifies
+
+TestDesign -left-> Epics : verifies logic
+TestDesign -down-> Story1_1 : tests
+TestDesign -down-> Story1_2 : tests
+
+' Tracking (Tracking -> All)
+BMMStatus .up.> PRD : tracks
+BMMStatus .up.> Epics : tracks
+BMMStatus .up.> ReadyReport : tracks
+
+SprintStatus .up.> Story1_1 : tracks
+SprintStatus .up.> Story1_2 : tracks
+
+TechDebt .left.> Story1_1 : logs CLI issue
+
+@enduml
