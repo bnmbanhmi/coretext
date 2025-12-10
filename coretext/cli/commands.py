@@ -4,6 +4,7 @@ from pathlib import Path
 from surrealdb import Surreal
 from coretext.db.client import SurrealDBClient
 from coretext.db.migrations import SchemaManager
+from coretext.core.parser.schema import DEFAULT_SCHEMA_MAP_CONTENT
 
 app = typer.Typer()
 
@@ -37,45 +38,8 @@ def init(
     schema_map_path = project_root / ".coretext" / "schema_map.yaml"
     if not schema_map_path.exists():
         typer.echo(f"Creating default schema_map.yaml at {schema_map_path}...")
-        # This content should ideally come from a template or a default in the parser module
-        default_schema_content = """
-node_types:
-  file:
-    db_table: node
-    properties:
-      path:
-        type: str
-      title:
-        type: str
-      summary:
-        type: str
-  header:
-    db_table: node
-    properties:
-      path:
-        type: str
-      level:
-        type: int
-      title:
-        type: str
-      content_hash:
-        type: str
-
-edge_types:
-  contains:
-    db_table: contains
-    source_type: file
-    target_type: header
-    properties:
-      order:
-        type: int
-  parent_of:
-    db_table: parent_of
-    source_type: header
-    target_type: header
-    properties: {}
-"""
-        schema_map_path.write_text(default_schema_content)
+        schema_map_path.parent.mkdir(parents=True, exist_ok=True)
+        schema_map_path.write_text(DEFAULT_SCHEMA_MAP_CONTENT)
         typer.echo("Default schema_map.yaml created.")
     else:
         typer.echo("schema_map.yaml already exists. Skipping creation.")
@@ -97,29 +61,32 @@ def apply_schema(
         
         # Ensure DB is up
         started_by_us = False
-        if not client.process: # Simple check, ideally we check if port is open
+        if not client.process: 
              # For now, let's just try to start it. client.start_surreal_db handles "already running" logic 
-             # but check is internal. We rely on the client.
              await client.start_surreal_db()
-             # We give it a moment or loop check health (TODO: health check in client)
-             await asyncio.sleep(1) # temporary wait for startup
              started_by_us = True
 
-        try:
-            # Connect
-            async with Surreal("ws://localhost:8000/rpc") as db:
-                await db.signin({"user": "root", "pass": "root"})
-                await db.use("coretext", "coretext") # Namespace, Database
-                
-                migration = SchemaManager(db, project_root)
-                await migration.apply_schema()
-                typer.echo("Schema applied successfully.")
-        except Exception as e:
-            typer.echo(f"Error applying schema: {e}", err=True)
-            raise
-        finally:
-            if started_by_us:
-                await client.stop_surreal_db()
+        # Retry loop for connection
+        max_retries = 10
+        for i in range(max_retries):
+            try:
+                # Connect
+                async with Surreal("ws://localhost:8000/rpc") as db:
+                    await db.signin({"user": "root", "pass": "root"})
+                    await db.use("coretext", "coretext") # Namespace, Database
+                    
+                    migration = SchemaManager(db, project_root)
+                    await migration.apply_schema()
+                    typer.echo("Schema applied successfully.")
+                    break # Success
+            except Exception as e:
+                if i == max_retries - 1:
+                    typer.echo(f"Error applying schema after {max_retries} attempts: {e}", err=True)
+                    raise
+                await asyncio.sleep(0.5)
+        
+        if started_by_us:
+            await client.stop_surreal_db()
 
     try:
         asyncio.run(_run_apply())

@@ -28,12 +28,31 @@ class SchemaManager:
         await self.db.query("DEFINE FIELD content ON TABLE node TYPE string")
         await self.db.query("DEFINE FIELD metadata ON TABLE node TYPE object")
         
-        # Apply specific property definitions from YAML if needed?
-        # For now, we keep the base schema rigid for Pydantic models, 
-        # but we could add dynamic fields based on YAML here.
-        # The schema_map.yaml is mostly for the *Parser* to map MD -> DB, 
-        # but we can enforce fields if we want.
-        
+        # Apply specific property definitions from YAML for nodes
+        node_types = schema_map.get("node_types", {})
+        for node_type_name, config in node_types.items():
+            # Check if this node type maps to the 'node' table (it should)
+            if config.get("db_table") == "node":
+                properties = config.get("properties", {})
+                for prop_name, prop_type_def in properties.items():
+                    # Check if property is already defined (base fields)
+                    if prop_name in ["path", "node_type", "content", "metadata"]:
+                        continue
+
+                    # Map Python/YAML types to SurrealDB types
+                    surreal_type = "string" # default
+                    if isinstance(prop_type_def, dict):
+                         pt = prop_type_def.get("type", "str")
+                    else:
+                         pt = prop_type_def # assume string if just value, though yaml parses as dict usually if structured
+
+                    if pt == "int": surreal_type = "int"
+                    elif pt == "float": surreal_type = "float"
+                    elif pt == "bool": surreal_type = "bool"
+                    elif pt == "datetime": surreal_type = "datetime"
+                    
+                    await self.db.query(f"DEFINE FIELD {prop_name} ON TABLE node TYPE {surreal_type}")
+
         # 2. Define Edge Types
         edge_types = schema_map.get("edge_types", {})
         for edge_name, config in edge_types.items():
@@ -47,13 +66,13 @@ class SchemaManager:
             for prop_name, prop_type in properties.items():
                 # Simple mapping: python type str -> surreal type
                 surreal_type = "string"
-                if prop_type == "int": surreal_type = "int"
-                elif prop_type == "float": surreal_type = "float"
-                elif prop_type == "bool": surreal_type = "bool"
-                elif isinstance(prop_type, dict) and "type" in prop_type: # Handle object format
-                     pt = prop_type["type"]
-                     if pt == "int": surreal_type = "int"
-                     elif pt == "float": surreal_type = "float"
-                     elif pt == "bool": surreal_type = "bool"
+                if isinstance(prop_type, dict):
+                    pt = prop_type.get("type", "str")
+                else:
+                    pt = prop_type
+
+                if pt == "int": surreal_type = "int"
+                elif pt == "float": surreal_type = "float"
+                elif pt == "bool": surreal_type = "bool"
                 
                 await self.db.query(f"DEFINE FIELD {prop_name} ON TABLE {db_table} TYPE {surreal_type}")

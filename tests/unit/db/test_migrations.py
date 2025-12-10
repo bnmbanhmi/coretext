@@ -1,14 +1,36 @@
 # tests/unit/db/test_migrations.py
 import pytest
-from unittest.mock import AsyncMock, MagicMock, call
+from unittest.mock import AsyncMock, MagicMock, call, patch
 from coretext.db.migrations import SchemaManager
 
 @pytest.mark.asyncio
-async def test_apply_schema():
+async def test_apply_schema(tmp_path):
     mock_db = AsyncMock()
-    manager = SchemaManager(mock_db)
+    # Pass tmp_path as project_root
+    manager = SchemaManager(mock_db, project_root=tmp_path)
 
-    await manager.apply_schema()
+    # Create a dummy schema_map.yaml so _load_schema_map doesn't fail or returns empty
+    # We want it to return the dict that drives the test assertions
+    # OR we can mock _load_schema_map
+    
+    with patch.object(SchemaManager, '_load_schema_map') as mock_load:
+        # Define the schema map that corresponds to the assertions
+        mock_load.return_value = {
+            "node_types": {
+                "file": {},
+                "header": {}
+            },
+            "edge_types": {
+                "contains": {
+                    "db_table": "contains"
+                },
+                "parent_of": {
+                    "db_table": "parent_of"
+                }
+            }
+        }
+
+        await manager.apply_schema()
 
     assert mock_db.query.called
     

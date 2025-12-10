@@ -21,6 +21,44 @@ class SchemaMap(BaseModel):
     node_types: dict[str, NodeTypeSchema] = Field(default_factory=dict)
     edge_types: dict[str, EdgeTypeSchema] = Field(default_factory=dict)
 
+DEFAULT_SCHEMA_MAP_CONTENT = """
+node_types:
+  file:
+    db_table: node
+    properties:
+      path:
+        type: str
+      title:
+        type: str
+      summary:
+        type: str
+  header:
+    db_table: node
+    properties:
+      path:
+        type: str
+      level:
+        type: int
+      title:
+        type: str
+      content_hash:
+        type: str
+
+edge_types:
+  contains:
+    db_table: contains
+    source_type: file
+    target_type: header
+    properties:
+      order:
+        type: int
+  parent_of:
+    db_table: parent_of
+    source_type: header
+    target_type: header
+    properties: {}
+"""
+
 class SchemaMapper:
     def __init__(self, schema_map_path: Path):
         self.schema_map_path = schema_map_path

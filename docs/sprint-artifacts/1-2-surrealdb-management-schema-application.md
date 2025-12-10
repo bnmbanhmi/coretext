@@ -1,6 +1,6 @@
 # Story 1.2: SurrealDB Management & Schema Application
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -97,6 +97,18 @@ gemini-2.5-flash
 
 ### Completion Notes List
 
+- Implemented SurrealDB client for binary management and process control.
+- Implemented SchemaManager with dynamic schema application from YAML.
+- Implemented GraphManager and Pydantic models.
+- Implemented CLI commands for `init` and `apply-schema`.
+- **Code Review Fixes (2025-12-10):**
+  - Refactored `SchemaManager` to dynamically define fields from `schema_map.yaml`.
+  - Added retry logic to `apply_schema` command to prevent race conditions.
+  - Moved default schema content to `coretext/core/parser/schema.py`.
+  - Fixed unit tests for migrations and CLI commands.
+  - Added module and class docstrings to `models.py`.
+  - Added conditional integration test `tests/integration/test_db_integration.py`.
+
 ### File List
 
 - `coretext/db/client.py`
@@ -104,6 +116,10 @@ gemini-2.5-flash
 - `coretext/core/graph/models.py`
 - `coretext/core/graph/manager.py`
 - `coretext/cli/commands.py`
+- `coretext/core/parser/schema.py`
 - `.coretext/schema_map.yaml`
 - `tests/unit/core/graph/test_manager.py`
 - `tests/unit/db/test_client.py`
+- `tests/unit/db/test_migrations.py`
+- `tests/unit/cli/test_commands.py`
+- `tests/integration/test_db_integration.py`
