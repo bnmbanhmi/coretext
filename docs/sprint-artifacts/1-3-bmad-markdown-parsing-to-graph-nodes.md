@@ -1,6 +1,6 @@
 # Story 1.3: bmad-markdown-parsing-to-graph-nodes
 
-Status: Ready for Review
+Status: Done
 Completion Note: Ultimate context engine analysis completed - comprehensive developer guide created
 
 ## Story
@@ -183,3 +183,15 @@ gemini-2.5-flash
 *   `tests/data/valid_complex.md` (NEW - Test data)
 *   `tests/data/malformed_syntax.md` (NEW - Test data)
 *   `tests/data/subdir/target.md` (NEW - Test data for link resolution)
+*   `tests/unit/core/parser/test_link_validation.py` (NEW - Unit tests for link validation and duplicate edge IDs)
+
+### Code Review (2025-12-10)
+
+*   **Reviewer:** Amelia (Dev Agent - Adversarial Mode)
+*   **Status:** PASSED (After Fixes)
+*   **Critical Issues Fixed:**
+    1.  **Duplicate Edge ID Crash:** Fixed by appending a unique index to edge IDs (e.g., `-1`, `-2`).
+    2.  **Broken Links Create Edges:** Fixed by adding validation to explicit link processing; now generates `ParsingErrorNode` if target doesn't exist.
+*   **Other Improvements:**
+    *   Removed debug print statements from production code.
+    *   Added `tests/unit/core/parser/test_link_validation.py` to prevent regression.
