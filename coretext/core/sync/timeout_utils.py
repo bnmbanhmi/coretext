@@ -8,7 +8,7 @@ import os
 
 # Define threshold for detachment
 FILE_COUNT_DETACH_THRESHOLD = 5
-TIMEOUT_SECONDS = 2
+TIMEOUT_SECONDS = 1
 
 async def _run_sync_operation(sync_coro: Coroutine[Any, Any, Any], timeout: float = TIMEOUT_SECONDS) -> Any:
     """Runs an async operation with a timeout."""

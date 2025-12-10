@@ -168,9 +168,9 @@ def pre_commit_hook(
 
     typer.echo(f"Checking {len(files)} staged Markdown files...")
     
-    parser = MarkdownParser()
+    parser = MarkdownParser(project_root=project_root)
     # No DB needed for dry run
-    engine = SyncEngine(parser=parser, graph_manager=None)
+    engine = SyncEngine(parser=parser, graph_manager=None, project_root=project_root)
     
     # Content provider lambda
     def content_provider(file_path_str: str) -> str:
@@ -256,8 +256,8 @@ async def post_commit_hook(
                 await db.use("coretext", "coretext")
 
                 graph_manager = GraphManager(db)
-                parser = MarkdownParser()
-                engine = SyncEngine(parser=parser, graph_manager=graph_manager)
+                parser = MarkdownParser(project_root=project_root)
+                engine = SyncEngine(parser=parser, graph_manager=graph_manager, project_root=project_root)
 
                 # Content provider lambda: uses HEAD content for deterministic sync
                 def content_provider(file_path_str: str) -> str:

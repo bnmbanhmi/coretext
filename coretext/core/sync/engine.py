@@ -19,9 +19,10 @@ class SyncResult(BaseModel):
     errors: List[str] = []
 
 class SyncEngine:
-    def __init__(self, parser: MarkdownParser, graph_manager: GraphManager):
+    def __init__(self, parser: MarkdownParser, graph_manager: GraphManager, project_root: Path):
         self.parser = parser
         self.graph_manager = graph_manager
+        self.project_root = project_root
 
     async def process_files(self, file_paths: List[str], mode: SyncMode, content_provider: Optional[Callable[[str], str]] = None, commit_hash: Optional[str] = None) -> SyncResult:
         processed_count = 0

@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from pathlib import Path
-from coretext.core.sync.git_utils import get_staged_files, get_last_commit_files
+from coretext.core.sync.git_utils import get_staged_files, get_last_commit_files, get_staged_content, get_head_content, get_current_commit_hash
 
 @patch("coretext.core.sync.git_utils.Repo")
 def test_get_staged_files(mock_repo_cls):
@@ -36,3 +36,35 @@ def test_get_last_commit_files_initial_commit(mock_repo_cls):
     
     assert "readme.md" in files
     mock_repo.git.show.assert_called_with("--name-only", "--format=", "HEAD")
+
+@patch("coretext.core.sync.git_utils.Repo")
+def test_get_staged_content(mock_repo_cls):
+    mock_repo = mock_repo_cls.return_value
+    mock_repo.git.show.return_value = "staged content"
+    
+    content = get_staged_content(Path("."), "test.md")
+    
+    assert content == "staged content"
+    mock_repo.git.show.assert_called_with(":test.md")
+
+@patch("coretext.core.sync.git_utils.Repo")
+def test_get_head_content(mock_repo_cls):
+    mock_repo = mock_repo_cls.return_value
+    mock_repo.git.show.return_value = "head content"
+    
+    content = get_head_content(Path("."), "test.md")
+    
+    assert content == "head content"
+    mock_repo.git.show.assert_called_with("HEAD:test.md")
+
+@patch("coretext.core.sync.git_utils.Repo")
+def test_get_current_commit_hash(mock_repo_cls):
+    mock_repo = mock_repo_cls.return_value
+    mock_commit = MagicMock()
+    mock_commit.hexsha = "abcdef1234567890"
+    mock_repo.head.commit = mock_commit
+    
+    commit_hash = get_current_commit_hash(Path("."))
+    
+    assert commit_hash == "abcdef1234567890"
+

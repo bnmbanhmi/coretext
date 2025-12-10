@@ -158,7 +158,7 @@ async def test_post_commit_hook_detached_success(
     mock_surreal_instance.use.assert_awaited_once_with("coretext", "coretext")
     mock_graph_manager_cls.assert_called_once_with(mock_surreal_instance)
     mock_parser_cls.assert_called_once()
-    mock_sync_engine_cls.assert_called_once_with(parser=mock_parser_instance, graph_manager=mock_graph_manager_instance)
+    mock_sync_engine_cls.assert_called_once_with(parser=mock_parser_instance, graph_manager=mock_graph_manager_instance, project_root=tmp_path)
     mock_sync_engine_instance.process_files.assert_awaited_once_with(
         mock_get_last_commit_files.return_value,
         mode=SyncMode.WRITE,

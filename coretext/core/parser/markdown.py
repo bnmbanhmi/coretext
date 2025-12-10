@@ -16,11 +16,15 @@ class MarkdownParser:
         md (MarkdownIt): An instance of the markdown-it parser.
     """
 
-    def __init__(self):
+    def __init__(self, project_root: Path):
         """
         Initializes the MarkdownParser with CommonMark compliance.
+        
+        Args:
+            project_root (Path): The root directory of the project.
         """
         self.md = MarkdownIt("commonmark")
+        self.project_root = project_root
 
     def _process_link_token(self, link_token: Token, current_file_path: Path, file_node: FileNode, nodes: List[BaseNode], edges: List[BaseEdge], content_lines: List[str], link_index: int):
         """Helper function to process link_open tokens and create REFERENCES edges or ParsingErrorNodes."""
@@ -31,18 +35,11 @@ class MarkdownParser:
         if href:
             try:
                 # Normalize the link target path
-                normalized_link_path = normalize_path_to_project_root(current_file_path, href)
+                normalized_link_path = normalize_path_to_project_root(current_file_path, href, project_root=self.project_root)
                 
                 # VALIDATION: Check if target exists
                 # We need to resolve the full path to check existence
-                # normalize_path_to_project_root doesn't return the full absolute path, so we re-resolve
-                project_root = None
-                for parent in current_file_path.parents:
-                    if (parent / "pyproject.toml").exists() or (parent / ".git").is_dir():
-                        project_root = parent
-                        break
-                
-                full_target_path = project_root / normalized_link_path if project_root else Path(normalized_link_path)
+                full_target_path = self.project_root / normalized_link_path
 
                 if not full_target_path.exists():
                      # Treat as broken link -> Parsing Error
@@ -97,7 +94,7 @@ class MarkdownParser:
                 raise FileNotFoundError(f"Markdown file not found: {file_path}")
             content = file_path.read_text()
 
-        normalized_file_path = normalize_path_to_project_root(file_path, str(file_path))
+        normalized_file_path = normalize_path_to_project_root(file_path, str(file_path), project_root=self.project_root)
 
         tokens = self.md.parse(content)
 
@@ -191,7 +188,7 @@ class MarkdownParser:
                                     try:
                                         resolved_implicit_file = (file_path.parent / implicit_path).resolve()
                                         if resolved_implicit_file.is_file():
-                                            normalized_implicit_path = normalize_path_to_project_root(file_path, str(resolved_implicit_file))
+                                            normalized_implicit_path = normalize_path_to_project_root(file_path, str(resolved_implicit_file), project_root=self.project_root)
                                             link_counter += 1
                                             edges.append(BaseEdge(
                                                 id=f"{file_node.id}-REFERENCES-{normalized_implicit_path}-{link_counter}",
@@ -211,7 +208,7 @@ class MarkdownParser:
                         try:
                             resolved_implicit_file = (file_path.parent / implicit_path).resolve()
                             if resolved_implicit_file.is_file():
-                                normalized_implicit_path = normalize_path_to_project_root(file_path, str(resolved_implicit_file))
+                                normalized_implicit_path = normalize_path_to_project_root(file_path, str(resolved_implicit_file), project_root=self.project_root)
                                 link_counter += 1
                                 edges.append(BaseEdge(
                                     id=f"{file_node.id}-REFERENCES-{normalized_implicit_path}-{link_counter}",
