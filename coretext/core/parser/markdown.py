@@ -26,11 +26,16 @@ class MarkdownParser:
         self.md = MarkdownIt("commonmark")
         self.project_root = project_root
 
-    def _process_link_token(self, link_token: Token, current_file_path: Path, file_node: FileNode, nodes: List[BaseNode], edges: List[BaseEdge], content_lines: List[str], link_index: int):
+    def _process_link_token(self, link_token: Token, parent_token: Token, current_file_path: Path, file_node: FileNode, nodes: List[BaseNode], edges: List[BaseEdge], content_lines: List[str], link_index: int):
         """Helper function to process link_open tokens and create REFERENCES edges or ParsingErrorNodes."""
         href = None
         if link_token.attrs:
             href = link_token.attrs.get("href")
+        
+        # Use parent_token map if child token map is missing (common for inline tokens)
+        map_info = link_token.map or parent_token.map
+        line_number = map_info[0] + 1 if map_info else 0
+        raw_snippet = content_lines[map_info[0]] if map_info and map_info[0] < len(content_lines) else ""
         
         if href:
             try:
@@ -43,32 +48,28 @@ class MarkdownParser:
 
                 if not full_target_path.exists():
                      # Treat as broken link -> Parsing Error
-                    line_number = link_token.map[0] + 1 if link_token.map else 0
-                    raw_snippet = content_lines[link_token.map[0]] if link_token.map and link_token.map[0] < len(content_lines) else ""
                     error_node = ParsingErrorNode(
                         id=f"{file_node.id}#link-error-line-{line_number}-{link_index}",
                         file_path=file_node.file_path,
                         line_number=line_number,
-                        error_message=f"Broken link: Target '{href}' does not exist.",
+                        error_message=f"Dangling Reference: Target '{href}' does not exist.",
                         raw_content_snippet=raw_snippet
                     )
                     nodes.append(error_node)
                     return
 
-                # Create a REFERENCES edge
+                # Create a PARENT_OF edge
                 # Ensure unique ID by appending index
-                edge_id = f"{file_node.id}-REFERENCES-{normalized_link_path}-{link_index}"
+                edge_id = f"{file_node.id}-PARENT_OF-{normalized_link_path}-{link_index}"
                 
                 edges.append(BaseEdge(
                     id=edge_id,
-                    edge_type="REFERENCES",
+                    edge_type="PARENT_OF",
                     source=file_node.id,
                     target=str(normalized_link_path)
                 ))
             except ValueError as e:
                 # Handle cases where link target cannot be normalized (e.g., external links, invalid paths)
-                line_number = link_token.map[0] + 1 if link_token.map else 0
-                raw_snippet = content_lines[link_token.map[0]] if link_token.map and link_token.map[0] < len(content_lines) else ""
                 error_node = ParsingErrorNode(
                     id=f"{file_node.id}#link-error-line-{line_number}-{link_index}",
                     file_path=file_node.file_path,
@@ -178,7 +179,7 @@ class MarkdownParser:
                     for child_token in token.children:
                         if child_token.type == "link_open":
                             link_counter += 1
-                            self._process_link_token(child_token, file_path, file_node, nodes, edges, content_lines, link_counter)
+                            self._process_link_token(child_token, token, file_path, file_node, nodes, edges, content_lines, link_counter)
                         elif child_token.type == "text" or child_token.type == "code_inline":
                             # Apply implicit link detection only to plain text or inline code
                             if child_token.content:
@@ -191,8 +192,8 @@ class MarkdownParser:
                                             normalized_implicit_path = normalize_path_to_project_root(file_path, str(resolved_implicit_file), project_root=self.project_root)
                                             link_counter += 1
                                             edges.append(BaseEdge(
-                                                id=f"{file_node.id}-REFERENCES-{normalized_implicit_path}-{link_counter}",
-                                                edge_type="REFERENCES",
+                                                id=f"{file_node.id}-PARENT_OF-{normalized_implicit_path}-{link_counter}",
+                                                edge_type="PARENT_OF",
                                                 source=file_node.id,
                                                 target=str(normalized_implicit_path)
                                             ))
@@ -211,8 +212,8 @@ class MarkdownParser:
                                 normalized_implicit_path = normalize_path_to_project_root(file_path, str(resolved_implicit_file), project_root=self.project_root)
                                 link_counter += 1
                                 edges.append(BaseEdge(
-                                    id=f"{file_node.id}-REFERENCES-{normalized_implicit_path}-{link_counter}",
-                                    edge_type="REFERENCES",
+                                    id=f"{file_node.id}-PARENT_OF-{normalized_implicit_path}-{link_counter}",
+                                    edge_type="PARENT_OF",
                                     source=file_node.id,
                                     target=str(normalized_implicit_path)
                                 ))

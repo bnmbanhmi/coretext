@@ -270,13 +270,13 @@ async def post_commit_hook(
                     for error in result.errors:
                         typer.echo(f"  - {error}", err=True)
                     # Fail-Open: do not block commit, log error and exit gracefully
-                    raise typer.Exit(code=0) # Changed to raise
+                    raise typer.Exit(code=1) # Changed to raise
                 else:
                     typer.echo("✅ CoreText Post-commit Synchronization COMPLETE.")
                 
         except Exception as e:
             typer.echo(f"❌ Unexpected error during post-commit synchronization: {e}", err=True)
-            raise typer.Exit(code=0) # Changed to raise
+            raise typer.Exit(code=1) # Changed to raise
         finally:
             if started_db_by_us:
                 typer.echo("Stopping SurrealDB server started for synchronization.")

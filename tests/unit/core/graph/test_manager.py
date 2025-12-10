@@ -86,7 +86,7 @@ async def test_update_node(graph_manager, mock_surreal_client):
 
     mock_surreal_client.update.assert_awaited_once() # Check that update was called
     call_args = mock_surreal_client.update.call_args.args
-    assert call_args[0] == node_data.id
+    assert call_args[0] == f"{node_data.node_type}:{node_data.id}"
     
     sent_data = call_args[1]
     assert sent_data["node_type"] == node_data.node_type
@@ -182,7 +182,7 @@ async def test_update_edge(graph_manager, mock_surreal_client):
 
     mock_surreal_client.update.assert_awaited_once() # Check that update was called
     call_args = mock_surreal_client.update.call_args.args
-    assert call_args[0] == edge_data.id
+    assert call_args[0] == f"{edge_data.edge_type}:{edge_data.id}"
     
     sent_data = call_args[1]
     assert sent_data["in"] == edge_data.source

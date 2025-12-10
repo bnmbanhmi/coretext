@@ -26,7 +26,8 @@ class GraphManager:
     async def update_node(self, node: BaseNode) -> BaseNode:
         node.updated_at = datetime.utcnow()
         data = node.model_dump(mode='json')
-        updated_record = await self.db.update(node.id, data)
+        # SurrealDB ID must include the table name prefix
+        updated_record = await self.db.update(f"{node.node_type}:{node.id}", data)
         return BaseNode.model_validate(updated_record)
 
     async def delete_node(self, node_id: str) -> None:
@@ -64,7 +65,7 @@ class GraphManager:
         data["in"] = data.pop("source")
         data["out"] = data.pop("target")
 
-        updated_record = await self.db.update(edge.id, data)
+        updated_record = await self.db.update(f"{edge.edge_type}:{edge.id}", data)
         updated_record['source'] = updated_record.pop('in')
         updated_record['target'] = updated_record.pop('out')
         return BaseEdge.model_validate(updated_record)
@@ -96,13 +97,12 @@ class GraphManager:
         edges_created = 0
 
         for node in nodes:
-            # For simplicity, we're always creating here.
-            # A more advanced ingest would handle updates/deletes for existing nodes.
-            await self.create_node(node)
+            # Upsert logic: update() in SurrealDB creates if not exists
+            await self.update_node(node)
             nodes_created += 1
 
         for edge in edges:
-            await self.create_edge(edge)
+            await self.update_edge(edge)
             edges_created += 1
         
         return SyncReport(
