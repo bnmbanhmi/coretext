@@ -1,6 +1,6 @@
 # Story 1.3: bmad-markdown-parsing-to-graph-nodes
 
-Status: ready-for-dev
+Status: Ready for Review
 Completion Note: Ultimate context engine analysis completed - comprehensive developer guide created
 
 ## Story
@@ -17,7 +17,40 @@ so that their content can be accurately and deterministically converted into a s
 4.  **Referential Integrity Consideration:** The parser supports the identification of Standard Markdown Links and their conversion into graph edges, and flags potential "Dangling Reference" warnings for unresolved links (though full validation may be in a later story).
 5.  **Deterministic Output:** For identical Markdown file content, the parser consistently produces an identical Knowledge Graph structure, verifiable via a deterministic test suite.
 
+## Tasks/Subtasks
+
+*   [ ] **Setup Parsing Environment**
+    *   [x] Install `markdown-it-py`
+    *   [x] Create `coretext/core/parser/markdown.py`
+*   [ ] **Implement Canonical Path Normalization**
+    *   [x] Develop utility function for project-root relative path resolution (`coretext/core/parser/path_utils.py`)
+    *   [x] Integrate path normalization into parsing process
+*   [ ] **Define Graph Node Models**
+    *   [x] Create Pydantic models for `FileNode`, `HeaderNode`, `ParsingErrorNode` in `coretext/core/graph/models.py`
+    *   [x] Define relationships (`CONTAINS`, `PARENT_OF`)
+*   [ ] **Implement AST-Based Markdown Parsing**
+    *   [x] Use `markdown-it-py` to parse Markdown into AST
+    *   [x] Traverse AST to identify file, headers, and content
+    *   [x] Convert AST elements to graph nodes (`FileNode`, `HeaderNode`)
+*   [ ] **Handle Malformed Markdown**
+    *   [x] Detect parsing errors (e.g., broken syntax)
+    *   [x] Generate `ParsingErrorNode` with `file_path`, `line_number`, `error_message`, `raw_content_snippet`
+    *   [x] Reject update of corresponding graph section on error
+*   [ ] **Implement Smart Hybrid Link Detection**
+    *   [x] Parse explicit `[Label](./path)` links and normalize paths
+    *   [x] Scan text for implicit `r"[\w\-/]+\.(md|yaml)"` references and normalize paths
+    *   [x] Create `REFERENCES` edges only if target exists
+*   [ ] **Integrate with Graph Manager**
+    *   [x] Ensure `coretext/core/graph/manager.py` can ingest the new node types (`ingest` method)
+*   [x] **Develop Deterministic Test Suite**
+    *   [x] Create `tests/data/valid_simple.md`, `valid_complex.md`, `malformed_syntax.md`
+    *   [x] Write unit tests for `coretext/core/parser/markdown.py` in `tests/unit/core/parser/test_markdown.py`
+    *   [x] Verify accurate graph node conversion for valid markdown
+    *   [x] Verify correct `ParsingErrorNode` generation for malformed markdown
+    *   [x] Verify deterministic output for identical input
+
 ## Dev Notes
+
 
 ### 🔥 STRATEGIC OVERRIDE: Smart Linking & Canonical Normalization
 
@@ -124,17 +157,29 @@ gemini-2.5-flash
 
 ### Debug Log References
 
+*   Resolved `NameError` in `markdown.py` related to `header_content_token` by removing redundant code.
+*   Fixed slug generation regex to correctly handle non-alphanumeric characters.
+*   Corrected explicit and implicit link detection logic to ensure `REFERENCES` edges are created only for existing files.
+*   Debugged token processing to handle nested `link_open` tokens within `inline` tokens.
+*   Added comprehensive unit tests with `tests/data/` fixtures.
+
 ### Completion Notes List
 
-*   Comprehensive analysis of `PRD.md`, `architecture.md`, and `test-design-epic-1.md` completed.
-*   Learnings from previous story (`1.2-surrealdb-management-schema-application`) incorporated.
-*   Web research on Python Markdown AST parsers conducted.
-*   Detailed story, acceptance criteria, technical requirements, and dev notes generated.
+*   Implemented `MarkdownParser` class using `markdown-it-py` with robust AST traversal.
+*   Developed `normalize_path_to_project_root` for canonical path resolution.
+*   Defined Pydantic models: `FileNode`, `HeaderNode`, `ParsingErrorNode`, `SyncReport`.
+*   Implemented `GraphManager.ingest` to handle batch updates and error checking.
+*   Created robust unit tests covering valid, complex, and malformed Markdown scenarios.
+*   Ensured graph integrity by validating link targets before creating edges.
 
 ### File List
 
-*   `coretext/core/parser/markdown.py` (NEW - Core parser module)
-*   `coretext/core/parser/schema.py` (MODIFIED - Schema projection logic)
-*   `coretext/core/graph/models.py` (MODIFIED - Graph Node Pydantic models)
-*   `coretext/core/graph/manager.py` (MODIFIED - Graph Manager Integration)
-*   `tests/unit/core/parser/test_markdown.py` (NEW - Deterministic test suite for parser)
+*   `coretext/core/parser/markdown.py` (NEW - Core parser module with AST traversal and link detection)
+*   `coretext/core/parser/path_utils.py` (NEW - Path normalization utility)
+*   `coretext/core/graph/models.py` (MODIFIED - Added FileNode, HeaderNode, ParsingErrorNode, SyncReport)
+*   `coretext/core/graph/manager.py` (MODIFIED - Added ingest method for graph synchronization)
+*   `tests/unit/core/parser/test_markdown.py` (NEW - Unit tests for parser logic)
+*   `tests/data/valid_simple.md` (NEW - Test data)
+*   `tests/data/valid_complex.md` (NEW - Test data)
+*   `tests/data/malformed_syntax.md` (NEW - Test data)
+*   `tests/data/subdir/target.md` (NEW - Test data for link resolution)

@@ -1,6 +1,6 @@
-from typing import Type
+from typing import Type, List
 from surrealdb import Surreal
-from coretext.core.graph.models import BaseNode, BaseEdge
+from coretext.core.graph.models import BaseNode, BaseEdge, ParsingErrorNode, SyncReport
 from datetime import datetime
 
 class GraphManager:
@@ -71,3 +71,43 @@ class GraphManager:
 
     async def delete_edge(self, edge_id: str) -> None:
         await self.db.delete(edge_id)
+
+    async def ingest(self, nodes: List[BaseNode], edges: List[BaseEdge]) -> SyncReport:
+        """
+        Ingests a list of nodes and edges into the graph database.
+        If any ParsingErrorNode is present, the ingestion is rejected.
+
+        Args:
+            nodes (List[BaseNode]): A list of nodes to ingest.
+            edges (List[BaseEdge]): A list of edges to ingest.
+
+        Returns:
+            SyncReport: A report detailing the outcome of the ingestion.
+        """
+        parsing_errors = [node for node in nodes if isinstance(node, ParsingErrorNode)]
+        if parsing_errors:
+            return SyncReport(
+                success=False,
+                message=f"Ingestion rejected due to {len(parsing_errors)} parsing errors.",
+                parsing_errors=parsing_errors
+            )
+
+        nodes_created = 0
+        edges_created = 0
+
+        for node in nodes:
+            # For simplicity, we're always creating here.
+            # A more advanced ingest would handle updates/deletes for existing nodes.
+            await self.create_node(node)
+            nodes_created += 1
+
+        for edge in edges:
+            await self.create_edge(edge)
+            edges_created += 1
+        
+        return SyncReport(
+            success=True,
+            message="Nodes and edges ingested successfully.",
+            nodes_created=nodes_created,
+            edges_created=edges_created
+        )
