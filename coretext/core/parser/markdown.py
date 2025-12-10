@@ -81,22 +81,24 @@ class MarkdownParser:
                 )
                 nodes.append(error_node)
 
-    def parse(self, file_path: Path) -> Tuple[List[BaseNode], List[BaseEdge]]:
+    def parse(self, file_path: Path, content: str = None) -> Tuple[List[BaseNode], List[BaseEdge]]:
         """
         Parses a Markdown file and converts its content into a list of BaseNodes and BaseEdges.
 
         Args:
             file_path (Path): The path to the Markdown file.
+            content (str, optional): The content of the file. If None, reads from file_path.
 
         Returns:
             Tuple[List[BaseNode], List[BaseEdge]]: A tuple containing lists of graph nodes and edges.
         """
-        if not file_path.is_file():
-            raise FileNotFoundError(f"Markdown file not found: {file_path}")
+        if content is None:
+            if not file_path.is_file():
+                raise FileNotFoundError(f"Markdown file not found: {file_path}")
+            content = file_path.read_text()
 
         normalized_file_path = normalize_path_to_project_root(file_path, str(file_path))
 
-        content = file_path.read_text()
         tokens = self.md.parse(content)
 
         nodes: List[BaseNode] = []

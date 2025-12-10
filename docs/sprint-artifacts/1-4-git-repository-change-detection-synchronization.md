@@ -1,6 +1,6 @@
 # Story 1.4: Git Repository Change Detection & Synchronization
 
-Status: ready-for-dev
+Status: Ready for Review
 
 ## Story
 
@@ -26,13 +26,13 @@ As a developer, I want my local Markdown changes to be automatically synchronize
 
 ## Tasks / Subtasks
 
-- [ ] Implement `coretext/core/sync/engine.py` with dual modes: `dry-run` (lint) and `write` (sync).
-- [ ] Implement `coretext/cli/commands.py`: Add `install-hooks` command to safely symlink/copy hooks.
-- [ ] Implement **Pre-commit Logic**: Change detection + `MarkdownParser` validation (No DB writes).
-- [ ] Implement **Post-commit Logic**: Change detection (HEAD diff) + `GraphManager.ingest` (DB writes).
-- [ ] Implement **Async/Timeout Logic**: Use `subprocess.Popen` for detachment and strict 2s timeout/fail-open wrapper.
-- [ ] Integrate with `markdown.py` parser and `graph/manager.py`.
-- [ ] Implement versioning strategy using Git commit hashes.
+- [x] Implement `coretext/core/sync/engine.py` with dual modes: `dry-run` (lint) and `write` (sync).
+- [x] Implement `coretext/cli/commands.py`: Add `install-hooks` command to safely symlink/copy hooks.
+- [x] Implement **Pre-commit Logic**: Change detection + `MarkdownParser` validation (No DB writes).
+- [x] Implement **Post-commit Logic**: Change detection (HEAD diff) + `GraphManager.ingest` (DB writes).
+- [x] Implement **Async/Timeout Logic**: Use `subprocess.Popen` for detachment and strict 2s timeout/fail-open wrapper.
+- [x] Integrate with `markdown.py` parser and `graph/manager.py`.
+- [x] Implement versioning strategy using Git commit hashes.
 
 ## Dev Notes
 
@@ -108,10 +108,31 @@ gemini-2.5-flash
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created
+- Implemented `coretext/core/sync/engine.py` with `SyncEngine` and `SyncMode`.
+- Created unit tests `tests/unit/core/sync/test_engine.py` covering dry-run and write modes.
+- Implemented `coretext/core/sync/git_utils.py` for Git change detection.
+- Created unit tests `tests/unit/core/sync/test_git_utils.py` for Git utilities.
+- Implemented `coretext/cli/commands.py` `install_hooks` command to install Git hooks.
+- Implemented `coretext/cli/commands.py` `hook pre-commit` logic for dry-run/linting of staged Markdown files.
+- Created unit tests `tests/unit/cli/test_hooks.py` covering `install_hooks` and `pre-commit` hook.
+- Moved `SyncEngine`, `SyncMode`, `get_staged_files`, `get_staged_content`, `MarkdownParser` imports to module level in `coretext/cli/commands.py` for better testability.
+- Implemented `coretext/cli/commands.py` `post_commit_hook` logic for write/sync of committed Markdown files to SurrealDB.
+- Implemented `coretext/core/sync/timeout_utils.py` for async operation detachment and timeout management.
+- Created unit tests `tests/unit/core/sync/test_timeout_utils.py` for timeout and detachment logic.
+- Updated `post_commit_hook` to use `run_with_timeout_or_detach` and added `--detached` flag.
+- Added `commit_hash` field to `BaseNode` and `BaseEdge` models.
+- Updated `SyncEngine` to propagate `commit_hash` to graph entities.
+- Updated `post_commit_hook` to retrieve and pass `commit_hash`.
 
 ### File List
 
 - `coretext/core/sync/__init__.py`
 - `coretext/core/sync/engine.py`
+- `coretext/core/sync/git_utils.py`
+- `coretext/core/sync/timeout_utils.py`
+- `coretext/cli/commands.py`
+- `coretext/core/graph/models.py`
 - `tests/unit/core/sync/test_engine.py`
-- `tests/integration/test_sync_integration.py`
+- `tests/unit/core/sync/test_git_utils.py`
+- `tests/unit/core/sync/test_timeout_utils.py`
+- `tests/unit/cli/test_hooks.py`

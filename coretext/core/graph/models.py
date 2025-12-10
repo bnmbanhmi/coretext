@@ -27,6 +27,7 @@ class BaseNode(BaseModel):
     node_type: str = Field(description="The type of the node (e.g., 'file', 'header').")
     content: str = Field(default="", description="The main content associated with the node.")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Arbitrary metadata for the node.")
+    commit_hash: str | None = Field(default=None, description="Git commit hash associated with this graph entity.")
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Timestamp of node creation.")
     updated_at: datetime = Field(default_factory=datetime.utcnow, description="Timestamp of last node update.")
 
@@ -79,6 +80,7 @@ class BaseEdge(BaseModel):
     source: str = Field(description="The ID of the source node.")
     target: str = Field(description="The ID of the target node.")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Arbitrary metadata for the edge.")
+    commit_hash: str | None = Field(default=None, description="Git commit hash associated with this graph entity.")
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Timestamp of edge creation.")
     updated_at: datetime = Field(default_factory=datetime.utcnow, description="Timestamp of last edge update.")
 
