@@ -1,6 +1,7 @@
 import typer
 import asyncio
 import stat
+import subprocess
 from pathlib import Path
 from typing import Optional # Keep Optional for now, as init uses Path.cwd() which is not Optional
 from surrealdb import Surreal
@@ -53,6 +54,54 @@ def init(
         typer.echo("schema_map.yaml already exists. Skipping creation.")
 
     typer.echo("CoreText project initialized successfully.")
+
+    if typer.confirm("Do you want to start the coretext daemon now?", default=True):
+        # Trigger the start command logic
+        # We invoke the logic directly or via subprocess to ensure it runs
+        # Since 'start' will detach, we can just call it (if we factor out logic) or call subprocess.
+        # But here, we can just call the start command function directly if we move the logic to a helper or just subprocess call here.
+        # However, calling another typer command directly is tricky if it relies on context.
+        # Let's just execute the start logic here or call the cli command via subprocess?
+        # Calling via subprocess `coretext start` assumes coretext is in path.
+        # Calling the function `start` directly is better if we just pass arguments.
+        start(project_root=project_root)
+
+@app.command()
+def start(
+    project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p", help="Root directory of the project.")
+):
+    """
+    Starts the CoreText daemon (SurrealDB) in the background.
+    """
+    db_client = SurrealDBClient(project_root=project_root)
+    if not db_client.surreal_path.exists():
+         typer.echo("SurrealDB binary not found. Please run 'coretext init' first.", err=True)
+         raise typer.Exit(code=1)
+
+    typer.echo(f"Starting CoreText daemon from {db_client.surreal_path}...")
+    
+    # Construct command
+    cmd = [
+        str(db_client.surreal_path),
+        "start",
+        "--log", "trace",
+        "--user", "root",
+        "--pass", "root",
+        f"file:{db_client.db_path}"
+    ]
+    
+    try:
+        # Start detached process
+        subprocess.Popen(
+            cmd, 
+            start_new_session=True, 
+            stdout=subprocess.DEVNULL, 
+            stderr=subprocess.DEVNULL
+        )
+        typer.echo("CoreText daemon started in background.")
+    except Exception as e:
+        typer.echo(f"Error starting CoreText daemon: {e}", err=True)
+        raise typer.Exit(code=1)
 
 @app.command()
 def apply_schema(
@@ -270,13 +319,13 @@ async def post_commit_hook(
                     for error in result.errors:
                         typer.echo(f"  - {error}", err=True)
                     # Fail-Open: do not block commit, log error and exit gracefully
-                    raise typer.Exit(code=1) # Changed to raise
+                    raise typer.Exit(code=0) # Changed to raise
                 else:
                     typer.echo("✅ CoreText Post-commit Synchronization COMPLETE.")
                 
         except Exception as e:
             typer.echo(f"❌ Unexpected error during post-commit synchronization: {e}", err=True)
-            raise typer.Exit(code=1) # Changed to raise
+            raise typer.Exit(code=0) # Changed to raise
         finally:
             if started_db_by_us:
                 typer.echo("Stopping SurrealDB server started for synchronization.")

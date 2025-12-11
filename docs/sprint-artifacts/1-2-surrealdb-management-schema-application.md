@@ -1,6 +1,6 @@
 # Story 1.2: SurrealDB Management & Schema Application
 
-Status: done
+Status: in-progress
 
 ## Story
 
@@ -14,8 +14,9 @@ so that the knowledge graph has a persistent and structured storage.
 2. When `coretext init` is executed
 3. Then the platform-specific `surreal` binary is downloaded to `~/.coretext/bin/`.
 4. And a `surreal.db` file is created or found in `.coretext/` (in the project root).
-5. And on daemon startup, the SurrealDB schema (defined by Pydantic models mapped via `schema_map.yaml`) is automatically applied.
-6. And `GraphManager` class is implemented to be the sole gatekeeper for DB writes.
+5. And the user is prompted to start the daemon immediately ("Do you want to start the coretext daemon now? [Y/n]").
+6. And on daemon startup, the SurrealDB schema (defined by Pydantic models mapped via `schema_map.yaml`) is automatically applied.
+7. And `GraphManager` class is implemented to be the sole gatekeeper for DB writes.
 
 ## Tasks / Subtasks
 
@@ -33,7 +34,10 @@ so that the knowledge graph has a persistent and structured storage.
 - [x] Implement `schema_map.yaml` loading logic (AC 5)
   - [x] Create default `schema_map.yaml` in `.coretext/`
   - [x] Implement parser to map BMAD concepts to DB schema
-- [x] Update `coretext/cli/commands.py` to include `init` logic (AC 2)
+- [x] Update `coretext/cli/commands.py` to include `init` and `start` logic (AC 2, 5)
+  - [x] Add `start` command to CLI (daemon management)
+  - [x] Update `init` command to prompt user to start daemon
+  - [x] Implement `coretext start` logic (detached subprocess)
 
 ## Dev Notes
 

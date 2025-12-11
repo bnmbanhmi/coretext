@@ -1,7 +1,7 @@
 # Coretext runtime (Local DB & Config)
 .coretext/
 
-# Python artifacts (Cái bạn đang muốn xóa)
+# Python artifacts 
 __pycache__/
 *.pyc
 *.pyo

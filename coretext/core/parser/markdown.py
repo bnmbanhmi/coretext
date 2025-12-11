@@ -58,13 +58,13 @@ class MarkdownParser:
                     nodes.append(error_node)
                     return
 
-                # Create a PARENT_OF edge
+                # Create a REFERENCES edge
                 # Ensure unique ID by appending index
-                edge_id = f"{file_node.id}-PARENT_OF-{normalized_link_path}-{link_index}"
+                edge_id = f"{file_node.id}-REFERENCES-{normalized_link_path}-{link_index}"
                 
                 edges.append(BaseEdge(
                     id=edge_id,
-                    edge_type="PARENT_OF",
+                    edge_type="REFERENCES",
                     source=file_node.id,
                     target=str(normalized_link_path)
                 ))
@@ -192,8 +192,8 @@ class MarkdownParser:
                                             normalized_implicit_path = normalize_path_to_project_root(file_path, str(resolved_implicit_file), project_root=self.project_root)
                                             link_counter += 1
                                             edges.append(BaseEdge(
-                                                id=f"{file_node.id}-PARENT_OF-{normalized_implicit_path}-{link_counter}",
-                                                edge_type="PARENT_OF",
+                                                id=f"{file_node.id}-REFERENCES-{normalized_implicit_path}-{link_counter}",
+                                                edge_type="REFERENCES",
                                                 source=file_node.id,
                                                 target=str(normalized_implicit_path)
                                             ))
@@ -212,8 +212,8 @@ class MarkdownParser:
                                 normalized_implicit_path = normalize_path_to_project_root(file_path, str(resolved_implicit_file), project_root=self.project_root)
                                 link_counter += 1
                                 edges.append(BaseEdge(
-                                    id=f"{file_node.id}-PARENT_OF-{normalized_implicit_path}-{link_counter}",
-                                    edge_type="PARENT_OF",
+                                    id=f"{file_node.id}-REFERENCES-{normalized_implicit_path}-{link_counter}",
+                                    edge_type="REFERENCES",
                                     source=file_node.id,
                                     target=str(normalized_implicit_path)
                                 ))

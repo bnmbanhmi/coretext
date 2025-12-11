@@ -3,6 +3,8 @@ Command not found: coretext
 
 fix: add coretext = "coretext.cli.main:app" to pyproject.toml
 
+consistently have errors: pytest -> poetry pytest -> python3 -m poetry pytest
+
 
 
 
