@@ -102,6 +102,7 @@ As a `coretext` system, I want to manage a local SurrealDB instance and apply th
 *   When `coretext init` is executed
 *   Then the platform-specific `surreal` binary is downloaded to `~/.coretext/bin/`.
 *   And a `surreal.db` file is created or found in `.coretext/`.
+*   And the user is prompted to start the daemon immediately ("Do you want to start the coretext daemon now? [Y/n]").
 *   And on daemon startup, the SurrealDB schema (defined by Pydantic models mapped via `schema_map.yaml`) is automatically applied.
 *   And `GraphManager` class is implemented to be the sole gatekeeper for DB writes.
 
