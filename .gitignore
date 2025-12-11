@@ -1,1 +1,13 @@
-**/__pycache__/
+# Coretext runtime (Local DB & Config)
+.coretext/
+
+# Python artifacts (Cái bạn đang muốn xóa)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment
+.env
+.venv/
+env/
