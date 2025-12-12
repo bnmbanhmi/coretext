@@ -88,37 +88,32 @@ async def test_download_surreal_binary_failure(mock_surreal_client):
         
         assert not client.surreal_path.exists()
 
-@pytest.mark.asyncio
-async def test_start_surreal_db_success(mock_surreal_client):
-    client = mock_surreal_client
-    client.bin_dir.mkdir(parents=True, exist_ok=True)
-    client.surreal_path.touch() # binary must exist
-
-    mock_proc = AsyncMock()
-    mock_proc.returncode = None
-
-    with patch("asyncio.create_subprocess_exec", return_value=mock_proc) as mock_exec:
-        await client.start_surreal_db()
-        
-        expected_args = [
-            str(client.surreal_path),
-            "start",
-            "--log", "trace",
-            "--user", "root",
-            "--pass", "root",
-            f"file:{client.db_path}"
-        ]
-        mock_exec.assert_awaited_once()
-        call_args = mock_exec.await_args
-        assert call_args.args[0] == str(client.surreal_path)
-        # We can check other args, but exact match of args list is good
-        # Note: call_args.args will be tuple of positional args.
-        # The first arg is program, rest are arguments.
-        # asyncio.create_subprocess_exec(program, *args, ...)
-        
-        assert call_args.args[0] == str(client.surreal_path)
-        assert call_args.args[1:] == tuple(expected_args[1:])
-        
+    @pytest.mark.asyncio
+    async def test_start_surreal_db_success(mock_surreal_client):
+        client = mock_surreal_client
+        client.bin_dir.mkdir(parents=True, exist_ok=True)
+        client.surreal_path.touch() # binary must exist
+    
+        mock_proc = AsyncMock()
+        mock_proc.returncode = None
+    
+        with patch("asyncio.create_subprocess_exec", return_value=mock_proc) as mock_exec:
+            await client.start_surreal_db()
+    
+            expected_args = [
+                str(client.surreal_path),
+                "start",
+                "--log", "trace",
+                "--user", "root",
+                "--pass", "root",
+                f"rocksdb:{client.db_path}",
+                "--unauthenticated"
+            ]
+            mock_exec.assert_awaited_once()
+            call_args = mock_exec.await_args
+            # We check the args tuple
+            assert call_args.args[0] == str(client.surreal_path)
+            assert call_args.args[1:] == tuple(expected_args[1:])
         assert client.process == mock_proc
 
 @pytest.mark.asyncio

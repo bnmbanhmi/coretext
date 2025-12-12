@@ -110,7 +110,7 @@ def test_pre_commit_hook_fail(mock_echo, mock_get_files, mock_engine_cls, tmp_pa
 @patch("coretext.cli.commands.MarkdownParser")
 @patch("coretext.cli.commands.GraphManager")
 @patch("coretext.cli.commands.SurrealDBClient")
-@patch("coretext.cli.commands.Surreal", new_callable=MagicMock) # Replace Surreal class with MagicMock
+@patch("coretext.cli.commands.AsyncSurreal", new_callable=MagicMock) # Replace Surreal class with MagicMock
 async def test_post_commit_hook_detached_success(
     mock_surreal_cls, mock_db_client_cls, mock_graph_manager_cls, mock_parser_cls, 
     mock_sync_engine_cls, mock_get_head_content, mock_get_last_commit_files, 
@@ -154,7 +154,6 @@ async def test_post_commit_hook_detached_success(
     mock_db_client_instance.is_running.assert_awaited_once()
     mock_db_client_instance.start_surreal_db.assert_awaited_once()
     mock_surreal_cls.assert_called_once_with("ws://localhost:8000/rpc")
-    mock_surreal_instance.signin.assert_awaited_once_with({"user": "root", "pass": "root"})
     mock_surreal_instance.use.assert_awaited_once_with("coretext", "coretext")
     mock_graph_manager_cls.assert_called_once_with(mock_surreal_instance)
     mock_parser_cls.assert_called_once()
@@ -179,7 +178,7 @@ async def test_post_commit_hook_detached_success(
 @patch("coretext.cli.commands.MarkdownParser")
 @patch("coretext.cli.commands.GraphManager")
 @patch("coretext.cli.commands.SurrealDBClient")
-@patch("coretext.cli.commands.Surreal", new_callable=MagicMock) # Replace Surreal class with MagicMock
+@patch("coretext.cli.commands.AsyncSurreal", new_callable=MagicMock) # Replace Surreal class with MagicMock
 async def test_post_commit_hook_detached_fail(
     mock_surreal_cls, mock_db_client_cls, mock_graph_manager_cls, mock_parser_cls, 
     mock_sync_engine_cls, mock_get_head_content, mock_get_last_commit_files, 

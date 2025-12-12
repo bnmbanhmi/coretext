@@ -1,6 +1,7 @@
+import asyncio
 from enum import Enum
 from pathlib import Path
-from typing import List, Callable, Optional
+from typing import List, Callable, Optional, Tuple
 from pydantic import BaseModel
 
 from coretext.core.parser.markdown import MarkdownParser
@@ -24,7 +25,25 @@ class SyncEngine:
         self.graph_manager = graph_manager
         self.project_root = project_root
 
-    async def process_files(self, file_paths: List[str], mode: SyncMode, content_provider: Optional[Callable[[str], str]] = None, commit_hash: Optional[str] = None) -> SyncResult:
+    def _parse_single_file(self, file_path: Path, content: Optional[str]) -> Tuple[List[BaseNode], List[BaseEdge], List[str]]:
+        """Parses a single file, handling potential exceptions and returning nodes, edges, and errors."""
+        file_errors = []
+        try:
+            nodes, edges = self.parser.parse(file_path, content=content)
+            
+            # Check for parsing errors immediately
+            file_parsing_errors = [n for n in nodes if isinstance(n, ParsingErrorNode)]
+            if file_parsing_errors:
+                for err in file_parsing_errors:
+                     file_errors.append(f"File {file_path}: {err.error_message}")
+            
+            return nodes, edges, file_errors
+        except Exception as e:
+            file_errors.append(f"File {file_path}: Unexpected error during parsing: {str(e)}")
+            return [], [], file_errors
+
+
+    async def process_files(self, file_paths_str: List[str], mode: SyncMode, content_provider: Optional[Callable[[str], str]] = None, commit_hash: Optional[str] = None) -> SyncResult:
         processed_count = 0
         error_count = 0
         all_errors = []
@@ -32,35 +51,30 @@ class SyncEngine:
         nodes_to_ingest: List[BaseNode] = []
         edges_to_ingest: List[BaseEdge] = []
 
-        for file_path_str in file_paths:
+        async def get_content_and_parse(file_path_str: str):
             file_path = Path(file_path_str)
-            try:
-                # Parsing
-                content = None
-                if content_provider:
-                    try:
-                        content = content_provider(file_path_str)
-                    except Exception as e:
-                        error_count += 1
-                        all_errors.append(f"File {file_path_str}: Failed to read content: {e}")
-                        continue
+            content = None
+            if content_provider:
+                try:
+                    content = await asyncio.to_thread(content_provider, file_path_str)
+                except Exception as e:
+                    return file_path, [], [], [f"File {file_path_str}: Failed to read content: {e}"]
 
-                nodes, edges = self.parser.parse(file_path, content=content)
-                processed_count += 1
-                
-                # Check for parsing errors immediately
-                file_parsing_errors = [n for n in nodes if isinstance(n, ParsingErrorNode)]
-                if file_parsing_errors:
-                    error_count += len(file_parsing_errors)
-                    for err in file_parsing_errors:
-                         all_errors.append(f"File {file_path_str}: {err.error_message}")
-                
-                nodes_to_ingest.extend(nodes)
-                edges_to_ingest.extend(edges)
+            # Run CPU-bound parsing in a separate thread
+            nodes, edges, file_errors = await asyncio.to_thread(self._parse_single_file, file_path, content)
+            return file_path, nodes, edges, file_errors
 
-            except Exception as e:
-                error_count += 1
-                all_errors.append(f"File {file_path_str}: Unexpected error: {str(e)}")
+        tasks = [get_content_and_parse(fp) for fp in file_paths_str]
+        results = await asyncio.gather(*tasks)
+
+        for file_path, nodes, edges, file_errors in results:
+            processed_count += 1
+            if file_errors:
+                error_count += len(file_errors)
+                all_errors.extend(file_errors)
+            
+            nodes_to_ingest.extend(nodes)
+            edges_to_ingest.extend(edges)
 
         # Propagate commit_hash to nodes and edges before ingestion
         if commit_hash:

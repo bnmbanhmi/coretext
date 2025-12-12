@@ -12,6 +12,7 @@ def mock_db_client_new():
         mock_client_instance = mock_client_cls.return_value
         mock_client_instance.download_surreal_binary = AsyncMock()
         mock_client_instance.start_surreal_db = AsyncMock()
+        mock_client_instance.is_running = AsyncMock(return_value=True) # Mock is_running
         mock_client_instance.db_path = MagicMock()
         mock_client_instance.db_path.parent.mkdir = MagicMock()
         
@@ -23,16 +24,25 @@ def mock_db_client_new():
         
         yield mock_client_instance
 
+@pytest.fixture
+def mock_async_surreal():
+    with patch("coretext.cli.commands.AsyncSurreal") as mock_cls:
+        mock_instance = mock_cls.return_value
+        # Setup async context manager
+        mock_instance.__aenter__.return_value = AsyncMock()
+        mock_instance.__aexit__.return_value = None
+        yield mock_cls
+
+@pytest.fixture
+def mock_sleep():
+    with patch("coretext.cli.commands.asyncio.sleep", new_callable=AsyncMock) as mock:
+        yield mock
+
 @patch("coretext.cli.commands.subprocess.Popen")
-def test_start_command(mock_popen):
+def test_start_command(mock_popen, mock_db_client_new, mock_async_surreal, mock_sleep):
     # Verify 'start' command exists and runs
     result = runner.invoke(app, ["start"])
     
-    # Currently fails because 'start' command is not implemented
-    if result.exit_code != 0:
-        assert "No such command 'start'" in result.stdout or result.exit_code != 0
-        return
-
     assert result.exit_code == 0
     assert "Starting CoreText daemon" in result.stdout
     mock_popen.assert_called()
@@ -42,22 +52,16 @@ def test_init_prompts_start_no(tmp_path, mock_db_client_new):
     result = runner.invoke(app, ["init", "--project-root", str(tmp_path)], input="n\n")
     
     assert result.exit_code == 0
-    # Currently fails because prompt is missing
-    if "Do you want to start the coretext daemon now?" not in result.stdout:
-        pytest.fail("Init command did not prompt for daemon start")
     
     assert "Do you want to start the coretext daemon now?" in result.stdout
 
 @patch("coretext.cli.commands.subprocess.Popen")
-def test_init_prompts_start_yes(mock_popen, tmp_path, mock_db_client_new):
+def test_init_prompts_start_yes(mock_popen, tmp_path, mock_db_client_new, mock_async_surreal, mock_sleep):
     # Verify 'init' handles 'Y' and triggers start
     result = runner.invoke(app, ["init", "--project-root", str(tmp_path)], input="Y\n")
     
     assert result.exit_code == 0
-    # Currently fails because prompt is missing
-    if "Do you want to start the coretext daemon now?" not in result.stdout:
-        pytest.fail("Init command did not prompt for daemon start")
-
+    
     assert "Starting CoreText daemon" in result.stdout
     mock_popen.assert_called()
 

@@ -3,46 +3,58 @@ from unittest.mock import patch, MagicMock, AsyncMock, ANY, call
 from pathlib import Path
 import asyncio
 import sys
-import subprocess # Added import
+import subprocess
+import signal
 
-# Patching these at the module level for timeout_utils.py
-from coretext.core.sync.timeout_utils import run_with_timeout_or_detach, FILE_COUNT_DETACH_THRESHOLD, TIMEOUT_SECONDS, _run_sync_operation
+from coretext.core.sync.timeout_utils import run_with_timeout_or_detach, FILE_COUNT_DETACH_THRESHOLD, TIMEOUT_SECONDS, _run_sync_operation, TimeoutError
 
 
 @pytest.mark.asyncio
-@patch("coretext.core.sync.timeout_utils.wait_for")
-async def test_run_sync_operation_completes(mock_wait_for):
-    mock_coro = AsyncMock(return_value="Sync Result")
-    mock_wait_for.return_value = "Sync Result"
+@patch("coretext.core.sync.timeout_utils.signal.alarm")
+@patch("coretext.core.sync.timeout_utils.signal.signal")
+async def test_run_sync_operation_completes(mock_signal, mock_alarm):
+    async def simple_coro():
+        return "Sync Result"
 
-    result = await _run_sync_operation(mock_coro, timeout=1)
+    # We need to simulate the coroutine completing successfully
+    result = await _run_sync_operation(simple_coro(), timeout=1)
 
-    mock_wait_for.assert_awaited_once_with(mock_coro, timeout=1)
+    # Verify signal was set and then unset
+    mock_signal.assert_called_with(signal.SIGALRM, ANY)
+    mock_alarm.assert_any_call(1) # Called with timeout
+    mock_alarm.assert_called_with(0) # Called with 0 to cancel
+    
     assert result == "Sync Result"
 
 @pytest.mark.asyncio
-@patch("coretext.core.sync.timeout_utils.wait_for")
-@patch("builtins.print") # Patch print to capture output
-async def test_run_sync_operation_times_out(mock_print, mock_wait_for):
-    mock_coro = AsyncMock()
-    mock_wait_for.side_effect = asyncio.TimeoutError
+@patch("coretext.core.sync.timeout_utils.signal.alarm")
+@patch("coretext.core.sync.timeout_utils.signal.signal")
+@patch("builtins.print")
+async def test_run_sync_operation_times_out(mock_print, mock_signal, mock_alarm):
+    # Simulate a timeout by having the side effect of the coroutine raise TimeoutError
+    # Note: In real life, the signal handler raises this, but for unit test mocking we just simulate the raise
+    async def raising_coro():
+        raise TimeoutError("Operation timed out")
 
-    result = await _run_sync_operation(mock_coro, timeout=1)
+    result = await _run_sync_operation(raising_coro(), timeout=1)
 
-    mock_wait_for.assert_awaited_once_with(mock_coro, timeout=1)
-    mock_print.assert_any_call(f"Warning: Sync operation timed out after {1} seconds.", file=sys.stderr)
+    mock_alarm.assert_any_call(1)
+    mock_alarm.assert_called_with(0)
+    mock_print.assert_any_call(f"Warning: Sync operation timed out after {1} seconds (Strict Signal).", file=sys.stderr)
     assert result is None
 
 @pytest.mark.asyncio
-@patch("coretext.core.sync.timeout_utils.wait_for")
-@patch("builtins.print") # Patch print to capture output
-async def test_run_sync_operation_raises_exception(mock_print, mock_wait_for):
-    mock_coro = AsyncMock()
-    mock_wait_for.side_effect = ValueError("Test Error")
+@patch("coretext.core.sync.timeout_utils.signal.alarm")
+@patch("coretext.core.sync.timeout_utils.signal.signal")
+@patch("builtins.print")
+async def test_run_sync_operation_raises_exception(mock_print, mock_signal, mock_alarm):
+    async def raising_coro():
+        raise ValueError("Test Error")
 
-    result = await _run_sync_operation(mock_coro, timeout=1)
+    result = await _run_sync_operation(raising_coro(), timeout=1)
 
-    mock_wait_for.assert_awaited_once_with(mock_coro, timeout=1)
+    mock_alarm.assert_any_call(1)
+    mock_alarm.assert_called_with(0)
     mock_print.assert_any_call(f"Error: Sync operation failed with unexpected error: Test Error", file=sys.stderr)
     assert result is None
 
@@ -77,12 +89,12 @@ def test_run_with_timeout_or_detach_detaches(mock_print, mock_popen, tmp_path: P
     mock_sync_coro_factory.assert_not_called()
 
 @pytest.mark.asyncio
-@patch("coretext.core.sync.timeout_utils.subprocess.Popen") # 4th patch
-@patch("coretext.core.sync.timeout_utils.asyncio.run") # 3rd patch
-@patch("coretext.core.sync.timeout_utils._run_sync_operation") # 2nd patch
-@patch("builtins.print") # 1st patch
+@patch("coretext.core.sync.timeout_utils.subprocess.Popen")
+@patch("coretext.core.sync.timeout_utils.asyncio.run")
+@patch("coretext.core.sync.timeout_utils._run_sync_operation")
+@patch("builtins.print")
 async def test_run_with_timeout_or_detach_runs_with_timeout(
-    mock_print, mock_run_sync_op, mock_asyncio_run, mock_subprocess_popen, tmp_path: Path # Reordered args
+    mock_print, mock_run_sync_op, mock_asyncio_run, mock_subprocess_popen, tmp_path: Path
 ):
     project_root = tmp_path
     file_paths = ["file1.md"] * FILE_COUNT_DETACH_THRESHOLD # At or below threshold
@@ -97,12 +109,13 @@ async def test_run_with_timeout_or_detach_runs_with_timeout(
 
     run_with_timeout_or_detach(project_root, file_paths, mock_sync_coro_factory)
 
-    mock_print.assert_any_call(f"Processing {len(file_paths)} files, running sync operation with timeout...")
+    # UPDATED ASSERTION: Check for "strict timeout"
+    mock_print.assert_any_call(f"Processing {len(file_paths)} files, running sync operation with strict timeout...")
     mock_subprocess_popen.assert_not_called()
-    mock_sync_coro_factory.assert_called_once() # Factory should be called once to get the coroutine
+    mock_sync_coro_factory.assert_called_once() 
 
-    mock_asyncio_run.assert_called_once() # Just check that asyncio.run was called once
-    mock_run_sync_op.assert_called_once_with(mock_coro_instance) # Check that _run_sync_operation was called with the coroutine
+    mock_asyncio_run.assert_called_once() 
+    mock_run_sync_op.assert_called_once_with(mock_coro_instance)
 
 
 @patch("coretext.core.sync.timeout_utils.subprocess.Popen")

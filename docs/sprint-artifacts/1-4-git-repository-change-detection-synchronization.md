@@ -131,6 +131,7 @@ gemini-2.5-flash
 - `coretext/core/sync/git_utils.py`
 - `coretext/core/sync/timeout_utils.py`
 - `coretext/cli/commands.py`
+- `coretext/cli/main.py`
 - `coretext/core/graph/models.py`
 - `tests/unit/core/sync/test_engine.py`
 - `tests/unit/core/sync/test_git_utils.py`
