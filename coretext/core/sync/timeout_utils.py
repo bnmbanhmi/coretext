@@ -44,7 +44,7 @@ async def _run_sync_operation(sync_coro: Coroutine[Any, Any, Any], timeout: floa
         signal.signal(signal.SIGALRM, original_handler)
 
 
-def run_with_timeout_or_detach(
+async def run_with_timeout_or_detach(
     project_root: Path,
     file_paths: List[str],
     sync_coro_factory: Callable[[], Coroutine[Any, Any, Any]]
@@ -81,5 +81,5 @@ def run_with_timeout_or_detach(
         print(f"Processing {len(file_paths)} files, running sync operation with strict timeout...")
         # Run synchronously with timeout
         sync_coro = sync_coro_factory()
-        asyncio.run(_run_sync_operation(sync_coro))
+        await _run_sync_operation(sync_coro)
 

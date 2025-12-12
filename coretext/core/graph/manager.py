@@ -109,7 +109,7 @@ class GraphManager:
                 param_name = f"node_{i}_{idx}"
                 params[param_name] = data
                 # Using UPDATE (upsert behavior)
-                transaction_query += f"UPDATE {node.node_type}:{node.id} CONTENT ${param_name};\n"
+                transaction_query += f"UPDATE {node.node_type}:⟨{node.id}⟩ CONTENT ${param_name};\n"
             
             transaction_query += "COMMIT TRANSACTION;"
             await self.db.query(transaction_query, params)
@@ -130,7 +130,7 @@ class GraphManager:
                 
                 param_name = f"edge_{i}_{idx}"
                 params[param_name] = data
-                transaction_query += f"UPDATE {edge.edge_type}:{edge.id} CONTENT ${param_name};\n"
+                transaction_query += f"UPDATE {edge.edge_type}:⟨{edge.id}⟩ CONTENT ${param_name};\n"
 
             transaction_query += "COMMIT TRANSACTION;"
             await self.db.query(transaction_query, params)

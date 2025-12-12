@@ -32,6 +32,12 @@ node_types:
         type: str
       summary:
         type: str
+      commit_hash:
+        type: str
+      created_at:
+        type: datetime
+      updated_at:
+        type: datetime
   header:
     db_table: node
     properties:
@@ -43,6 +49,12 @@ node_types:
         type: str
       content_hash:
         type: str
+      commit_hash:
+        type: str
+      created_at:
+        type: datetime
+      updated_at:
+        type: datetime
 
 edge_types:
   contains:

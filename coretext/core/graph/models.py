@@ -18,10 +18,11 @@ class BaseNode(BaseModel):
     Attributes:
         id (str): Unique ID for the node, typically a file path or header path.
         node_type (str): The type of the node (e.g., 'file', 'header').
-        content (str): The main content associated with the node.
-        metadata (dict[str, Any]): Arbitrary metadata for the node.
-        created_at (datetime): Timestamp of node creation.
-        updated_at (datetime): Timestamp of last node update.
+        content: str = Field(default="", description="The main content associated with the node.")
+        metadata: dict[str, Any] = Field(default_factory=dict, description="Arbitrary metadata for the node.")
+        commit_hash: str | None = Field(default=None, description="Git commit hash associated with this graph entity.")
+        created_at: datetime = Field(default_factory=datetime.utcnow, description="Timestamp of node creation.")
+        updated_at: datetime = Field(default_factory=datetime.utcnow, description="Timestamp of last node update.")
     """
     id: str = Field(description="Unique ID for the node, typically a file path or header path.")
     node_type: str = Field(description="The type of the node (e.g., 'file', 'header').")
@@ -38,7 +39,9 @@ class FileNode(BaseNode):
     The ID for a FileNode should be its project-root relative path.
     """
     node_type: Literal["file"] = Field("file", description="The type of the node, fixed to 'file'.")
-    file_path: Path = Field(description="The project-root relative path to the file.")
+    path: Path = Field(description="The project-root relative path to the file.")
+    title: str = Field(default="", description="The title extracted from the file's content.")
+    summary: str = Field(default="", description="A summary extracted from the file's content.")
 
 
 class HeaderNode(BaseNode):
@@ -47,8 +50,9 @@ class HeaderNode(BaseNode):
     The ID for a HeaderNode should be a combination of its file path and header slug.
     """
     node_type: Literal["header"] = Field("header", description="The type of the node, fixed to 'header'.")
-    file_path: Path = Field(description="The project-root relative path to the file containing this header.")
+    path: Path = Field(description="The project-root relative path to the file containing this header.")
     level: int = Field(ge=1, le=6, description="The header level (e.g., 1 for H1, 2 for H2).")
+    title: str = Field(default="", description="The title of the header.")
 
 
 class ParsingErrorNode(BaseNode):
