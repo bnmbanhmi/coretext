@@ -50,3 +50,4 @@ To run a demo and view the synchronized data in Surrealist, follow these
   You should see an entry for demo.md in the file table and a corresponding
   entry for "Demo File" in the header table.\n\nAnother change
 \n\nAnother change
+\n\nAnother change
