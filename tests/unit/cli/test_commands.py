@@ -23,12 +23,11 @@ def mock_db_client():
         
         yield mock_client_instance
 
-@pytest.mark.skip("CliRunner issue with async commands and Path options. See technical_debt.md")
 def test_init_command_success_new_schema_map(tmp_path: Path, mock_db_client: AsyncMock):
     # Ensure no schema_map exists
     # tmp_path is a new directory
     
-    result = runner.invoke(commands_app, ["init", "--project-root", str(tmp_path)])
+    result = runner.invoke(commands_app, ["init", "--project-root", str(tmp_path)], input="n\n")
     
     if result.exit_code != 0:
         print(result.stdout)
@@ -47,13 +46,12 @@ def test_init_command_success_new_schema_map(tmp_path: Path, mock_db_client: Asy
     assert schema_map_path.exists()
     assert "node_types" in schema_map_path.read_text()
 
-@pytest.mark.skip("CliRunner issue with async commands and Path options. See technical_debt.md")
 def test_init_command_success_existing_schema_map(tmp_path: Path, mock_db_client: AsyncMock):
     # Create a dummy existing schema_map.yaml
     (tmp_path / ".coretext").mkdir()
     (tmp_path / ".coretext" / "schema_map.yaml").write_text("existing content")
 
-    result = runner.invoke(commands_app, ["init", "--project-root", str(tmp_path)])
+    result = runner.invoke(commands_app, ["init", "--project-root", str(tmp_path)], input="n\n")
     
     if result.exit_code != 0:
         print(result.stdout)

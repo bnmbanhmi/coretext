@@ -15,6 +15,18 @@ class SchemaManager:
         with open(schema_path, "r") as f:
             return yaml.safe_load(f)
 
+    def _map_type(self, prop_def: any) -> str:
+        surreal_type = "string" # default
+        pt = prop_def
+        if isinstance(prop_def, dict):
+             pt = prop_def.get("type", "str")
+        
+        if pt == "int": surreal_type = "int"
+        elif pt == "float": surreal_type = "float"
+        elif pt == "bool": surreal_type = "bool"
+        elif pt == "datetime": surreal_type = "datetime"
+        return surreal_type
+
     async def apply_schema(self):
         schema_map = self._load_schema_map()
         
@@ -39,18 +51,7 @@ class SchemaManager:
                     if prop_name in ["path", "node_type", "content", "metadata"]:
                         continue
 
-                    # Map Python/YAML types to SurrealDB types
-                    surreal_type = "string" # default
-                    if isinstance(prop_type_def, dict):
-                         pt = prop_type_def.get("type", "str")
-                    else:
-                         pt = prop_type_def # assume string if just value, though yaml parses as dict usually if structured
-
-                    if pt == "int": surreal_type = "int"
-                    elif pt == "float": surreal_type = "float"
-                    elif pt == "bool": surreal_type = "bool"
-                    elif pt == "datetime": surreal_type = "datetime"
-                    
+                    surreal_type = self._map_type(prop_type_def)
                     await self.db.query(f"DEFINE FIELD {prop_name} ON TABLE node TYPE {surreal_type}")
 
         # 2. Define Edge Types
@@ -64,15 +65,5 @@ class SchemaManager:
             # Define specific fields for the edge
             properties = config.get("properties", {})
             for prop_name, prop_type in properties.items():
-                # Simple mapping: python type str -> surreal type
-                surreal_type = "string"
-                if isinstance(prop_type, dict):
-                    pt = prop_type.get("type", "str")
-                else:
-                    pt = prop_type
-
-                if pt == "int": surreal_type = "int"
-                elif pt == "float": surreal_type = "float"
-                elif pt == "bool": surreal_type = "bool"
-                
+                surreal_type = self._map_type(prop_type)
                 await self.db.query(f"DEFINE FIELD {prop_name} ON TABLE {db_table} TYPE {surreal_type}")

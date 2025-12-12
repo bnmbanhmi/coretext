@@ -4,7 +4,7 @@ import stat
 import subprocess
 from pathlib import Path
 from typing import Optional # Keep Optional for now, as init uses Path.cwd() which is not Optional
-from surrealdb import Surreal
+from surrealdb import AsyncSurreal
 from coretext.db.client import SurrealDBClient
 from coretext.db.migrations import SchemaManager
 from coretext.core.parser.schema import DEFAULT_SCHEMA_MAP_CONTENT
@@ -53,18 +53,26 @@ def init(
     else:
         typer.echo("schema_map.yaml already exists. Skipping creation.")
 
+
+
     typer.echo("CoreText project initialized successfully.")
 
     if typer.confirm("Do you want to start the coretext daemon now?", default=True):
-        # Trigger the start command logic
-        # We invoke the logic directly or via subprocess to ensure it runs
-        # Since 'start' will detach, we can just call it (if we factor out logic) or call subprocess.
-        # But here, we can just call the start command function directly if we move the logic to a helper or just subprocess call here.
-        # However, calling another typer command directly is tricky if it relies on context.
-        # Let's just execute the start logic here or call the cli command via subprocess?
-        # Calling via subprocess `coretext start` assumes coretext is in path.
-        # Calling the function `start` directly is better if we just pass arguments.
-        start(project_root=project_root)
+        try:
+            # Trigger the start command logic
+            # We invoke the logic directly or via subprocess to ensure it runs
+            # Since 'start' will detach, we can just call it (if we factor out logic) or call subprocess.
+            # But here, we can just call the start command function directly if we move the logic to a helper or just subprocess call here.
+            # However, calling another typer command directly is tricky if it relies on context.
+            # Let's just execute the start logic here or call the cli command via subprocess?
+            # Calling via subprocess `coretext start` assumes coretext is in path.
+            # Calling the function `start` directly is better if we just pass arguments.
+            start(project_root=project_root)
+        except Exception as e:
+            typer.echo(f"Error starting CoreText daemon: {e}", err=True)
+            raise typer.Exit(code=1)
+
+    typer.echo("CoreText project initialized successfully.")
 
 @app.command()
 def start(
@@ -87,21 +95,76 @@ def start(
         "--log", "trace",
         "--user", "root",
         "--pass", "root",
-        f"file:{db_client.db_path}"
+        f"rocksdb:{db_client.db_path}",
+        "--unauthenticated" # Disable authentication for local development
     ]
     
     try:
-        # Start detached process
-        subprocess.Popen(
+        cmd.extend(["--bind", "127.0.0.1:8000"]) # Explicitly bind to localhost:8000
+
+        proc = subprocess.Popen(
             cmd, 
             start_new_session=True, 
-            stdout=subprocess.DEVNULL, 
-            stderr=subprocess.DEVNULL
+            # Remove stdout/stderr redirection to see output directly
+            # stdout=subprocess.DEVNULL, 
+            # stderr=subprocess.DEVNULL
         )
+        
+        # Write PID file
+        pid_file = project_root / ".coretext" / "daemon.pid"
+        pid_file.write_text(str(proc.pid))
+        
         typer.echo("CoreText daemon started in background.")
+        
+        # AC6: Automatically apply schema after daemon starts
+        typer.echo("Applying schema automatically...")
+        try:
+            # We need to wait a moment for the subprocess to fully start and listen
+            asyncio.run(asyncio.sleep(2)) # Give it 2 seconds to start
+            asyncio.run(_apply_schema_logic(project_root))
+            typer.echo("Schema applied successfully during initialization.")
+        except Exception as e:
+            typer.echo(f"Warning: Failed to apply schema automatically after daemon start: {e}", err=True)
+            typer.echo("Please run 'coretext apply-schema' manually if schema was not applied.", err=True)
+
     except Exception as e:
         typer.echo(f"Error starting CoreText daemon: {e}", err=True)
         raise typer.Exit(code=1)
+
+async def _apply_schema_logic(project_root: Path):
+    """
+    Internal logic to apply the schema from .coretext/schema_map.yaml to the local SurrealDB.
+    Starts the DB temporarily if not running.
+    """
+    client = SurrealDBClient(project_root=project_root)
+    
+    # Ensure DB is up
+    started_by_us = False
+    if not await client.is_running(): # Check if it's already running
+         typer.echo("SurrealDB is not running, attempting to start temporarily for schema application.", err=True)
+         await client.start_surreal_db()
+         started_by_us = True
+
+    # Retry loop for connection
+    max_retries = 10
+    for i in range(max_retries):
+        try:
+            async with AsyncSurreal("ws://localhost:8000/rpc") as db:
+                await db.use("coretext", "coretext") # Namespace, Database
+                
+                migration = SchemaManager(db, project_root)
+                await migration.apply_schema()
+                typer.echo("Schema applied successfully.")
+                break # Success
+        except Exception as e:
+            if i == max_retries - 1:
+                typer.echo(f"Error applying schema after {max_retries} attempts: {e}", err=True)
+                raise
+            await asyncio.sleep(0.5)
+    
+    if started_by_us:
+        typer.echo("Stopping temporary SurrealDB server after schema application.")
+        await client.stop_surreal_db()
 
 @app.command()
 def apply_schema(
@@ -112,43 +175,12 @@ def apply_schema(
     Starts the DB temporarily if not running.
     """
     typer.echo("Applying database schema...")
-    
-    async def _run_apply():
-        client = SurrealDBClient(project_root=project_root)
-        
-        # Ensure DB is up
-        started_by_us = False
-        if not client.process: 
-             # For now, let's just try to start it. client.start_surreal_db handles "already running" logic 
-             await client.start_surreal_db()
-             started_by_us = True
-
-        # Retry loop for connection
-        max_retries = 10
-        for i in range(max_retries):
-            try:
-                # Connect
-                async with Surreal("ws://localhost:8000/rpc") as db:
-                    await db.signin({"user": "root", "pass": "root"})
-                    await db.use("coretext", "coretext") # Namespace, Database
-                    
-                    migration = SchemaManager(db, project_root)
-                    await migration.apply_schema()
-                    typer.echo("Schema applied successfully.")
-                    break # Success
-            except Exception as e:
-                if i == max_retries - 1:
-                    typer.echo(f"Error applying schema after {max_retries} attempts: {e}", err=True)
-                    raise
-                await asyncio.sleep(0.5)
-        
-        if started_by_us:
-            await client.stop_surreal_db()
-
     try:
-        asyncio.run(_run_apply())
+        asyncio.run(_apply_schema_logic(project_root))
     except Exception:
         raise typer.Exit(code=1)
+
+
 
 @app.command()
 def ping():
@@ -300,8 +332,7 @@ async def post_commit_hook(
                 started_db_by_us = True
 
             # Connect to SurrealDB
-            async with Surreal("ws://localhost:8000/rpc") as db:
-                await db.signin({"user": "root", "pass": "root"})
+            async with AsyncSurreal("ws://localhost:8000/rpc") as db:
                 await db.use("coretext", "coretext")
 
                 graph_manager = GraphManager(db)

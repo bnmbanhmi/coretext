@@ -1,6 +1,6 @@
 # Story 1.2: SurrealDB Management & Schema Application
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -112,6 +112,13 @@ gemini-2.5-flash
   - Fixed unit tests for migrations and CLI commands.
   - Added module and class docstrings to `models.py`.
   - Added conditional integration test `tests/integration/test_db_integration.py`.
+- **Code Review Fixes (2025-12-12):**
+  - **CRITICAL FIX:** Implemented automatic schema application in `init`/`start` command flow to satisfy AC6.
+  - **CRITICAL FIX:** Resolved authentication errors by switching from deprecated `file:` storage to `rocksdb:` and handling unauthenticated local mode correctly for initial startup.
+  - **CRITICAL FIX:** Implemented PID file management in `SurrealDBClient` and `start` command to prevent multiple daemon instances and lock conflicts.
+  - **Performance:** Refactored `GraphManager.ingest` to use batched transactions (`BEGIN TRANSACTION ... COMMIT TRANSACTION`) for O(1) database round-trips per batch instead of O(N).
+  - **Code Quality:** Removed duplicated type mapping logic in `migrations.py`.
+  - **Testing:** Un-skipped and fixed CLI unit tests by handling `CliRunner` async incompatibility via synchronous test wrappers.
 
 ### File List
 

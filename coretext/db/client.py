@@ -11,6 +11,7 @@ class SurrealDBClient:
         self.project_root = project_root
         self.bin_dir = Path.home() / ".coretext" / "bin"
         self.db_path = project_root / ".coretext" / "surreal.db"
+        self.pid_file = project_root / ".coretext" / "daemon.pid"
         self.surreal_path = self.bin_dir / self._get_surreal_binary_name()
         self.process = None
 
@@ -57,7 +58,7 @@ class SurrealDBClient:
         if not self.surreal_path.exists():
             raise RuntimeError("SurrealDB binary not found. Run 'coretext init' first.")
         
-        if self.process and self.process.returncode is None:
+        if await self.is_running():
             return # Already running
 
         # Create .coretext directory if it doesn't exist (for the DB file)
@@ -69,7 +70,8 @@ class SurrealDBClient:
             "--log", "trace",
             "--user", "root",
             "--pass", "root",
-            f"file:{self.db_path}"
+            f"rocksdb:{self.db_path}",
+            "--unauthenticated" # Disable authentication for local development
         ]
 
         self.process = await asyncio.create_subprocess_exec(
@@ -77,13 +79,63 @@ class SurrealDBClient:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
+        
+        if self.process.pid:
+            self.pid_file.write_text(str(self.process.pid))
 
     async def stop_surreal_db(self):
+        pid = None
         if self.process and self.process.returncode is None:
+            pid = self.process.pid
             self.process.terminate()
+        elif self.pid_file.exists():
             try:
-                await asyncio.wait_for(self.process.wait(), timeout=5.0)
+                pid = int(self.pid_file.read_text().strip())
+                os.kill(pid, 15) # SIGTERM
+            except (ValueError, OSError):
+                pass # Process might be already gone or file corrupted
+
+        if pid:
+            # Simple wait logic, could be more robust
+            try:
+                # If we have a process object, use it
+                if self.process:
+                    await asyncio.wait_for(self.process.wait(), timeout=5.0)
+                else:
+                    # Polling for process exit if we don't have the object
+                    for _ in range(50):
+                        try:
+                            os.kill(pid, 0)
+                            await asyncio.sleep(0.1)
+                        except OSError:
+                            break
             except asyncio.TimeoutError:
-                self.process.kill()
-                await self.process.wait()
-            self.process = None
+                if self.process:
+                    self.process.kill()
+                    await self.process.wait()
+                else:
+                    try:
+                        os.kill(pid, 9) # SIGKILL
+                    except OSError:
+                        pass
+            
+        self.process = None
+        if self.pid_file.exists():
+            self.pid_file.unlink()
+
+    async def is_running(self) -> bool:
+        # Check internal process object
+        if self.process and self.process.returncode is None:
+            return True
+        
+        # Check PID file
+        if self.pid_file.exists():
+            try:
+                pid = int(self.pid_file.read_text().strip())
+                os.kill(pid, 0) # Check if process exists
+                return True
+            except (ValueError, OSError):
+                # PID file invalid or process dead
+                return False
+        
+        return False

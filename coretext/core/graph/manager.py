@@ -73,14 +73,15 @@ class GraphManager:
     async def delete_edge(self, edge_id: str) -> None:
         await self.db.delete(edge_id)
 
-    async def ingest(self, nodes: List[BaseNode], edges: List[BaseEdge]) -> SyncReport:
+    async def ingest(self, nodes: List[BaseNode], edges: List[BaseEdge], batch_size: int = 100) -> SyncReport:
         """
-        Ingests a list of nodes and edges into the graph database.
+        Ingests a list of nodes and edges into the graph database using batched transactions.
         If any ParsingErrorNode is present, the ingestion is rejected.
 
         Args:
             nodes (List[BaseNode]): A list of nodes to ingest.
             edges (List[BaseEdge]): A list of edges to ingest.
+            batch_size (int): Number of operations per transaction batch.
 
         Returns:
             SyncReport: A report detailing the outcome of the ingestion.
@@ -96,14 +97,44 @@ class GraphManager:
         nodes_created = 0
         edges_created = 0
 
-        for node in nodes:
-            # Upsert logic: update() in SurrealDB creates if not exists
-            await self.update_node(node)
-            nodes_created += 1
+        # Process Nodes in batches
+        for i in range(0, len(nodes), batch_size):
+            batch_nodes = nodes[i:i + batch_size]
+            transaction_query = "BEGIN TRANSACTION;\n"
+            params = {}
+            
+            for idx, node in enumerate(batch_nodes):
+                node.updated_at = datetime.utcnow()
+                data = node.model_dump(mode='json')
+                param_name = f"node_{i}_{idx}"
+                params[param_name] = data
+                # Using UPDATE (upsert behavior)
+                transaction_query += f"UPDATE {node.node_type}:{node.id} CONTENT ${param_name};\n"
+            
+            transaction_query += "COMMIT TRANSACTION;"
+            await self.db.query(transaction_query, params)
+            nodes_created += len(batch_nodes)
 
-        for edge in edges:
-            await self.update_edge(edge)
-            edges_created += 1
+        # Process Edges in batches
+        for i in range(0, len(edges), batch_size):
+            batch_edges = edges[i:i + batch_size]
+            transaction_query = "BEGIN TRANSACTION;\n"
+            params = {}
+
+            for idx, edge in enumerate(batch_edges):
+                edge.updated_at = datetime.utcnow()
+                data = edge.model_dump(mode='json')
+                # Map source/target to in/out
+                data["in"] = data.pop("source")
+                data["out"] = data.pop("target")
+                
+                param_name = f"edge_{i}_{idx}"
+                params[param_name] = data
+                transaction_query += f"UPDATE {edge.edge_type}:{edge.id} CONTENT ${param_name};\n"
+
+            transaction_query += "COMMIT TRANSACTION;"
+            await self.db.query(transaction_query, params)
+            edges_created += len(batch_edges)
         
         return SyncReport(
             success=True,
