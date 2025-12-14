@@ -50,7 +50,7 @@ class MarkdownParser:
                      # Treat as broken link -> Parsing Error
                     error_node = ParsingErrorNode(
                         id=f"{file_node.id}#link-error-line-{line_number}-{link_index}",
-                        file_path=file_node.file_path,
+                        file_path=file_node.path,
                         line_number=line_number,
                         error_message=f"Dangling Reference: Target '{href}' does not exist.",
                         raw_content_snippet=raw_snippet
@@ -72,7 +72,7 @@ class MarkdownParser:
                 # Handle cases where link target cannot be normalized (e.g., external links, invalid paths)
                 error_node = ParsingErrorNode(
                     id=f"{file_node.id}#link-error-line-{line_number}-{link_index}",
-                    file_path=file_node.file_path,
+                    file_path=file_node.path,
                     line_number=line_number,
                     error_message=f"Malformed or unresolvable link target: {href}. Error: {e}",
                     raw_content_snippet=raw_snippet
@@ -103,7 +103,7 @@ class MarkdownParser:
         edges: List[BaseEdge] = []
 
         # 1. Create a FileNode for the markdown file itself
-        file_node = FileNode(id=str(normalized_file_path), file_path=normalized_file_path, content=content)
+        file_node = FileNode(id=str(normalized_file_path), path=normalized_file_path, content=content)
         nodes.append(file_node)
 
         header_stack = [] # To manage PARENT_OF relationships
@@ -146,7 +146,7 @@ class MarkdownParser:
 
                 new_header_node = HeaderNode(
                     id=header_id,
-                    file_path=normalized_file_path,
+                    path=normalized_file_path,
                     level=level,
                     content=header_content
                 )

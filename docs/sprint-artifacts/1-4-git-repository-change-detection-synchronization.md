@@ -1,6 +1,6 @@
 # Story 1.4: Git Repository Change Detection & Synchronization
 
-Status: Done
+Status: Ready for Review
 
 ## Story
 
@@ -23,6 +23,7 @@ As a developer, I want my local Markdown changes to be automatically synchronize
 *   And the Post-commit hook completes within 1 second for typical commits (1-5 files).
 *   And if the Post-commit hook predicts processing > 2 seconds, it detaches using `subprocess.Popen` (Simple Async). (Complexity Reduction)
 *   And if the hook hangs, strict timeout (2s) kills it, logs a warning, and Fails Open. (Complexity Reduction)
+*   **Critical Fix (Sprint Change Proposal):** Data persistence must succeed. `query_surreal.py` must execute without `NONE` value errors.
 
 ## Tasks / Subtasks
 
@@ -33,6 +34,10 @@ As a developer, I want my local Markdown changes to be automatically synchronize
 - [x] Implement **Async/Timeout Logic**: Use `subprocess.Popen` for detachment and strict 2s timeout/fail-open wrapper.
 - [x] Integrate with `markdown.py` parser and `graph/manager.py`.
 - [x] Implement versioning strategy using Git commit hashes.
+- [x] Isolate the `NONE` Error: Debug `query_surreal.py` to identify the field causing `Can not execute CREATE statement using value: NONE`.
+- [x] Verify Schema Constraints: Ensure `models.py` Pydantic models align exactly with `schema.py` and SurrealDB requirements.
+- [x] Refactor `GraphManager` to use the verified working query pattern from the reproduction script.
+- [x] Verify end-to-end data ingestion: `git commit` results in visible data in SurrealDB.
 
 ## Dev Notes
 
@@ -123,6 +128,15 @@ gemini-2.5-flash
 - Added `commit_hash` field to `BaseNode` and `BaseEdge` models.
 - Updated `SyncEngine` to propagate `commit_hash` to graph entities.
 - Updated `post_commit_hook` to retrieve and pass `commit_hash`.
+- **Sprint Change Proposal Fixes (2025-12-14):**
+    - Reproduced `NONE` error: confirmed it stems from creating nodes in `file` table instead of `node` table.
+    - Refactored `GraphManager` to accept `SchemaMapper` and use it to look up the correct DB table (e.g., `node`) for node types.
+    - Updated `coretext/cli/commands.py` to instantiate `SchemaMapper` and pass it to `GraphManager`.
+    - Updated `tests/unit/core/graph/test_manager.py` to mock `SchemaMapper` and verify correct table names in queries (including escaping).
+    - Fixed f-string interpolation bug in `install_hooks`.
+    - Refactored `tests/unit/cli/test_hooks.py` to test `_post_commit_hook_logic` directly, fixing `asyncio.run` conflicts in tests.
+    - Fixed `coretext/core/parser/markdown.py` to use `path` instead of `file_path` for `FileNode` and `HeaderNode`, resolving model mismatch regressions.
+    - Fixed `tests/unit/core/sync/test_timeout_utils.py` to await async functions.
 
 ### File List
 
@@ -132,8 +146,11 @@ gemini-2.5-flash
 - `coretext/core/sync/timeout_utils.py`
 - `coretext/cli/commands.py`
 - `coretext/cli/main.py`
+- `coretext/core/graph/manager.py`
 - `coretext/core/graph/models.py`
+- `coretext/core/parser/markdown.py`
 - `tests/unit/core/sync/test_engine.py`
 - `tests/unit/core/sync/test_git_utils.py`
 - `tests/unit/core/sync/test_timeout_utils.py`
 - `tests/unit/cli/test_hooks.py`
+- `tests/unit/core/graph/test_manager.py`

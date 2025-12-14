@@ -8,7 +8,7 @@ from typing import Optional # Keep Optional for now, as init uses Path.cwd() whi
 from surrealdb import AsyncSurreal
 from coretext.db.client import SurrealDBClient
 from coretext.db.migrations import SchemaManager
-from coretext.core.parser.schema import DEFAULT_SCHEMA_MAP_CONTENT
+from coretext.core.parser.schema import DEFAULT_SCHEMA_MAP_CONTENT, SchemaMapper
 
 # Moved imports to module level for better testability and consistency
 from coretext.core.sync.engine import SyncEngine, SyncMode
@@ -214,7 +214,7 @@ def install_hooks(
 """
     pre_commit_path.write_text(pre_commit_content)
     pre_commit_path.chmod(pre_commit_path.stat().st_mode | stat.S_IEXEC)
-    typer.echo(f"Installed pre-commit hook to {{pre_commit_path}}")
+    typer.echo(f"Installed pre-commit hook to {pre_commit_path}")
     
     # Post-commit hook
     post_commit_path = hooks_dir / "post-commit"
@@ -226,7 +226,7 @@ def install_hooks(
 """
     post_commit_path.write_text(post_commit_content)
     post_commit_path.chmod(post_commit_path.stat().st_mode | stat.S_IEXEC)
-    typer.echo(f"Installed post-commit hook to {{post_commit_path}}")
+    typer.echo(f"Installed post-commit hook to {post_commit_path}")
 
 # Hook commands group
 hook_app = typer.Typer()
@@ -345,7 +345,10 @@ async def _post_commit_hook_logic(project_root: Path, detached: bool):
             async with AsyncSurreal("ws://localhost:8000/rpc") as db:
                 await db.use("coretext", "coretext")
 
-                graph_manager = GraphManager(db)
+                schema_map_path = project_root / ".coretext" / "schema_map.yaml"
+                schema_mapper = SchemaMapper(schema_map_path)
+                
+                graph_manager = GraphManager(db, schema_mapper)
                 parser = MarkdownParser(project_root=project_root)
                 engine = SyncEngine(parser=parser, graph_manager=graph_manager, project_root=project_root)
 

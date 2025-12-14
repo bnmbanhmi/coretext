@@ -1,19 +1,22 @@
 from typing import Type, List
 from surrealdb import Surreal
 from coretext.core.graph.models import BaseNode, BaseEdge, ParsingErrorNode, SyncReport
+from coretext.core.parser.schema import SchemaMapper
 from datetime import datetime
 
 class GraphManager:
-    def __init__(self, db_client: Surreal):
+    def __init__(self, db_client: Surreal, schema_mapper: SchemaMapper):
         self.db = db_client
+        self.schema_mapper = schema_mapper
 
     async def create_node(self, node: BaseNode) -> BaseNode:
         node.created_at = datetime.utcnow()
         node.updated_at = datetime.utcnow()
         data = node.model_dump(mode='json')
-        # SurrealDB uses `id` as part of the table name for records
-        # e.g., `node:some_id`
-        created_record = await self.db.create(f"{node.node_type}:{node.id}", data)
+        
+        table = self.schema_mapper.get_node_table(node.node_type)
+        # Use table from schema map (e.g., 'node')
+        created_record = await self.db.create(f"{table}:⟨{node.id}⟩", data)
         return BaseNode.model_validate(created_record)
 
     async def get_node(self, node_id: str, node_model: Type[BaseNode] = BaseNode) -> BaseNode | None:
@@ -26,8 +29,9 @@ class GraphManager:
     async def update_node(self, node: BaseNode) -> BaseNode:
         node.updated_at = datetime.utcnow()
         data = node.model_dump(mode='json')
-        # SurrealDB ID must include the table name prefix
-        updated_record = await self.db.update(f"{node.node_type}:{node.id}", data)
+        
+        table = self.schema_mapper.get_node_table(node.node_type)
+        updated_record = await self.db.update(f"{table}:⟨{node.id}⟩", data)
         return BaseNode.model_validate(updated_record)
 
     async def delete_node(self, node_id: str) -> None:
@@ -41,9 +45,9 @@ class GraphManager:
         data["in"] = data.pop("source")
         data["out"] = data.pop("target")
 
+        table = self.schema_mapper.get_edge_table(edge.edge_type)
         # SurrealDB automatically creates the relation table if it doesn't exist
-        # and links records as `source_node_id->edge_type->target_node_id`
-        created_record = await self.db.create(f"{edge.edge_type}:{edge.id}", data)
+        created_record = await self.db.create(f"{table}:⟨{edge.id}⟩", data)
         # Need to map 'in' and 'out' back to 'source' and 'target' for the Pydantic model validation
         created_record['source'] = created_record.pop('in')
         created_record['target'] = created_record.pop('out')
@@ -65,7 +69,8 @@ class GraphManager:
         data["in"] = data.pop("source")
         data["out"] = data.pop("target")
 
-        updated_record = await self.db.update(f"{edge.edge_type}:{edge.id}", data)
+        table = self.schema_mapper.get_edge_table(edge.edge_type)
+        updated_record = await self.db.update(f"{table}:⟨{edge.id}⟩", data)
         updated_record['source'] = updated_record.pop('in')
         updated_record['target'] = updated_record.pop('out')
         return BaseEdge.model_validate(updated_record)
@@ -108,8 +113,10 @@ class GraphManager:
                 data = node.model_dump(mode='json')
                 param_name = f"node_{i}_{idx}"
                 params[param_name] = data
+                
+                table = self.schema_mapper.get_node_table(node.node_type)
                 # Using UPDATE (upsert behavior)
-                transaction_query += f"UPDATE {node.node_type}:⟨{node.id}⟩ CONTENT ${param_name};\n"
+                transaction_query += f"UPDATE {table}:⟨{node.id}⟩ CONTENT ${param_name};\n"
             
             transaction_query += "COMMIT TRANSACTION;"
             await self.db.query(transaction_query, params)
@@ -130,7 +137,9 @@ class GraphManager:
                 
                 param_name = f"edge_{i}_{idx}"
                 params[param_name] = data
-                transaction_query += f"UPDATE {edge.edge_type}:⟨{edge.id}⟩ CONTENT ${param_name};\n"
+                
+                table = self.schema_mapper.get_edge_table(edge.edge_type)
+                transaction_query += f"UPDATE {table}:⟨{edge.id}⟩ CONTENT ${param_name};\n"
 
             transaction_query += "COMMIT TRANSACTION;"
             await self.db.query(transaction_query, params)

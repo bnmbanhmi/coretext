@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 from coretext.core.graph.manager import GraphManager
 from coretext.core.graph.models import BaseNode, BaseEdge
+from coretext.core.parser.schema import SchemaMapper
 from datetime import datetime
 
 @pytest.fixture
@@ -9,8 +10,16 @@ def mock_surreal_client():
     return AsyncMock()
 
 @pytest.fixture
-def graph_manager(mock_surreal_client):
-    return GraphManager(mock_surreal_client)
+def mock_schema_mapper():
+    mapper = MagicMock(spec=SchemaMapper)
+    # Setup default return values for typical test cases
+    mapper.get_node_table.return_value = "node"
+    mapper.get_edge_table.side_effect = lambda x: x # Map edge type to itself (e.g. contains -> contains)
+    return mapper
+
+@pytest.fixture
+def graph_manager(mock_surreal_client, mock_schema_mapper):
+    return GraphManager(mock_surreal_client, mock_schema_mapper)
 
 @pytest.mark.asyncio
 async def test_create_node(graph_manager, mock_surreal_client):
@@ -26,7 +35,8 @@ async def test_create_node(graph_manager, mock_surreal_client):
     
     mock_surreal_client.create.assert_awaited_once() # Check that create was called
     call_args = mock_surreal_client.create.call_args.args
-    assert call_args[0] == f"{node_data.node_type}:{node_data.id}"
+    # Expected: 'node:⟨test_node_1⟩' because get_node_table returns 'node'
+    assert call_args[0] == f"node:⟨{node_data.id}⟩"
     
     # Check the data passed to create. It should be a dict representation of the model.
     # We can't directly compare datetime objects in mock args due to slight differences,
@@ -86,7 +96,8 @@ async def test_update_node(graph_manager, mock_surreal_client):
 
     mock_surreal_client.update.assert_awaited_once() # Check that update was called
     call_args = mock_surreal_client.update.call_args.args
-    assert call_args[0] == f"{node_data.node_type}:{node_data.id}"
+    # Expected: 'node:⟨test_node_1⟩'
+    assert call_args[0] == f"node:⟨{node_data.id}⟩"
     
     sent_data = call_args[1]
     assert sent_data["node_type"] == node_data.node_type
@@ -123,7 +134,7 @@ async def test_create_edge(graph_manager, mock_surreal_client):
 
     mock_surreal_client.create.assert_awaited_once() # Check that create was called
     call_args = mock_surreal_client.create.call_args.args
-    assert call_args[0] == f"{edge_data.edge_type}:{edge_data.id}"
+    assert call_args[0] == f"{edge_data.edge_type}:⟨{edge_data.id}⟩"
 
     sent_data = call_args[1]
     assert sent_data["in"] == edge_data.source
@@ -182,7 +193,7 @@ async def test_update_edge(graph_manager, mock_surreal_client):
 
     mock_surreal_client.update.assert_awaited_once() # Check that update was called
     call_args = mock_surreal_client.update.call_args.args
-    assert call_args[0] == f"{edge_data.edge_type}:{edge_data.id}"
+    assert call_args[0] == f"{edge_data.edge_type}:⟨{edge_data.id}⟩"
     
     sent_data = call_args[1]
     assert sent_data["in"] == edge_data.source

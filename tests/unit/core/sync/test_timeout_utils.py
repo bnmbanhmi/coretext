@@ -59,15 +59,16 @@ async def test_run_sync_operation_raises_exception(mock_print, mock_signal, mock
     assert result is None
 
 
+@pytest.mark.asyncio
 @patch("coretext.core.sync.timeout_utils.subprocess.Popen")
 @patch("coretext.core.sync.timeout_utils.sys.executable", "/usr/bin/python") # Mock sys.executable
 @patch("builtins.print")
-def test_run_with_timeout_or_detach_detaches(mock_print, mock_popen, tmp_path: Path):
+async def test_run_with_timeout_or_detach_detaches(mock_print, mock_popen, tmp_path: Path):
     project_root = tmp_path
     file_paths = ["file1.md"] * (FILE_COUNT_DETACH_THRESHOLD + 1) # Exceed threshold
     mock_sync_coro_factory = AsyncMock() # This won't be called, but needs to be a valid callable
 
-    run_with_timeout_or_detach(project_root, file_paths, mock_sync_coro_factory)
+    await run_with_timeout_or_detach(project_root, file_paths, mock_sync_coro_factory)
 
     mock_print.assert_any_call(f"Processing {len(file_paths)} files, detaching sync operation...")
     expected_cmd_args = [
@@ -90,11 +91,10 @@ def test_run_with_timeout_or_detach_detaches(mock_print, mock_popen, tmp_path: P
 
 @pytest.mark.asyncio
 @patch("coretext.core.sync.timeout_utils.subprocess.Popen")
-@patch("coretext.core.sync.timeout_utils.asyncio.run")
 @patch("coretext.core.sync.timeout_utils._run_sync_operation")
 @patch("builtins.print")
 async def test_run_with_timeout_or_detach_runs_with_timeout(
-    mock_print, mock_run_sync_op, mock_asyncio_run, mock_subprocess_popen, tmp_path: Path
+    mock_print, mock_run_sync_op, mock_subprocess_popen, tmp_path: Path
 ):
     project_root = tmp_path
     file_paths = ["file1.md"] * FILE_COUNT_DETACH_THRESHOLD # At or below threshold
@@ -105,29 +105,30 @@ async def test_run_with_timeout_or_detach_runs_with_timeout(
 
     # Configure the mock _run_sync_operation to simulate returning a coroutine object
     mock_coroutine_returned_by_run_sync_op = AsyncMock(return_value="Operation completed successfully")
-    mock_run_sync_op.return_value = mock_coroutine_returned_by_run_sync_op
+    mock_run_sync_op.return_value = "Operation completed successfully" # awaitable return value
 
-    run_with_timeout_or_detach(project_root, file_paths, mock_sync_coro_factory)
+    await run_with_timeout_or_detach(project_root, file_paths, mock_sync_coro_factory)
 
     # UPDATED ASSERTION: Check for "strict timeout"
     mock_print.assert_any_call(f"Processing {len(file_paths)} files, running sync operation with strict timeout...")
     mock_subprocess_popen.assert_not_called()
     mock_sync_coro_factory.assert_called_once() 
 
-    mock_asyncio_run.assert_called_once() 
-    mock_run_sync_op.assert_called_once_with(mock_coro_instance)
+    # mock_asyncio_run.assert_called_once()  # No longer called
+    mock_run_sync_op.assert_awaited_once_with(mock_coro_instance)
 
 
+@pytest.mark.asyncio
 @patch("coretext.core.sync.timeout_utils.subprocess.Popen")
 @patch("builtins.print")
-def test_run_with_timeout_or_detach_detach_fails(mock_print, mock_popen, tmp_path: Path):
+async def test_run_with_timeout_or_detach_detach_fails(mock_print, mock_popen, tmp_path: Path):
     project_root = tmp_path
     file_paths = ["file1.md"] * (FILE_COUNT_DETACH_THRESHOLD + 1) # Exceed threshold
     mock_sync_coro_factory = AsyncMock()
 
     mock_popen.side_effect = Exception("Popen failed")
 
-    run_with_timeout_or_detach(project_root, file_paths, mock_sync_coro_factory)
+    await run_with_timeout_or_detach(project_root, file_paths, mock_sync_coro_factory)
 
     mock_print.assert_any_call(f"Processing {len(file_paths)} files, detaching sync operation...")
     mock_print.assert_any_call(f"Error: Failed to detach sync operation: Popen failed", file=sys.stderr)
