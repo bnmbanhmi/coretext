@@ -32,6 +32,8 @@ node_types:
         type: str
       summary:
         type: str
+      content:
+        type: str
       commit_hash:
         type: str
       created_at:
@@ -47,6 +49,8 @@ node_types:
         type: int
       title:
         type: str
+      content:
+        type: str
       content_hash:
         type: str
       commit_hash:
@@ -55,7 +59,7 @@ node_types:
         type: datetime
       updated_at:
         type: datetime
-
+  
 edge_types:
   contains:
     db_table: contains
