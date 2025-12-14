@@ -69,6 +69,12 @@ edge_types:
     source_type: header
     target_type: header
     properties: {}
+  references:
+    db_table: references
+    source_type: file
+    target_type: file
+    properties: {}
+
 """
 
 class SchemaMapper:

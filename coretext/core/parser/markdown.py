@@ -64,7 +64,7 @@ class MarkdownParser:
                 
                 edges.append(BaseEdge(
                     id=edge_id,
-                    edge_type="REFERENCES",
+                    edge_type="references",
                     source=file_node.id,
                     target=str(normalized_link_path)
                 ))
@@ -193,7 +193,7 @@ class MarkdownParser:
                                             link_counter += 1
                                             edges.append(BaseEdge(
                                                 id=f"{file_node.id}-REFERENCES-{normalized_implicit_path}-{link_counter}",
-                                                edge_type="REFERENCES",
+                                                edge_type="references",
                                                 source=file_node.id,
                                                 target=str(normalized_implicit_path)
                                             ))
@@ -213,7 +213,7 @@ class MarkdownParser:
                                 link_counter += 1
                                 edges.append(BaseEdge(
                                     id=f"{file_node.id}-REFERENCES-{normalized_implicit_path}-{link_counter}",
-                                    edge_type="REFERENCES",
+                                    edge_type="references",
                                     source=file_node.id,
                                     target=str(normalized_implicit_path)
                                 ))
