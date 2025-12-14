@@ -56,3 +56,6 @@ To run a demo and view the synchronized data in Surrealist, follow these
 
 ## New Demo Section
 This content is synced via Git hook.
+
+# Retry Sync
+ Testing schema fix.
