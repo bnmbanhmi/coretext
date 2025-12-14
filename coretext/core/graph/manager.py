@@ -16,7 +16,7 @@ class GraphManager:
         
         table = self.schema_mapper.get_node_table(node.node_type)
         # Use table from schema map (e.g., 'node')
-        created_record = await self.db.create(f"{table}:⟨{node.id}⟩", data)
+        created_record = await self.db.create(f"{table}:`{node.id}`", data)
         return BaseNode.model_validate(created_record)
 
     async def get_node(self, node_id: str, node_model: Type[BaseNode] = BaseNode) -> BaseNode | None:
@@ -31,7 +31,7 @@ class GraphManager:
         data = node.model_dump(mode='json')
         
         table = self.schema_mapper.get_node_table(node.node_type)
-        updated_record = await self.db.update(f"{table}:⟨{node.id}⟩", data)
+        updated_record = await self.db.update(f"{table}:`{node.id}`", data)
         return BaseNode.model_validate(updated_record)
 
     async def delete_node(self, node_id: str) -> None:
@@ -47,7 +47,7 @@ class GraphManager:
 
         table = self.schema_mapper.get_edge_table(edge.edge_type)
         # SurrealDB automatically creates the relation table if it doesn't exist
-        created_record = await self.db.create(f"{table}:⟨{edge.id}⟩", data)
+        created_record = await self.db.create(f"{table}:`{edge.id}`", data)
         # Need to map 'in' and 'out' back to 'source' and 'target' for the Pydantic model validation
         created_record['source'] = created_record.pop('in')
         created_record['target'] = created_record.pop('out')
@@ -70,7 +70,7 @@ class GraphManager:
         data["out"] = data.pop("target")
 
         table = self.schema_mapper.get_edge_table(edge.edge_type)
-        updated_record = await self.db.update(f"{table}:⟨{edge.id}⟩", data)
+        updated_record = await self.db.update(f"{table}:`{edge.id}`", data)
         updated_record['source'] = updated_record.pop('in')
         updated_record['target'] = updated_record.pop('out')
         return BaseEdge.model_validate(updated_record)
@@ -116,7 +116,7 @@ class GraphManager:
                 
                 table = self.schema_mapper.get_node_table(node.node_type)
                 # Using UPDATE (upsert behavior)
-                transaction_query += f"UPDATE {table}:⟨{node.id}⟩ CONTENT ${param_name};\n"
+                transaction_query += f"UPDATE {table}:`{node.id}` CONTENT ${param_name};\n"
             
             transaction_query += "COMMIT TRANSACTION;"
             await self.db.query(transaction_query, params)
@@ -139,7 +139,7 @@ class GraphManager:
                 params[param_name] = data
                 
                 table = self.schema_mapper.get_edge_table(edge.edge_type)
-                transaction_query += f"UPDATE {table}:⟨{edge.id}⟩ CONTENT ${param_name};\n"
+                transaction_query += f"UPDATE {table}:`{edge.id}` CONTENT ${param_name};\n"
 
             transaction_query += "COMMIT TRANSACTION;"
             await self.db.query(transaction_query, params)
