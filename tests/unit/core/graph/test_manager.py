@@ -35,8 +35,7 @@ async def test_create_node(graph_manager, mock_surreal_client):
     
     mock_surreal_client.create.assert_awaited_once() # Check that create was called
     call_args = mock_surreal_client.create.call_args.args
-    # Expected: 'node:⟨test_node_1⟩' because get_node_table returns 'node'
-    assert call_args[0] == f"node:⟨{node_data.id}⟩"
+    assert call_args[0] == f"node:`{node_data.id}`"
     
     # Check the data passed to create. It should be a dict representation of the model.
     # We can't directly compare datetime objects in mock args due to slight differences,
@@ -97,7 +96,7 @@ async def test_update_node(graph_manager, mock_surreal_client):
     mock_surreal_client.update.assert_awaited_once() # Check that update was called
     call_args = mock_surreal_client.update.call_args.args
     # Expected: 'node:⟨test_node_1⟩'
-    assert call_args[0] == f"node:⟨{node_data.id}⟩"
+    assert call_args[0] == f"node:`{node_data.id}`"
     
     sent_data = call_args[1]
     assert sent_data["node_type"] == node_data.node_type
@@ -133,8 +132,7 @@ async def test_create_edge(graph_manager, mock_surreal_client):
     created_edge = await graph_manager.create_edge(edge_data)
 
     mock_surreal_client.create.assert_awaited_once() # Check that create was called
-    call_args = mock_surreal_client.create.call_args.args
-    assert call_args[0] == f"{edge_data.edge_type}:⟨{edge_data.id}⟩"
+    assert call_args[0] == f"{edge_data.edge_type}:`{edge_data.id}`"
 
     sent_data = call_args[1]
     assert sent_data["in"] == edge_data.source
@@ -193,7 +191,7 @@ async def test_update_edge(graph_manager, mock_surreal_client):
 
     mock_surreal_client.update.assert_awaited_once() # Check that update was called
     call_args = mock_surreal_client.update.call_args.args
-    assert call_args[0] == f"{edge_data.edge_type}:⟨{edge_data.id}⟩"
+    assert call_args[0] == f"{edge_data.edge_type}:`{edge_data.id}`"
     
     sent_data = call_args[1]
     assert sent_data["in"] == edge_data.source
