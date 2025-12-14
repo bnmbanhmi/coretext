@@ -137,6 +137,9 @@ gemini-2.5-flash
     - Refactored `tests/unit/cli/test_hooks.py` to test `_post_commit_hook_logic` directly, fixing `asyncio.run` conflicts in tests.
     - Fixed `coretext/core/parser/markdown.py` to use `path` instead of `file_path` for `FileNode` and `HeaderNode`, resolving model mismatch regressions.
     - Fixed `tests/unit/core/sync/test_timeout_utils.py` to await async functions.
+- **Code Review Fixes (2025-12-14):**
+    - Created `tests/unit/core/graph/test_manager_ingest.py` to test `GraphManager.ingest` method (batching, error handling).
+    - Created `tests/integration/test_sync_integration.py` to verify the end-to-end sync logic via `_post_commit_hook_logic`.
 
 ### File List
 
@@ -154,3 +157,6 @@ gemini-2.5-flash
 - `tests/unit/core/sync/test_timeout_utils.py`
 - `tests/unit/cli/test_hooks.py`
 - `tests/unit/core/graph/test_manager.py`
+- `tests/unit/core/graph/test_manager_ingest.py`
+- `tests/integration/test_sync_integration.py`
+
