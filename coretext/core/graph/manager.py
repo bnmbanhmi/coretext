@@ -116,7 +116,10 @@ class GraphManager:
                 
                 table = self.schema_mapper.get_node_table(node.node_type)
                 # Using UPDATE (upsert behavior)
-                transaction_query += f"UPDATE {table}:`{node.id}` CONTENT ${param_name};\n"
+                # Robust Upsert Logic
+                check_var = f"check_node_{i}_{idx}"
+                transaction_query += f"LET ${check_var} = SELECT * FROM {table}:`{node.id}`;\n"
+                transaction_query += f"IF ${check_var} THEN (UPDATE {table}:`{node.id}` CONTENT ${param_name}) ELSE (CREATE {table}:`{node.id}` CONTENT ${param_name}) END;\n"
             
             transaction_query += "COMMIT TRANSACTION;"
             await self.db.query(transaction_query, params)
@@ -139,7 +142,10 @@ class GraphManager:
                 params[param_name] = data
                 
                 table = self.schema_mapper.get_edge_table(edge.edge_type)
-                transaction_query += f"UPDATE {table}:`{edge.id}` CONTENT ${param_name};\n"
+                # Robust Upsert Logic
+                check_var = f"check_edge_{i}_{idx}"
+                transaction_query += f"LET ${check_var} = SELECT * FROM {table}:`{edge.id}`;\n"
+                transaction_query += f"IF ${check_var} THEN (UPDATE {table}:`{edge.id}` CONTENT ${param_name}) ELSE (CREATE {table}:`{edge.id}` CONTENT ${param_name}) END;\n"
 
             transaction_query += "COMMIT TRANSACTION;"
             await self.db.query(transaction_query, params)
