@@ -155,7 +155,7 @@ class MarkdownParser:
                 # Define CONTAINS relationship: File -> Header
                 edges.append(BaseEdge(
                     id=f"{file_node.id}-CONTAINS-{new_header_node.id}",
-                    edge_type="CONTAINS",
+                    edge_type="contains",
                     source=file_node.id,
                     target=new_header_node.id
                 ))
@@ -167,7 +167,7 @@ class MarkdownParser:
                     parent_header = header_stack[-1]
                     edges.append(BaseEdge(
                         id=f"{parent_header.id}-PARENT_OF-{new_header_node.id}",
-                        edge_type="PARENT_OF",
+                        edge_type="parent_of",
                         source=parent_header.id,
                         target=new_header_node.id
                     ))
