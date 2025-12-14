@@ -53,3 +53,6 @@ To run a demo and view the synchronized data in Surrealist, follow these
 \n\nAnother change
 \n\nOne more change
 \n\nYet another change.
+
+## New Demo Section
+This content is synced via Git hook.
