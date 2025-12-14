@@ -220,6 +220,30 @@ class MarkdownParser:
                         except ValueError:
                             pass # Ignore errors for implicit links that don't resolve to project files
 
-            # TODO: Handle content associated with headers and other node types
+            # Associate content with the current active header
+            elif header_stack:
+                 # Check if the token represents content (paragraph, list, code block, etc.)
+                 # We skip 'heading_close' and 'inline' tokens that are part of the heading itself
+                 # But 'inline' tokens for paragraphs are separate.
+                 # Actually, markdown-it token stream:
+                 # h1_open, inline (header text), h1_close, paragraph_open, inline (body), paragraph_close
+                 
+                 # So if we are here, we are NOT in a heading_open block (handled by elif above).
+                 # We need to filter out structural tokens that don't add content or are already handled.
+                 
+                 # Simple approach: If it's a content-bearing token (inline, fence, code_block), add it.
+                 # But 'inline' is used for headers too.
+                 # The 'heading_open' block handles the header node creation.
+                 # The next tokens until 'heading_close' are the header text.
+                 # We need to distinguish "header text" from "body text".
+                 
+                 # Current logic:
+                 # if token.type == "heading_open": ... creates node, pushes to stack.
+                 # The loop continues. Next token is 'inline' (header title).
+                 # Then 'heading_close'.
+                 
+                 # We should only add content if we are NOT inside the heading open/close tag.
+                 pass # Placeholder until we implement robust content extraction
+
 
         return nodes, edges
