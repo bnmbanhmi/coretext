@@ -42,6 +42,8 @@ class FileNode(BaseNode):
     path: Path = Field(description="The project-root relative path to the file.")
     title: str = Field(default="", description="The title extracted from the file's content.")
     summary: str = Field(default="", description="A summary extracted from the file's content.")
+    level: int = Field(default=0, description="Not applicable for files, default to 0.")
+    content_hash: str = Field(default="", description="Not applicable for files, default to empty.")
 
 
 class HeaderNode(BaseNode):
@@ -53,6 +55,8 @@ class HeaderNode(BaseNode):
     path: Path = Field(description="The project-root relative path to the file containing this header.")
     level: int = Field(ge=1, le=6, description="The header level (e.g., 1 for H1, 2 for H2).")
     title: str = Field(default="", description="The title of the header.")
+    summary: str = Field(default="", description="Not applicable for headers, default to empty.")
+    content_hash: str = Field(default="", description="Hash of the content under this header.")
 
 
 class ParsingErrorNode(BaseNode):
