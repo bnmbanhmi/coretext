@@ -1,0 +1,79 @@
+@startuml Coretext_GraphDataModel_Current
+
+' --- UI Configuration ---
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName "Helvetica Neue, Arial, sans-serif"
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+
+' --- Implementation Note ---
+note as N1
+  <b>Current Implementation Model:</b>
+  Single table ('node') implementation using a discriminator pattern.
+  Unlike the ideal model, there are no separate tables for Epics or Stories,
+  and Vector Embeddings are not yet implemented.
+end note
+
+' --- Node Type Definitions (Entities) ---
+
+' Base Node, everything in SurrealDB inherits from here
+abstract class "BaseNode\n<<SurrealDB Record>>" as BaseNode {
+    + id: string {PK} (Relative File Path. E.g.: docs/epics/login.md)
+    + created_at: datetime
+    + updated_at: datetime
+    + content_hash: string (Merkle hash for sync)
+    -- Difference from Ideal --
+    - No direct "VectorizedNode" inheritance yet
+    - Implemented as single 'node' table
+}
+
+' FileNode: Represents a physical file on disk
+class "FileNode\n(Original Markdown File)" as FileNode {
+    + file_type: string (E.g.: 'bm_epic', 'bm_story', 'code')
+    + git_commit: string
+    -- Difference from Ideal --
+    - Stores raw content but not vector embeddings yet
+}
+
+' SectionNode: Represents a small segment in a file (Chunking by Header)
+class "SectionNode\n(Section by Header)" as SectionNode {
+    + header_level: int (H1, H2, H3)
+    + title: string
+    + anchor_id: string (E.g.: file.md#header-title)
+    -- Difference from Ideal --
+    - Identified as 'header' type in schema
+}
+
+' --- Inheritance Relationships ---
+BaseNode <|-- FileNode
+BaseNode <|-- SectionNode
+
+' --- Edge Type Definitions (Edges/Relationships) ---
+
+' Internal file structure (Structural Edges)
+FileNode "1" *-- "many" SectionNode : <<CONTAINS>>\n(File contains sections) >
+SectionNode "1" *-- "many" SectionNode : <<PARENT_OF>>\n(H1 contains H2) >
+
+' Semantic relationships (Basic Implementation)
+BaseNode "many" ..> "many" BaseNode : <<REFERENCES>>\n(Any link in text content) >
+
+note right of BaseNode
+  <b>Core Principle (Implemented):</b>
+  Node ID is always the relative <b>File Path</b>.
+  This ensures 1-1 mapping between
+  Git and Database.
+end note
+
+note bottom of SectionNode
+  <b>Chunking Strategy (Implemented):</b>
+  Instead of splitting by word count, we split
+  by Header structure (H1, H2...). 
+  Each Header becomes a child node
+  to preserve semantic integrity.
+end note
+
+@enduml

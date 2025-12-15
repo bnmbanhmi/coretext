@@ -1,0 +1,38 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' LAYOUT_TOP_DOWN()
+LAYOUT_LEFT_RIGHT()
+
+title C4 Container Diagram for Coretext System (Current Implementation)
+
+Person(developer, "Developer (Human)", "Author of Markdown specs (BMAD) and code.")
+System_Ext(local_git, "Local Git Repository", "Source of Truth. Triggers hooks on commit.")
+
+System_Boundary(c1, "Coretext System") {
+    
+    Container(cli_tool, "Coretext CLI", "Python / Typer", "User interface. Runs 'init', 'start'. Manages the SurrealDB process.")
+    
+    Container(sync_engine, "Sync Engine (Transient)", "Python Script", "Spawned by Git Hook. Parses Markdown AST, diffs changes, and writes to DB. Exits after sync.")
+    
+    ContainerDb(surrealdb, "SurrealDB Daemon", "SurrealDB Binary", "The 'Daemon' (PID: .coretext/daemon.pid). Long-running. Stores the Graph & Vectors. Accessed via WebSocket.")
+}
+
+Rel(developer, local_git, "1. git commit")
+Rel(developer, cli_tool, "Runs commands")
+
+Rel(cli_tool, surrealdb, "Starts/Monitors (writes daemon.pid)")
+
+Rel_R(local_git, sync_engine, "2. Post-Commit Hook triggers Sync")
+Rel_U(sync_engine, local_git, "3. Reads staged/committed files")
+
+Rel(sync_engine, surrealdb, "4. Pushes Nodes/Edges (SurrealQL)", "WebSocket")
+
+note right of sync_engine
+  <b>Current Architecture:</b>
+  - No Python Daemon (yet)
+  - Sync driven by Git Hooks
+  - SurrealDB is the only daemon
+end note
+
+@enduml
