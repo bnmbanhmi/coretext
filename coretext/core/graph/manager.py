@@ -27,11 +27,13 @@ class GraphManager:
             source_table = self.schema_mapper.get_node_table(source_type)
             target_table = self.schema_mapper.get_node_table(target_type)
 
-        # Format in/out with table prefix and backticks
-        data["in"] = f"{source_table}:`{edge.source}`"
-        data["out"] = f"{target_table}:`{edge.target}`"
+        # Store separate parts for robust type::thing() construction
+        data["in_table"] = source_table
+        data["in_id"] = edge.source
+        data["out_table"] = target_table
+        data["out_id"] = edge.target
         
-        # Remove source/target as they are replaced by in/out
+        # Remove original source/target
         del data["source"]
         del data["target"]
         
@@ -39,11 +41,17 @@ class GraphManager:
 
     def _build_set_clause(self, data: dict, param_name: str) -> str:
         parts = []
+        
+        # Explicitly handle 'in' and 'out' using type::thing
+        parts.append(f"in = type::thing(${param_name}.in_table, ${param_name}.in_id)")
+        parts.append(f"out = type::thing(${param_name}.out_table, ${param_name}.out_id)")
+        
         for k in data.keys():
-            if k in ['in', 'out']:
-                parts.append(f"{k} = type::record(${param_name}.{k})")
-            else:
-                parts.append(f"{k} = ${param_name}.{k}")
+            # Skip the helper fields we added
+            if k in ['in_table', 'in_id', 'out_table', 'out_id']:
+                continue
+            parts.append(f"{k} = ${param_name}.{k}")
+            
         return ", ".join(parts)
 
     async def create_node(self, node: BaseNode) -> BaseNode:
@@ -52,6 +60,7 @@ class GraphManager:
         data = node.model_dump(mode='json')
         
         table = self.schema_mapper.get_node_table(node.node_type)
+        # Use table from schema map (e.g., 'node')
         created_record = await self.db.create(f"{table}:`{node.id}`", data)
         return BaseNode.model_validate(created_record)
 
@@ -85,6 +94,7 @@ class GraphManager:
         results = await self.db.query(query, {"data": data})
         created_record = results[0] if results else {}
         
+        # Map back for response (simplified)
         created_record['source'] = created_record.get('in', '')
         created_record['target'] = created_record.get('out', '')
         return BaseEdge.model_validate(created_record)
@@ -173,7 +183,7 @@ class GraphManager:
                 
                 table = self.schema_mapper.get_edge_table(edge.edge_type)
                 
-                # Dynamic SET clause for casting
+                # Dynamic SET clause with type::thing
                 set_clause = self._build_set_clause(data, param_name)
                 
                 # Using UPSERT with SET
@@ -182,11 +192,12 @@ class GraphManager:
             transaction_query += "COMMIT TRANSACTION;"
             results = await self.db.query(transaction_query, params)
             
+            # Check for transaction errors
             if isinstance(results, list):
                 for res in results:
                     if isinstance(res, dict) and res.get('status') == 'ERR':
                         raise Exception(f"SurrealDB Transaction Error (Edges): {res.get('detail')}")
-                        
+            
             edges_created += len(batch_edges)
         
         return SyncReport(
