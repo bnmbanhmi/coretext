@@ -19,6 +19,8 @@ class GraphManager:
         # Get schema definition for this edge type
         edge_def = self.schema_mapper.schema_map.edge_types.get(edge.edge_type)
         if not edge_def:
+            # Fallback if unknown type (shouldn't happen with valid schema)
+            # Assume 'node' table as default
             source_table = "node"
             target_table = "node"
         else:
@@ -51,10 +53,12 @@ class GraphManager:
         data = node.model_dump(mode='json')
         
         table = self.schema_mapper.get_node_table(node.node_type)
+        # Use table from schema map (e.g., 'node')
         created_record = await self.db.create(f"{table}:`{node.id}`", data)
         return BaseNode.model_validate(created_record)
 
     async def get_node(self, node_id: str, node_model: Type[BaseNode] = BaseNode) -> BaseNode | None:
+        # SurrealDB select returns a list of records
         fetched_record = await self.db.select(node_id)
         if fetched_record:
             return node_model.model_validate(fetched_record)
@@ -95,6 +99,7 @@ class GraphManager:
     async def get_edge(self, edge_id: str, edge_model: Type[BaseEdge] = BaseEdge) -> BaseEdge | None:
         fetched_record = await self.db.select(edge_id)
         if fetched_record:
+            # Map 'in' and 'out' to 'source' and 'target' for Pydantic model
             fetched_record['source'] = fetched_record.pop('in')
             fetched_record['target'] = fetched_record.pop('out')
             return edge_model.model_validate(fetched_record)
@@ -152,6 +157,8 @@ class GraphManager:
                 params[param_name] = data
                 
                 table = self.schema_mapper.get_node_table(node.node_type)
+                
+                # Using UPSERT
                 transaction_query += f"UPSERT {table}:`{node.id}` CONTENT ${param_name};\n"
             
             transaction_query += "COMMIT TRANSACTION;"
@@ -188,7 +195,9 @@ class GraphManager:
 
             transaction_query += "COMMIT TRANSACTION;"
             results = await self.db.query(transaction_query, params)
+            print(f"DEBUG RELATE RES: {results}")
             
+            # Check for transaction errors
             if isinstance(results, list):
                 for res in results:
                     if isinstance(res, dict) and res.get('status') == 'ERR':
