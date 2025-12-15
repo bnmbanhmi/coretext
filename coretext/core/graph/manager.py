@@ -148,7 +148,12 @@ class GraphManager:
                 transaction_query += f"UPSERT {table}:`{node.id}` CONTENT ${param_name};\n"
             
             transaction_query += "COMMIT TRANSACTION;"
-            await self.db.query(transaction_query, params)
+            results = await self.db.query(transaction_query, params)
+            # Check for transaction errors
+            if isinstance(results, list):
+                for res in results:
+                    if isinstance(res, dict) and res.get('status') == 'ERR':
+                        raise Exception(f"SurrealDB Transaction Error (Nodes): {res.get('detail')}")
             nodes_created += len(batch_nodes)
 
         # Process Edges in batches
@@ -172,7 +177,12 @@ class GraphManager:
                 transaction_query += f"UPSERT {table}:`{edge.id}` CONTENT ${param_name};\n"
 
             transaction_query += "COMMIT TRANSACTION;"
-            await self.db.query(transaction_query, params)
+            results = await self.db.query(transaction_query, params)
+            # Check for transaction errors
+            if isinstance(results, list):
+                for res in results:
+                    if isinstance(res, dict) and res.get('status') == 'ERR':
+                        raise Exception(f"SurrealDB Transaction Error (Edges): {res.get('detail')}")
             edges_created += len(batch_edges)
         
         return SyncReport(
