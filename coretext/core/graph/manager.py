@@ -144,10 +144,8 @@ class GraphManager:
                 
                 table = self.schema_mapper.get_node_table(node.node_type)
                 
-                # Robust Upsert Logic
-                check_var = f"check_node_{i}_{idx}"
-                transaction_query += f"LET ${check_var} = SELECT * FROM {table}:`{node.id}`\n"
-                transaction_query += f"IF ${check_var} THEN (UPDATE {table}:`{node.id}` CONTENT ${param_name}) ELSE (CREATE {table}:`{node.id}` CONTENT ${param_name}) END;\n"
+                # Using UPSERT (SurrealDB 2.0+ compatible)
+                transaction_query += f"UPSERT {table}:`{node.id}` CONTENT ${param_name};\n"
             
             transaction_query += "COMMIT TRANSACTION;"
             await self.db.query(transaction_query, params)
@@ -170,10 +168,8 @@ class GraphManager:
                 
                 table = self.schema_mapper.get_edge_table(edge.edge_type)
                 
-                # Robust Upsert Logic
-                check_var = f"check_edge_{i}_{idx}"
-                transaction_query += f"LET ${check_var} = SELECT * FROM {table}:`{edge.id}`\n"
-                transaction_query += f"IF ${check_var} THEN (UPDATE {table}:`{edge.id}` CONTENT ${param_name}) ELSE (CREATE {table}:`{edge.id}` CONTENT ${param_name}) END;\n"
+                # Using UPSERT
+                transaction_query += f"UPSERT {table}:`{edge.id}` CONTENT ${param_name};\n"
 
             transaction_query += "COMMIT TRANSACTION;"
             await self.db.query(transaction_query, params)
