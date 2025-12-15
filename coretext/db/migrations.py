@@ -60,7 +60,7 @@ class SchemaManager:
             db_table = config.get("db_table", edge_name)
             # FROM/TO constraints could be added if we had specific tables for each node type,
             # but since everything is 'node', we constrain relations FROM node TO node.
-            await self.db.query(f"DEFINE TABLE {db_table} TYPE RELATION FROM node TO node")
+            await self.db.query(f"DEFINE TABLE {db_table} TYPE RELATION")
             # await self.db.query(f"DEFINE FIELD in ON TABLE {db_table} TYPE record<node>")
             # await self.db.query(f"DEFINE FIELD out ON TABLE {db_table} TYPE record<node>")
             
