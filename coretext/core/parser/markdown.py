@@ -99,7 +99,15 @@ class MarkdownParser:
                 raise FileNotFoundError(f"Markdown file not found: {file_path}")
             content = file_path.read_text()
 
-        normalized_file_path = normalize_path_to_project_root(file_path, str(file_path), project_root=self.project_root)
+        if file_path.is_absolute():
+            try:
+                normalized_file_path = file_path.relative_to(self.project_root)
+            except ValueError:
+                # Fallback if not relative to project root (e.g. symlinks or external)
+                # But for our use case, we assume it's in the project
+                normalized_file_path = file_path 
+        else:
+            normalized_file_path = file_path
 
         tokens = self.md.parse(content)
 
