@@ -140,6 +140,15 @@ gemini-2.5-flash
 - **Code Review Fixes (2025-12-14):**
     - Created `tests/unit/core/graph/test_manager_ingest.py` to test `GraphManager.ingest` method (batching, error handling).
     - Created `tests/integration/test_sync_integration.py` to verify the end-to-end sync logic via `_post_commit_hook_logic`.
+- **Final Validation & End-to-End Persistence Fixes (2025-12-15):**
+    - Aligned `FileNode` and `HeaderNode` models with the single-table inheritance schema (added missing `content`, `content_hash`, `level`).
+    - Updated `SchemaManager` to use `string` type for datetime fields to ensure compatibility with client serialization.
+    - Removed strict `FROM node TO node` constraints from Relation tables to allow flexible ID matching.
+    - Updated `GraphManager` to use **Backticks** for complex IDs (e.g. `node:`demo.md``).
+    - Replaced implicit Upsert logic with explicit `UPSERT` statements for Nodes (SurrealDB 2.0+).
+    - Replaced `UPSERT` with `RELATE` for Edge creation, ensuring robust relationship handling.
+    - Implemented dynamic `SET` clause construction in `GraphManager` to correctly cast `in`/`out` fields to `type::record(...)` / `type::thing(...)` for relations.
+    - Verified full end-to-end sync of `demo.md` resulting in correct Nodes and Edges in the database.
 
 ### File List
 
@@ -152,6 +161,8 @@ gemini-2.5-flash
 - `coretext/core/graph/manager.py`
 - `coretext/core/graph/models.py`
 - `coretext/core/parser/markdown.py`
+- `coretext/core/parser/schema.py`
+- `coretext/db/migrations.py`
 - `tests/unit/core/sync/test_engine.py`
 - `tests/unit/core/sync/test_git_utils.py`
 - `tests/unit/core/sync/test_timeout_utils.py`
@@ -159,4 +170,3 @@ gemini-2.5-flash
 - `tests/unit/core/graph/test_manager.py`
 - `tests/unit/core/graph/test_manager_ingest.py`
 - `tests/integration/test_sync_integration.py`
-
