@@ -38,6 +38,10 @@ class MarkdownParser:
         raw_snippet = content_lines[map_info[0]] if map_info and map_info[0] < len(content_lines) else ""
         
         if href:
+            # Skip validation for external links
+            if re.match(r'^(http|https|mailto):', href, re.IGNORECASE):
+                return
+
             try:
                 # Normalize the link target path
                 normalized_link_path = normalize_path_to_project_root(current_file_path, href, project_root=self.project_root)
