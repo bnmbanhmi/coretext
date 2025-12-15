@@ -27,32 +27,23 @@ class GraphManager:
             source_table = self.schema_mapper.get_node_table(source_type)
             target_table = self.schema_mapper.get_node_table(target_type)
 
-        # Store separate parts for robust type::thing() construction
-        data["in_table"] = source_table
-        data["in_id"] = edge.source
-        data["out_table"] = target_table
-        data["out_id"] = edge.target
+        # Store lookup info for RELATE query construction
+        data["_source_rec"] = f"{source_table}:`{edge.source}`"
+        data["_target_rec"] = f"{target_table}:`{edge.target}`"
         
-        # Remove original source/target
-        del data["source"]
-        del data["target"]
+        # Ensure ID is backticked for safety if it contains special chars
+        # But we pass the raw ID string to SurrealDB inside the content object?
+        # No, we pass `id` field.
+        data["id"] = f"`{edge.id}`"
+        
+        # Remove source/target/in/out from data payload if they exist to avoid confusion,
+        # although RELATE handles in/out automatically.
+        data.pop("source", None)
+        data.pop("target", None)
+        data.pop("in", None)
+        data.pop("out", None)
         
         return data
-
-    def _build_set_clause(self, data: dict, param_name: str) -> str:
-        parts = []
-        
-        # Explicitly handle 'in' and 'out' using type::thing
-        parts.append(f"in = type::thing(${param_name}.in_table, ${param_name}.in_id)")
-        parts.append(f"out = type::thing(${param_name}.out_table, ${param_name}.out_id)")
-        
-        for k in data.keys():
-            # Skip the helper fields we added
-            if k in ['in_table', 'in_id', 'out_table', 'out_id']:
-                continue
-            parts.append(f"{k} = ${param_name}.{k}")
-            
-        return ", ".join(parts)
 
     async def create_node(self, node: BaseNode) -> BaseNode:
         node.created_at = datetime.utcnow()
@@ -60,7 +51,6 @@ class GraphManager:
         data = node.model_dump(mode='json')
         
         table = self.schema_mapper.get_node_table(node.node_type)
-        # Use table from schema map (e.g., 'node')
         created_record = await self.db.create(f"{table}:`{node.id}`", data)
         return BaseNode.model_validate(created_record)
 
@@ -88,13 +78,16 @@ class GraphManager:
         data = self._prepare_edge_data(edge)
         table = self.schema_mapper.get_edge_table(edge.edge_type)
         
-        set_clause = self._build_set_clause(data, "data")
-        query = f"CREATE {table}:`{edge.id}` SET {set_clause} RETURN AFTER;"
+        in_rec = data.pop("_source_rec")
+        out_rec = data.pop("_target_rec")
+        
+        # RELATE query
+        query = f"RELATE {in_rec} -> {table} -> {out_rec} CONTENT $data RETURN AFTER;"
         
         results = await self.db.query(query, {"data": data})
         created_record = results[0] if results else {}
         
-        # Map back for response (simplified)
+        # Map back
         created_record['source'] = created_record.get('in', '')
         created_record['target'] = created_record.get('out', '')
         return BaseEdge.model_validate(created_record)
@@ -113,8 +106,13 @@ class GraphManager:
         data = self._prepare_edge_data(edge)
         table = self.schema_mapper.get_edge_table(edge.edge_type)
         
-        set_clause = self._build_set_clause(data, "data")
-        query = f"UPDATE {table}:`{edge.id}` SET {set_clause} RETURN AFTER;"
+        # For update, we can just use UPDATE/UPSERT if ID is known?
+        # Or RELATE again? RELATE is upsert if ID matches.
+        
+        in_rec = data.pop("_source_rec")
+        out_rec = data.pop("_target_rec")
+        
+        query = f"RELATE {in_rec} -> {table} -> {out_rec} CONTENT $data RETURN AFTER;"
         
         results = await self.db.query(query, {"data": data})
         updated_record = results[0] if results else {}
@@ -154,8 +152,6 @@ class GraphManager:
                 params[param_name] = data
                 
                 table = self.schema_mapper.get_node_table(node.node_type)
-                
-                # Using UPSERT
                 transaction_query += f"UPSERT {table}:`{node.id}` CONTENT ${param_name};\n"
             
             transaction_query += "COMMIT TRANSACTION;"
@@ -178,21 +174,21 @@ class GraphManager:
                 edge.updated_at = datetime.utcnow()
                 data = self._prepare_edge_data(edge)
                 
+                # Extract pre-calculated record IDs
+                in_rec = data.pop("_source_rec")
+                out_rec = data.pop("_target_rec")
+                
                 param_name = f"edge_{i}_{idx}"
                 params[param_name] = data
                 
                 table = self.schema_mapper.get_edge_table(edge.edge_type)
                 
-                # Dynamic SET clause with type::thing
-                set_clause = self._build_set_clause(data, param_name)
-                
-                # Using UPSERT with SET
-                transaction_query += f"UPSERT {table}:`{edge.id}` SET {set_clause};\n"
+                # Using RELATE for edges
+                transaction_query += f"RELATE {in_rec} -> {table} -> {out_rec} CONTENT ${param_name};\n"
 
             transaction_query += "COMMIT TRANSACTION;"
             results = await self.db.query(transaction_query, params)
             
-            # Check for transaction errors
             if isinstance(results, list):
                 for res in results:
                     if isinstance(res, dict) and res.get('status') == 'ERR':
