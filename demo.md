@@ -73,3 +73,14 @@ test
  This should finally sync.
 
 # Full Graph Test
+
+# Fixes Applied:
+  1. Schema Alignment: Added missing content, content_hash, level to schema and models. Mapped datetime to string.
+  2. Edge Constraints: Removed FROM node TO node constraint from relation tables to allow flexible ID matching. Removed mandatory order field
+    from contains.
+  3. GraphManager Logic:
+      * Switched to backticks for complex IDs (e.g., node:`demo.md`).
+      * Implemented robust Upsert logic using UPSERT for nodes.
+      * Implemented robust Relation logic using RELATE for edges (instead of UPSERT which failed on relation tables).
+      * Correctly formats in/out pointers with table prefixes.
+      * Added error checking for transaction results.
