@@ -9,6 +9,36 @@ class GraphManager:
         self.db = db_client
         self.schema_mapper = schema_mapper
 
+    def _get_relation_id(self, node_id: str, node_type: str) -> str:
+        table = self.schema_mapper.get_node_table(node_type)
+        return f"{table}:`{node_id}`"
+
+    def _prepare_edge_data(self, edge: BaseEdge) -> dict:
+        data = edge.model_dump(mode='json')
+        
+        # Get schema definition for this edge type
+        edge_def = self.schema_mapper.schema_map.edge_types.get(edge.edge_type)
+        if not edge_def:
+            # Fallback if unknown type (shouldn't happen with valid schema)
+            # Assume 'node' table as default
+            source_table = "node"
+            target_table = "node"
+        else:
+            source_type = edge_def.source_type
+            target_type = edge_def.target_type
+            source_table = self.schema_mapper.get_node_table(source_type)
+            target_table = self.schema_mapper.get_node_table(target_type)
+
+        # Format in/out with table prefix and backticks
+        data["in"] = f"{source_table}:`{edge.source}`"
+        data["out"] = f"{target_table}:`{edge.target}`"
+        
+        # Remove source/target as they are replaced by in/out
+        del data["source"]
+        del data["target"]
+        
+        return data
+
     async def create_node(self, node: BaseNode) -> BaseNode:
         node.created_at = datetime.utcnow()
         node.updated_at = datetime.utcnow()
@@ -40,15 +70,14 @@ class GraphManager:
     async def create_edge(self, edge: BaseEdge) -> BaseEdge:
         edge.created_at = datetime.utcnow()
         edge.updated_at = datetime.utcnow()
-        data = edge.model_dump(mode='json')
-        # Map source/target to in/out for SurrealDB relations
-        data["in"] = data.pop("source")
-        data["out"] = data.pop("target")
-
+        
+        data = self._prepare_edge_data(edge)
         table = self.schema_mapper.get_edge_table(edge.edge_type)
+        
         # SurrealDB automatically creates the relation table if it doesn't exist
         created_record = await self.db.create(f"{table}:`{edge.id}`", data)
-        # Need to map 'in' and 'out' back to 'source' and 'target' for the Pydantic model validation
+        
+        # Map back for response
         created_record['source'] = created_record.pop('in')
         created_record['target'] = created_record.pop('out')
         return BaseEdge.model_validate(created_record)
@@ -64,13 +93,12 @@ class GraphManager:
 
     async def update_edge(self, edge: BaseEdge) -> BaseEdge:
         edge.updated_at = datetime.utcnow()
-        data = edge.model_dump(mode='json')
-        # Map source/target to in/out for SurrealDB relations
-        data["in"] = data.pop("source")
-        data["out"] = data.pop("target")
-
+        
+        data = self._prepare_edge_data(edge)
         table = self.schema_mapper.get_edge_table(edge.edge_type)
+        
         updated_record = await self.db.update(f"{table}:`{edge.id}`", data)
+        
         updated_record['source'] = updated_record.pop('in')
         updated_record['target'] = updated_record.pop('out')
         return BaseEdge.model_validate(updated_record)
@@ -115,10 +143,10 @@ class GraphManager:
                 params[param_name] = data
                 
                 table = self.schema_mapper.get_node_table(node.node_type)
-                # Using UPDATE (upsert behavior)
+                
                 # Robust Upsert Logic
                 check_var = f"check_node_{i}_{idx}"
-                transaction_query += f"LET ${check_var} = SELECT * FROM {table}:`{node.id}`;\n"
+                transaction_query += f"LET ${check_var} = SELECT * FROM {table}:`{node.id}`\n"
                 transaction_query += f"IF ${check_var} THEN (UPDATE {table}:`{node.id}` CONTENT ${param_name}) ELSE (CREATE {table}:`{node.id}` CONTENT ${param_name}) END;\n"
             
             transaction_query += "COMMIT TRANSACTION;"
@@ -133,18 +161,18 @@ class GraphManager:
 
             for idx, edge in enumerate(batch_edges):
                 edge.updated_at = datetime.utcnow()
-                data = edge.model_dump(mode='json')
-                # Map source/target to in/out
-                data["in"] = data.pop("source")
-                data["out"] = data.pop("target")
+                
+                # Use helper to format data (resolving in/out with table prefixes)
+                data = self._prepare_edge_data(edge)
                 
                 param_name = f"edge_{i}_{idx}"
                 params[param_name] = data
                 
                 table = self.schema_mapper.get_edge_table(edge.edge_type)
+                
                 # Robust Upsert Logic
                 check_var = f"check_edge_{i}_{idx}"
-                transaction_query += f"LET ${check_var} = SELECT * FROM {table}:`{edge.id}`;\n"
+                transaction_query += f"LET ${check_var} = SELECT * FROM {table}:`{edge.id}`\n"
                 transaction_query += f"IF ${check_var} THEN (UPDATE {table}:`{edge.id}` CONTENT ${param_name}) ELSE (CREATE {table}:`{edge.id}` CONTENT ${param_name}) END;\n"
 
             transaction_query += "COMMIT TRANSACTION;"
