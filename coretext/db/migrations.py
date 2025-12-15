@@ -62,6 +62,12 @@ class SchemaManager:
             # but since everything is 'node', we constrain relations FROM node TO node.
             await self.db.query(f"DEFINE TABLE {db_table} SCHEMAFULL TYPE RELATION FROM node TO node")
             
+            # Define Base Fields for Edges
+            await self.db.query(f"DEFINE FIELD metadata ON TABLE {db_table} TYPE object")
+            await self.db.query(f"DEFINE FIELD created_at ON TABLE {db_table} TYPE string")
+            await self.db.query(f"DEFINE FIELD updated_at ON TABLE {db_table} TYPE string")
+            await self.db.query(f"DEFINE FIELD commit_hash ON TABLE {db_table} TYPE string")
+            
             # Define specific fields for the edge
             properties = config.get("properties", {})
             for prop_name, prop_type in properties.items():
