@@ -176,6 +176,24 @@ As a `coretext` system, I want to enforce referential integrity within the knowl
 
 **Prerequisites:** Story 1.4.
 
+### Story 1.6: Epic 1 Demo & Verification Fixes
+
+As a user (Minh), I want a verified, end-to-end demo guide for Epic 1, along with the necessary system fixes to make it work, so that I can confidently validate the core knowledge graph functionality.
+
+**Acceptance Criteria:**
+*   Given the system is built
+*   When I follow `docs/epic-1-demo-guide.md`
+*   Then I can successfully initialize, start, sync, verify, and stop the system.
+*   And the `coretext stop` command exists.
+*   And edge creation works without schema errors.
+
+**Technical Notes:**
+*   Implement `coretext stop`.
+*   Fix `GraphManager` edge ingestion (Schema `SCHEMALESS` fix).
+*   Create manual verification guide.
+
+**Prerequisites:** Story 1.5.
+
 ---
 
 ## Epic 2: Agent Context Retrieval & Semantic Querying
