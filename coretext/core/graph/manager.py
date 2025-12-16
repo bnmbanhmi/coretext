@@ -204,6 +204,9 @@ class GraphManager:
             transaction_query += "COMMIT TRANSACTION;"
             results = await self.db.query(transaction_query, params)
             
+            if isinstance(results, str):
+                 raise Exception(f"SurrealDB Transaction Error (Edges): {results}")
+
             # Check for transaction errors
             if isinstance(results, list):
                 for res in results:

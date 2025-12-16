@@ -132,6 +132,22 @@ def start(
         typer.echo(f"Error starting CoreText daemon: {e}", err=True)
         raise typer.Exit(code=1)
 
+@app.command()
+def stop(
+    project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p", help="Root directory of the project.")
+):
+    """
+    Stops the CoreText daemon.
+    """
+    typer.echo("Stopping CoreText daemon...")
+    db_client = SurrealDBClient(project_root=project_root)
+    try:
+        asyncio.run(db_client.stop_surreal_db())
+        typer.echo("CoreText daemon stopped.")
+    except Exception as e:
+        typer.echo(f"Error stopping CoreText daemon: {e}", err=True)
+        raise typer.Exit(code=1)
+
 async def _apply_schema_logic(project_root: Path):
     """
     Internal logic to apply the schema from .coretext/schema_map.yaml to the local SurrealDB.
