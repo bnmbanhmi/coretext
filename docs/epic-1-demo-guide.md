@@ -153,6 +153,7 @@
     # OR kill the process manually if stop command isn't fully robust yet
     kill $(cat .coretext/daemon.pid)
     ```
+    *   **Note:** Running `coretext stop` will also **pause** the Git hooks. Subsequent commits will not trigger synchronization or validation until `coretext start` is run again.
 
 2.  **Remove Demo File:**
     ```bash

@@ -29,6 +29,12 @@ so that I can confidently validate the core knowledge graph functionality before
 
 ### Major Fixes & Discoveries
 
+*   **Node Path Unique Index:** The `node` table's `path` field was incorrectly defined with a `UNIQUE` index. This prevented multiple nodes (e.g., a FileNode and its HeaderNodes) that share the same file path from being ingested. The `UNIQUE` constraint has been removed from the `node_path` index definition in `coretext/db/migrations.py`.
+*   **Edge Ingestion Idempotency & `RELATE` Mechanics:**
+    *   Using `RELATE ... CONTENT $data` was found to cause idempotency issues and "Found NONE for field `in`" errors on subsequent runs or updates. This is because `CONTENT` replaces the entire record, including the `in` and `out` pointer fields, leading to data loss or validation failures if not explicitly included in the payload.
+    *   **Solution:** A robust 2-step approach has been implemented in `GraphManager.ingest`:
+        1.  **RELATE ... SET mandatory_fields:** This step ensures the edge exists and its `in`/`out` links are correctly set (idempotently). Crucially, mandatory schema fields (`commit_hash`, `metadata`, `order` for `contains` edges) are explicitly set here to satisfy validation during creation.
+        2.  **UPDATE ... MERGE $data:** This subsequent step safely applies all other dynamic properties from the data payload without overwriting the graph links established by `RELATE`.
 *   **SurrealDB 2.0 Syntax:**
     *   **Record IDs:** Complex IDs with special chars or strings must use angle brackets: `node:⟨demo.md⟩`. Queries like `WHERE id = 'demo.md'` fail because of type mismatch (RecordID vs String).
     *   **Schema Strictness:** `DEFINE TABLE ... TYPE RELATION` without `SCHEMALESS` enforces strict existence checks on `in`/`out` records inside transactions, which caused `Found NONE for field in...` errors during batched ingestion. Switching to `SCHEMALESS` resolved this while maintaining the `RELATION` type for graph semantics.
@@ -36,6 +42,10 @@ so that I can confidently validate the core knowledge graph functionality before
     *   The `surrealdb` Python client sometimes returns a generic string message (`The query was not executed due to a failed transaction`) instead of a structured error object when a transaction fails. Logic was added to catch this.
 *   **Git Content Retrieval:**
     *   Verified that `get_head_content` correctly retrieves content from `HEAD` for the post-commit hook, ensuring parity with the file on disk for the parser.
+*   **Daemon Stop & Hook Pausing:**
+    *   Implemented logic in `coretext stop` to create a marker file (`.coretext/hooks_paused`).
+    *   Updated Git hooks (`pre-commit`, `post-commit`) to check for this marker and exit silently if present. This prevents connection errors or timeouts when the daemon is intentionally stopped, allowing normal Git operations to proceed.
+    *   `coretext start` removes the marker to resume synchronization.
 
 ## Dev Agent Record
 

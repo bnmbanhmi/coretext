@@ -16,6 +16,8 @@ from coretext.core.sync.git_utils import get_staged_files, get_staged_content, g
 from coretext.core.parser.markdown import MarkdownParser
 from coretext.core.graph.manager import GraphManager
 
+PAUSE_FILE_NAME = "hooks_paused"
+
 app = typer.Typer()
 
 @app.command()
@@ -54,7 +56,10 @@ def init(
     else:
         typer.echo("schema_map.yaml already exists. Skipping creation.")
 
-
+    # Ensure hooks are unpaused on init
+    pause_file = project_root / ".coretext" / PAUSE_FILE_NAME
+    if pause_file.exists():
+        pause_file.unlink()
 
     typer.echo("CoreText project initialized successfully.")
 
@@ -82,6 +87,12 @@ def start(
     """
     Starts the CoreText daemon (SurrealDB) in the background.
     """
+    # Unpause hooks
+    pause_file = project_root / ".coretext" / PAUSE_FILE_NAME
+    if pause_file.exists():
+        pause_file.unlink()
+        typer.echo("CoreText hooks unpaused.")
+
     db_client = SurrealDBClient(project_root=project_root)
     if not db_client.surreal_path.exists():
          typer.echo("SurrealDB binary not found. Please run 'coretext init' first.", err=True)
@@ -140,6 +151,14 @@ def stop(
     Stops the CoreText daemon.
     """
     typer.echo("Stopping CoreText daemon...")
+    
+    # Pause hooks
+    pause_file = project_root / ".coretext" / PAUSE_FILE_NAME
+    if not pause_file.parent.exists():
+        pause_file.parent.mkdir(parents=True, exist_ok=True)
+    pause_file.touch()
+    typer.echo("CoreText hooks paused.")
+
     db_client = SurrealDBClient(project_root=project_root)
     try:
         asyncio.run(db_client.stop_surreal_db())
@@ -255,7 +274,9 @@ def pre_commit_hook(
     """
     Executed by Git pre-commit hook. Runs in dry-run/lint mode.
     """
-    
+    if (project_root / ".coretext" / PAUSE_FILE_NAME).exists():
+        return
+
     # 1. Change detection
     try:
         files = get_staged_files(project_root)
@@ -308,6 +329,11 @@ def post_commit_hook(
     Executed by Git post-commit hook. Runs in write/sync mode.
     Wrapper to run async logic.
     """
+    if (project_root / ".coretext" / PAUSE_FILE_NAME).exists():
+        if not detached: # Only verify on main process to avoid noise
+             pass # Silent exit
+        return
+
     asyncio.run(_post_commit_hook_logic(project_root, detached))
 
 async def _post_commit_hook_logic(project_root: Path, detached: bool):

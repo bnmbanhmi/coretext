@@ -36,7 +36,8 @@ class GraphManager:
         # Ensure ID is backticked for safety if it contains special chars
         # But we pass the raw ID string to SurrealDB inside the content object?
         # No, we pass `id` field.
-        data["id"] = f"`{edge.id}`"
+        # FIX: Do not wrap in backticks here. pass raw string.
+        data["id"] = edge.id
         
         # Remove source/target/in/out from data payload if they exist to avoid confusion,
         # although RELATE handles in/out automatically.
@@ -192,17 +193,54 @@ class GraphManager:
                 edge.updated_at = datetime.utcnow()
                 data = self._prepare_edge_data(edge)
                 
-                # Extract pre-calculated record IDs
-                in_rec = data.pop("_source_rec")
-                out_rec = data.pop("_target_rec")
+                # Extract pre-calculated record IDs (which currently have backticks/prefixes)
+                # We will ignore the pre-calculated string and reconstruct using type::thing for safety
+                # But _prepare_edge_data removes source/target from data, so we need to get them from 'edge' object
+                
+                # Cleanup keys we don't need from data payload
+                data.pop("_source_rec", None)
+                data.pop("_target_rec", None)
+                # Remove ID from payload as we will specify it in the RELATE clause
+                # Providing it in CONTENT causes referential integrity issues in RELATE
+                data.pop("id", None)
                 
                 param_name = f"edge_{i}_{idx}"
                 params[param_name] = data
                 
+                # Get tables
+                edge_def = self.schema_mapper.schema_map.edge_types.get(edge.edge_type)
+                if not edge_def:
+                    source_table = "node"
+                    target_table = "node"
+                else:
+                    source_table = self.schema_mapper.get_node_table(edge_def.source_type)
+                    target_table = self.schema_mapper.get_node_table(edge_def.target_type)
+
+                # Add params for the IDs to avoid injection and formatting issues
+                src_id_param = f"src_id_{i}_{idx}"
+                tgt_id_param = f"tgt_id_{i}_{idx}"
+                params[src_id_param] = edge.source
+                params[tgt_id_param] = edge.target
+                
                 table = self.schema_mapper.get_edge_table(edge.edge_type)
                 
-                # Using RELATE for edges
-                transaction_query += f"RELATE {in_rec} -> {table} -> {out_rec} CONTENT ${param_name};\n"
+                # Construct IDs manually with backticks to ensure safety and bypass type::thing issues
+                src_rec_str = f"{source_table}:`{edge.source}`"
+                tgt_rec_str = f"{target_table}:`{edge.target}`"
+                edge_rec_str = f"{table}:`{edge.id}`"
+                
+                # 1. RELATE to ensure existence and links.
+                # Use manual string interpolation for IDs.
+                # Do NOT use CONTENT here to avoid wiping existing in/out pointers on update.
+                # We MUST set mandatory schema fields (like commit_hash) here to avoid validation error on creation.
+                set_clause = f"SET updated_at = time::now(), created_at = time::now(), commit_hash = ${param_name}.commit_hash, metadata = ${param_name}.metadata"
+                if edge.edge_type == "contains":
+                    set_clause += f", order = ${param_name}.order"
+
+                transaction_query += f"RELATE {src_rec_str} -> {edge_rec_str} -> {tgt_rec_str} {set_clause};\n"
+                
+                # 2. UPDATE MERGE to set/update properties from data payload without losing links.
+                transaction_query += f"UPDATE {edge_rec_str} MERGE ${param_name};\n"
 
             transaction_query += "COMMIT TRANSACTION;"
             results = await self.db.query(transaction_query, params)
