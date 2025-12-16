@@ -44,6 +44,10 @@ class GraphManager:
         data.pop("target", None)
         data.pop("in", None)
         data.pop("out", None)
+
+        # Hotfix for 'contains' edges requiring 'order'
+        if edge.edge_type == "contains" and "order" not in data:
+            data["order"] = 0
         
         return data
 
@@ -164,6 +168,10 @@ class GraphManager:
             transaction_query += "COMMIT TRANSACTION;"
             results = await self.db.query(transaction_query, params)
             
+            # Check for top-level error (SurrealDB 2.0 returns dict on error)
+            if isinstance(results, dict) and results.get('status') == 'ERR':
+                 raise Exception(f"SurrealDB Transaction Error (Nodes): {results.get('detail')}")
+
             if isinstance(results, list):
                 for res in results:
                     if isinstance(res, dict) and res.get('status') == 'ERR':
@@ -195,7 +203,6 @@ class GraphManager:
 
             transaction_query += "COMMIT TRANSACTION;"
             results = await self.db.query(transaction_query, params)
-            print(f"DEBUG RELATE RES: {results}")
             
             # Check for transaction errors
             if isinstance(results, list):

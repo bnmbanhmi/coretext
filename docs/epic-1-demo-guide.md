@@ -89,21 +89,21 @@
 
     *   **Query 1: Check File Node**
         ```sql
-        SELECT * FROM file WHERE id = 'demo_epic_1.md';
+        SELECT * FROM node:⟨demo_epic_1.md⟩;
         ```
-        *   *Expectation:* One record returned with `path: 'demo_epic_1.md'`.
+        *   *Expectation:* One record returned with `node_type: 'file'` and `path: 'demo_epic_1.md'`.
 
     *   **Query 2: Check Header Node**
         ```sql
-        SELECT * FROM header WHERE content CONTAINS 'Demo Epic 1';
+        SELECT * FROM node WHERE node_type = 'header' AND path = 'demo_epic_1.md';
         ```
-        *   *Expectation:* One record (the H1 header).
+        *   *Expectation:* One record (the H1 header `Demo Epic 1`).
 
     *   **Query 3: Check Relationship (File -> Header)**
         ```sql
-        SELECT * FROM contains WHERE in = file:`demo_epic_1.md`;
+        SELECT * FROM contains WHERE in = node:⟨demo_epic_1.md⟩;
         ```
-        *   *Expectation:* One edge connecting the file to the header.
+        *   *Expectation:* One edge connecting `node:⟨demo_epic_1.md⟩` to `node:⟨demo_epic_1.md#demo-epic-1⟩`.
 
 ---
 
@@ -126,9 +126,22 @@
 3.  **Verify Update:**
     *   **Query:**
         ```sql
-        SELECT * FROM header WHERE id CONTAINS 'demo_epic_1.md';
+        SELECT * FROM node WHERE node_type = 'header' AND path = 'demo_epic_1.md';
         ```
-        *   *Expectation:* Now you should see TWO headers (the original H1 and the new H2 "Sub-section").
+        *   *Expectation:* You should now see at least TWO header nodes (the original H1 and the new H2 "Sub-section") belonging to `demo_epic_1.md`.
+
+4.  **Verify References (Links):**
+    *   Add a link to another file.
+    ```bash
+    echo "\n[Link to Epics](../docs/epics.md)" >> demo_epic_1.md
+    git add demo_epic_1.md
+    git commit -m "Add link for reference check"
+    ```
+    *   **Query:**
+        ```sql
+        SELECT * FROM references WHERE in = node:⟨demo_epic_1.md⟩;
+        ```
+        *   *Expectation:* One edge connecting `node:⟨demo_epic_1.md⟩` to `node:⟨docs/epics.md⟩`.
 
 ---
 
