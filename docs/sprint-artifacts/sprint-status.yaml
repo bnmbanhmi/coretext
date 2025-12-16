@@ -42,7 +42,7 @@ development_status:
   1-3-bmad-markdown-parsing-to-graph-nodes: done
   1-4-git-repository-change-detection-synchronization: done
   1-5-referential-integrity-link-validation: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
   epic-2: backlog
   2-1-mcp-server-setup-health-check: backlog
