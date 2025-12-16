@@ -133,7 +133,7 @@
 4.  **Verify References (Links):**
     *   Add a link to another file.
     ```bash
-    echo "\n[Link to Epics](../docs/epics.md)" >> demo_epic_1.md
+    echo "\n[Link to Epics](docs/epics.md)" >> demo_epic_1.md
     git add demo_epic_1.md
     git commit -m "Add link for reference check"
     ```
