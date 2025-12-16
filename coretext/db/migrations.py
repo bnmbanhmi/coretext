@@ -34,7 +34,8 @@ class SchemaManager:
         # We enforce a single 'node' table but allow differentiation via 'type' field
         await self.db.query("DEFINE TABLE node SCHEMAFULL")
         await self.db.query("DEFINE FIELD path ON TABLE node TYPE string ASSERT $value != NONE")
-        await self.db.query("DEFINE INDEX node_path ON TABLE node COLUMNS path UNIQUE")
+        # Remove UNIQUE constraint as path is shared between FileNode and HeaderNodes
+        await self.db.query("DEFINE INDEX node_path ON TABLE node COLUMNS path")
         # 'node_type' is the discriminator (e.g., 'file', 'header')
         await self.db.query("DEFINE FIELD node_type ON TABLE node TYPE string") 
         await self.db.query("DEFINE FIELD content ON TABLE node TYPE string")
