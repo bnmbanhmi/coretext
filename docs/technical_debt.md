@@ -23,3 +23,27 @@
     *   **Status**: Recorded on 2025-12-10 (current date).
     *   **Action Required**: Consider implementing a dedicated daemon for SurrealDB management in a future architectural sprint.
 
+### Implementation Gaps
+* **Parser Blocking Future Links (Obsidian Style)**: The database schema for edges was updated to `SCHEMALESS` to allow linking to non-existent nodes (Story 1.6), but the `MarkdownParser` logic still treats missing targets as `ParsingErrorNode` and halts edge creation.
+    * **Cause**: Validation logic in `coretext/core/parser/markdown.py` explicitly checks `.exists()` and returns early on failure.
+    * **Impact**: Prevents the creation of "future links" (references to not-yet-created files), defeating the purpose of the schemaless edge design.
+    * **Status**: Identified during code review.
+    * **Action Required**: Relax validation in `MarkdownParser` to allow emitting `REFERENCES` edges even if the target file does not exist on disk.
+
+### Data Integrity & Maintenance
+* **Lack of Deletion/Rename Propagation (Ghost Nodes)**: The system currently only handles `UPSERT` (Add/Modify). Deleting or renaming a file in Git does not remove the old node from SurrealDB.
+    * **Cause**: `git_utils.py` filters exclude 'D' (Deleted) status, and there is no "Delete" logic in the sync engine.
+    * **Impact**: The graph will accumulate "ghost nodes" (nodes corresponding to deleted or renamed files) over time, leading to dead links.
+    * **Status**: Accepted Trade-off. The project follows an "Append-only/Safe" philosophy for automated hooks.
+    * **Action Required**: Do not implement automated deletion to prevent accidental data loss. Instead, implement a manual `coretext vacuum` or `prune` CLI command for periodic maintenance.
+
+* **Concurrency in Post-commit Hook (Race Condition)**: Rapid consecutive commits may trigger parallel, detached hook executions.
+    * **Cause**: No lockfile, queue, or PID check mechanism for the background sync process (`post-commit`).
+    * **Impact**: Potential transaction conflicts in SurrealDB or out-of-order updates (older commit overwriting newer commit).
+    * **Status**: Accepted Risk for Single-User MVP.
+    * **Action Required**: Users should wait for sync completion messages. Future iterations should implement a lockfile or a daemonized queue system.
+
+* **File Path as Node ID**: Node IDs are derived from mutable file paths (e.g., `folder/file.md`).
+    * **Cause**: Simplicity for MVP and human-readability of IDs.
+    * **Impact**: Refactoring folder structure (moving files) changes the Node ID, breaking the history and identity of the node in the graph (creating a new node instead of moving the old one).
+    * **Action Required**: Evaluate moving to UUIDs for Node IDs in the future (requires a complex migration strategy).
