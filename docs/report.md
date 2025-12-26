@@ -59,6 +59,7 @@ style RETRO fill:#fbf,stroke:#333,stroke-width:2px,color:#000
 ### 2.3. Technology Stack
 
 - **SurrealDB:** Selected for its multi-model capabilities (Graph + Document) and embedding support. (why not neo4j?)
+- **Gemini CLI:** free
 - **Abstract Syntax Tree (AST) Parsing:** For analyzing Markdown structure.
 - **Model Context Protocol (MCP):** The standard interface for connecting AI agents to the Knowledge Graph.
 

@@ -45,8 +45,8 @@ development_status:
   1-6-epic-1-demo-and-verification-fixes: done
   epic-1-retrospective: done
 
-  epic-2: backlog
-  2-1-mcp-server-setup-health-check: backlog
+  epic-2: in-progress
+  2-1-mcp-server-setup-health-check: review
   2-2-semantic-tool-for-topology-search: backlog
   2-3-semantic-tool-for-dependency-retrieval: backlog
   2-4-mcp-protocol-adherence-documentation: backlog

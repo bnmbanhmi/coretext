@@ -3,6 +3,8 @@ import asyncio
 import stat
 import subprocess
 import sys
+import os
+import signal
 from pathlib import Path
 from typing import Optional # Keep Optional for now, as init uses Path.cwd() which is not Optional
 from surrealdb import AsyncSurreal
@@ -127,6 +129,27 @@ def start(
         pid_file.write_text(str(proc.pid))
         
         typer.echo("CoreText daemon started in background.")
+
+        # Start FastAPI server
+        typer.echo("Starting FastAPI server...")
+        fastapi_cmd = [
+             sys.executable, "-m", "uvicorn", 
+             "coretext.server.app:app", 
+             "--host", "127.0.0.1", 
+             "--port", "8001"
+        ]
+        
+        proc_server = subprocess.Popen(
+            fastapi_cmd,
+            start_new_session=True,
+            # stdout=subprocess.DEVNULL,
+            # stderr=subprocess.DEVNULL
+        )
+        
+        # Write Server PID file
+        server_pid_file = project_root / ".coretext" / "server.pid"
+        server_pid_file.write_text(str(proc_server.pid))
+        typer.echo("FastAPI server started in background (port 8001).")
         
         # AC6: Automatically apply schema after daemon starts
         typer.echo("Applying schema automatically...")
@@ -158,6 +181,20 @@ def stop(
         pause_file.parent.mkdir(parents=True, exist_ok=True)
     pause_file.touch()
     typer.echo("CoreText hooks paused.")
+
+    # Stop FastAPI Server
+    server_pid_file = project_root / ".coretext" / "server.pid"
+    if server_pid_file.exists():
+        try:
+            pid = int(server_pid_file.read_text().strip())
+            os.kill(pid, signal.SIGTERM)
+            typer.echo(f"FastAPI server (PID {pid}) stopped.")
+            server_pid_file.unlink()
+        except ProcessLookupError:
+            typer.echo("FastAPI server process not found (already stopped?). Removing PID file.")
+            server_pid_file.unlink()
+        except Exception as e:
+            typer.echo(f"Warning: Failed to stop FastAPI server: {e}", err=True)
 
     db_client = SurrealDBClient(project_root=project_root)
     try:
