@@ -33,7 +33,7 @@ workflow_status:
   solutioning:
     create-architecture: docs/architecture.md
     create-epics-and-stories: docs/epics.md
-    test-design: recommended
+    test-design: docs/test-design-epic-2.md
     validate-architecture: optional
     implementation-readiness: docs/implementation-readiness-report-2025-12-04.md
   implementation:
