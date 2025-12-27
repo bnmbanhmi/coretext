@@ -47,8 +47,6 @@ $Performance = f(Model, Tools, Context)$.
 
 ### 2.2. Agentic Agile & The BMAD Framework
 
-*\[PLACEHOLDER: Describe the standard BMAD process. Define how it currently uses Markdown files and prompts to generate code. Discuss the limitations of the current "linear" ingestion method.\]*
-
 ```mermaid
 flowchart TD
 SPRINT[sprint-planning<br/>Initialize tracking]
@@ -68,6 +66,8 @@ CHECK -->|No| RETRO
 style SPRINT fill:#bfb,stroke:#333,stroke-width:2px,color:#000
 style RETRO fill:#fbf,stroke:#333,stroke-width:2px,color:#000
 ```
+
+
 
 ### 2.3. Knowledge Graph Theory
 
