@@ -28,7 +28,24 @@ The approach combines **Docs-as-Code** principles with **Graph Theory**. We prop
 
 ## Chapter II. Theoretical Background & Technology Stack
 
-### 2.1. Agentic Agile & The BMAD Framework
+### 2.1. The Anatomy of a Coding Agent
+
+*Why shouldn't I just dump all the documentation into the model?*
+
+**Answer:** It's not that simple, because LLMs operate under constraints of context window size and token limits. Feeding large documents leads to inefficiencies and loss of relevant information. Instead, we need a structured approach where the agent can query specific, relevant pieces of information.
+
+An AI coding agent can be abstractly defined as a function:
+
+$Performance = f(Model, Tools, Context)$.
+
+1. **Model:** The underlying LLM (e.g., GPT, Claude).
+- This can be easily evaluated via benchmarks like HumanEval, SWE-bench.
+- "Black box"
+2. **Tools:** External utilities (e.g., code execution environments, databases).
+3. **Context:** The information provided to the model to inform its decisions.
+- This is where our research focuses: improving the "Context" component.
+
+### 2.2. Agentic Agile & The BMAD Framework
 
 *\[PLACEHOLDER: Describe the standard BMAD process. Define how it currently uses Markdown files and prompts to generate code. Discuss the limitations of the current "linear" ingestion method.\]*
 
@@ -52,14 +69,18 @@ style SPRINT fill:#bfb,stroke:#333,stroke-width:2px,color:#000
 style RETRO fill:#fbf,stroke:#333,stroke-width:2px,color:#000
 ```
 
-### 2.2. Knowledge Graph Theory
+### 2.3. Knowledge Graph Theory
 
 *\[PLACEHOLDER: Define Knowledge Graphs. Contrast them with Relational Databases and Vector Stores. Explain concepts like Nodes, Edges, Properties, and Traversal. Explain why Graphs are superior for handling "Dependencies" in software.\]*
 
-### 2.3. Technology Stack
+### 2.4. Technology Stack
 
 - **SurrealDB:** Selected for its multi-model capabilities (Graph + Document) and embedding support. (why not neo4j?)
-- **Gemini CLI:** free
+- **Gemini CLI:** 
+	- Large context window
+	- Cached token (save a lot of token)
+	- Open Source
+	- 
 - **Abstract Syntax Tree (AST) Parsing:** For analyzing Markdown structure.
 - **Model Context Protocol (MCP):** The standard interface for connecting AI agents to the Knowledge Graph.
 
@@ -67,19 +88,24 @@ style RETRO fill:#fbf,stroke:#333,stroke-width:2px,color:#000
 
 ## Chapter III. Related Work
 
-### 3.1. Current State of "Code-to-Graph"
+Case study of 2 main coding agent memory approach
 
-*\[PLACEHOLDER: Briefly mention existing tools that turn *Code* into graphs (like CodeQL or Neo4j plugins). Note that there is a gap in turning *Requirements/Documentation* into graphs.\]*
+#### Approach 1: Graph-based (Sourcegraph)
+1. Repo Map
+	- AST Parsing
+	- Ranking 
+2. Retrieval via RAG + Keyword
+3. Full Content
+#### Approach 2: Agentic Context Isolation (Claude Code)
+1. Planning
+2. Context Isolation for sub-agent (Focusing)
+3. Execution
 
-### 3.2. Retrieval Augmented Generation (RAG)
-
-*\[PLACEHOLDER: Discuss standard Vector RAG. Explain its weakness in understanding structural relationships (e.g., "What implies What") compared to Graph RAG.\]*
+-> Lack of structured knowledge representation in both approaches
 
 ---
 
 ## Chapter IV. Analysis, Design, and Methodology (Core Chapter)
-
-> **Editor's Note:** This is the most important chapter. It abstracts the "Tool" into a "Method."
 
 ### 4.1. The Proposed Workflow: From Text to Knowledge
 
@@ -174,11 +200,3 @@ We applied this methodology to the "Nhaminhbach" (Rental Finding Platform) proje
 ### 5.4. Conclusion
 
 The integration of a Knowledge Graph into the BMAD framework shifts the paradigm from "Document-Centric" to "Knowledge-Centric" development. This abstraction allows AI agents to operate with a structural understanding of the software, paving the way for more autonomous and accurate software engineering workflows.
-
----
-
-### Student Note for Completion:
-
-- *In **Chapter III**, you need to briefly Google "Knowledge Graph for Software Engineering" or "Graph RAG" to add 1-2 paragraphs of references.*
-- *In **Chapter IV**, you can copy snippets of your `schema.py` (Data Model) and `markdown.py` (Algorithm) to demonstrate the technical rigor.*
-- *In **Chapter V**, take a screenshot of your SurrealDB table or a simple graph visualization to prove it works.*

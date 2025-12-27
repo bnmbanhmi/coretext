@@ -1,6 +1,7 @@
 ---
-name: Research Workflow
+name: research
 description: Conduct comprehensive research across multiple domains using current web data and verified sources - Market, Technical, Domain and other research types.
+web_bundle: true
 ---
 
 # Research Workflow
@@ -10,7 +11,7 @@ description: Conduct comprehensive research across multiple domains using curren
 **Document Standards:**
 
 - **Comprehensive Coverage**: Exhaustive research with no critical gaps
-- **Source Verification**: Every factual claim cited with URLs from {{current_year}}
+- **Source Verification**: Every factual claim backed by web sources with URL citations
 - **Document Length**: As long as needed to fully cover the research topic
 - **Professional Structure**: Compelling narrative introduction, detailed TOC, and comprehensive summary
 - **Authoritative Sources**: Multiple independent sources for all critical claims
@@ -24,8 +25,6 @@ description: Conduct comprehensive research across multiple domains using curren
 - Detailed research sections with proper citations
 - Executive summary and conclusions
 
----
-
 ## WORKFLOW ARCHITECTURE
 
 This uses **micro-file architecture** with **routing-based discovery**:
@@ -33,34 +32,33 @@ This uses **micro-file architecture** with **routing-based discovery**:
 - Each research type has its own step folder
 - Step 01 discovers research type and routes to appropriate sub-workflow
 - Sequential progression within each research type
-- Document state tracked in frontmatter
-
----
+- Document state tracked in output frontmatter
 
 ## INITIALIZATION
 
 ### Configuration Loading
 
-Load config from `{project-root}/.bmad/bmm/config.yaml` and resolve:
+Load config from `{project-root}/_bmad/bmm/config.yaml` and resolve:
 
-- `project_name`, `output_folder`, `user_name`
+- `project_name`, `output_folder`, , `planning_artifacts`, `user_name`
 - `communication_language`, `document_output_language`, `user_skill_level`
-- `date`, `current_year`, `current_month` as system-generated values
-- `enable_web_research = true` (web research is default behavior)
+- `date` as a system-generated value
 
 ### Paths
 
-- `installed_path` = `{project-root}/.bmad/bmm/workflows/1-analysis/research`
+- `installed_path` = `{project-root}/_bmad/bmm/workflows/1-analysis/research`
 - `template_path` = `{installed_path}/research.template.md`
-- `default_output_file` = `{output_folder}/analysis/research/{{research_type}}-{{topic}}-research-{{date}}.md` (dynamic based on research type)
+- `default_output_file` = `{planning_artifacts}/research/{{research_type}}-{{topic}}-research-{{date}}.md` (dynamic based on research type)
 
----
+## PREREQUISITE
+
+**⛔ Web search required.** If unavailable, abort and tell the user.
 
 ## RESEARCH BEHAVIOR
 
 ### Web Research Standards
 
-- **Current Data Only**: Always use {{current_year}} in web searches
+- **Current Data Only**: Search the web to verify and supplement your knowledge with current facts
 - **Source Verification**: Require citations for all factual claims
 - **Anti-Hallucination Protocol**: Never present information without verified sources
 - **Multiple Sources**: Require at least 2 independent sources for critical claims
@@ -74,9 +72,7 @@ Load config from `{project-root}/.bmad/bmm/config.yaml` and resolve:
 - **Critical Claims**: Market size, growth rates, competitive data need verification
 - **Fact Checking**: Apply fact-checking to critical data points
 
----
-
-## EXECUTION
+## Implementation Instructions
 
 Execute research type discovery and routing:
 
@@ -87,7 +83,7 @@ Execute research type discovery and routing:
 **Research Standards:**
 
 - **Anti-Hallucination Protocol**: Never present information without verified sources
-- **Current Data Only**: Always use {{current_year}} in web searches
+- **Current Data Only**: Search the web to verify and supplement your knowledge with current facts
 - **Source Citation**: Always include URLs for factual claims from web searches
 - **Multiple Sources**: Require 2+ independent sources for critical claims
 - **Conflict Resolution**: Present conflicting views and note discrepancies
@@ -95,7 +91,7 @@ Execute research type discovery and routing:
 
 ### Collaborative Research Discovery
 
-"Welcome {{user_name}}! I'm excited to work with you as your research partner. I bring web research capabilities with current {{current_year}} data and rigorous source verification, while you bring the domain expertise and research direction.
+"Welcome {{user_name}}! I'm excited to work with you as your research partner. I bring web research capabilities with rigorous source verification, while you bring the domain expertise and research direction.
 
 **Let me help you clarify what you'd like to research.**
 
@@ -149,50 +145,29 @@ After understanding the research topic and goals, identify the most appropriate 
 
 ### Research Type Routing
 
-Based on user selection, route to appropriate sub-workflow with the discovered topic:
+<critical>Based on user selection, route to appropriate sub-workflow with the discovered topic using the following IF block sets of instructions.</critical>
 
 #### If Market Research:
 
 - Set `research_type = "market"`
 - Set `research_topic = [discovered topic from discussion]`
-- Set output file: `{output_folder}/analysis/research/market-{{research_topic}}-research-{{date}}.md`
+- Create the starter output file: `{planning_artifacts}/research/market-{{research_topic}}-research-{{date}}.md` with exact copy of the ./research.template.md contents
 - Load: `./market-steps/step-01-init.md` with topic context
 
 #### If Domain Research:
 
 - Set `research_type = "domain"`
 - Set `research_topic = [discovered topic from discussion]`
-- Set output file: `{output_folder}/analysis/research/domain-{{research_topic}}-research-{{date}}.md`
+- Create the starter output file: `{planning_artifacts}/research/domain-{{research_topic}}-research-{{date}}.md` with exact copy of the ./research.template.md contents
 - Load: `./domain-steps/step-01-init.md` with topic context
 
 #### If Technical Research:
 
 - Set `research_type = "technical"`
 - Set `research_topic = [discovered topic from discussion]`
-- Set output file: `{output_folder}/analysis/research/technical-{{research_topic}}-research-{{date}}.md`
+- Create the starter output file: `{planning_artifacts}/research/technical-{{research_topic}}-research-{{date}}.md` with exact copy of the ./research.template.md contents
 - Load: `./technical-steps/step-01-init.md` with topic context
 
 **Important**: The discovered topic from the collaborative discussion should be passed to the research initialization steps, so they don't need to ask "What do you want to research?" again - they can focus on refining the scope for their specific research type.
 
-### Document Initialization
-
-Create research document with proper metadata:
-
-```yaml
----
-stepsCompleted: [1]
-inputDocuments: []
-workflowType: 'research'
-lastStep: 1
-research_type: '{{research_type}}'
-research_topic: '{{research_topic}}'
-research_goals: '{{research_goals}}'
-user_name: '{{user_name}}'
-date: '{{date}}'
-current_year: '{{current_year}}'
-web_research_enabled: true
-source_verification: true
----
-```
-
-**Note:** All research workflows emphasize current web data with {{current_year}} searches and rigorous source verification.
+**Note:** All research workflows require web search for current data and source verification.

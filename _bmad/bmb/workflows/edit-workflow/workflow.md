@@ -1,5 +1,5 @@
 ---
-name: Edit Workflow
+name: edit-workflow
 description: Intelligent workflow editor that helps modify existing workflows while following best practices
 web_bundle: true
 ---
@@ -49,7 +49,7 @@ This uses **step-file architecture** for disciplined execution:
 
 ### 1. Configuration Loading
 
-Load and read full config from {project-root}/.bmad/bmb/config.yaml and resolve:
+Load and read full config from {project-root}/_bmad/bmb/config.yaml and resolve:
 
 - `project_name`, `output_folder`, `user_name`, `communication_language`, `document_output_language`
 

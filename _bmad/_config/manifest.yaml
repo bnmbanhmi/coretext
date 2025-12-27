@@ -1,10 +1,15 @@
 installation:
-  version: 6.0.0-alpha.19
-  installDate: 2025-12-20T04:29:33.198Z
-  lastUpdated: 2025-12-20T04:29:33.198Z
+  version: 6.0.0-alpha.21
+  installDate: 2025-12-27T05:23:11.948Z
+  lastUpdated: 2025-12-27T05:23:11.948Z
 modules:
   - core
   - bmb
+  - bmgd
   - bmm
+  - cis
 ides:
   - gemini
+  - claude-code
+  - github-copilot
+  - antigravity

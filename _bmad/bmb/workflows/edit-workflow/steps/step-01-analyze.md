@@ -3,17 +3,13 @@ name: 'step-01-analyze'
 description: 'Load and deeply understand the target workflow'
 
 # Path Definitions
-workflow_path: '{project-root}/.bmad/bmb/workflows/edit-workflow'
+workflow_path: '{project-root}/_bmad/bmb/workflows/edit-workflow'
 
 # File References
 thisStepFile: '{workflow_path}/steps/step-01-analyze.md'
 nextStepFile: '{workflow_path}/steps/step-02-discover.md'
 workflowFile: '{workflow_path}/workflow.md'
 outputFile: '{output_folder}/workflow-edit-{target_workflow_name}.md'
-
-# Task References
-advancedElicitationTask: '{project-root}/.bmad/core/tasks/advanced-elicitation.xml'
-partyModeWorkflow: '{project-root}/.bmad/core/workflows/party-mode/workflow.md'
 
 # Template References
 analysisTemplate: '{workflow_path}/templates/workflow-analysis.md'
@@ -133,9 +129,9 @@ Based on what the user wants to edit:
 
 Load reference documentation as needed:
 
-- `{project-root}/.bmad/bmb/docs/workflows/architecture.md`
-- `{project-root}/.bmad/bmb/docs/workflows/step-template.md`
-- `{project-root}/.bmad/bmb/docs/workflows/workflow-template.md`
+- `{project-root}/_bmad/bmb/docs/workflows/architecture.md`
+- `{project-root}/_bmad/bmb/docs/workflows/templates/step-template.md`
+- `{project-root}/_bmad/bmb/docs/workflows/templates/workflow-template.md`
 
 Check against best practices:
 

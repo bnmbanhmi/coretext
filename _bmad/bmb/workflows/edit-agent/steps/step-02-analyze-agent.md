@@ -3,27 +3,27 @@ name: 'step-02-analyze-agent'
 description: 'Load agent and relevant documentation for analysis'
 
 # Path Definitions
-workflow_path: '{project-root}/src/modules/bmb/workflows/edit-agent'
+workflow_path: '{project-root}/bmb/workflows/create-agent/edit-agent'
 
 # File References
 thisStepFile: '{workflow_path}/steps/step-02-analyze-agent.md'
 nextStepFile: '{workflow_path}/steps/step-03-propose-changes.md'
 
 # Task References
-advancedElicitationTask: '{project-root}/.bmad/core/tasks/advanced-elicitation.xml'
-partyModeWorkflow: '{project-root}/.bmad/core/workflows/party-mode/workflow.md'
+advancedElicitationTask: '{project-root}/_bmad/core/tasks/advanced-elicitation.xml'
+partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
 
 # Documentation References (load JIT based on user goals)
-understanding_agent_types: '{project-root}/.bmad/bmb/docs/agents/understanding-agent-types.md'
-agent_compilation: '{project-root}/.bmad/bmb/docs/agents/agent-compilation.md'
-simple_architecture: '{project-root}/.bmad/bmb/docs/agents/simple-agent-architecture.md'
-expert_architecture: '{project-root}/.bmad/bmb/docs/agents/expert-agent-architecture.md'
-module_architecture: '{project-root}/.bmad/bmb/docs/agents/module-agent-architecture.md'
-menu_patterns: '{project-root}/.bmad/bmb/docs/agents/agent-menu-patterns.md'
-communication_presets: '{project-root}/.bmad/bmb/workflows/create-agent/data/communication-presets.csv'
-reference_simple_agent: '{project-root}/.bmad/bmb/reference/agents/simple-examples/commit-poet.agent.yaml'
-reference_expert_agent: '{project-root}/.bmad/bmb/reference/agents/expert-examples/journal-keeper/journal-keeper.agent.yaml'
-validation: '{project-root}/.bmad/bmb/workflows/create-agent/data/agent-validation-checklist.md'
+understanding_agent_types: '{project-root}/_bmad/bmb/docs/agents/understanding-agent-types.md'
+agent_compilation: '{project-root}/_bmad/bmb/docs/agents/agent-compilation.md'
+simple_architecture: '{project-root}/_bmad/bmb/docs/agents/simple-agent-architecture.md'
+expert_architecture: '{project-root}/_bmad/bmb/docs/agents/expert-agent-architecture.md'
+module_architecture: '{project-root}/_bmad/bmb/docs/agents/module-agent-architecture.md'
+menu_patterns: '{project-root}/_bmad/bmb/docs/agents/agent-menu-patterns.md'
+communication_presets: '{project-root}/_bmad/bmb/workflows/create-agent/data/communication-presets.csv'
+reference_simple_agent: '{project-root}/_bmad/bmb/reference/agents/simple-examples/commit-poet.agent.yaml'
+reference_expert_agent: '{project-root}/_bmad/bmb/reference/agents/expert-examples/journal-keeper/journal-keeper.agent.yaml'
+validation: '{project-root}/_bmad/bmb/workflows/create-agent/data/agent-validation-checklist.md'
 ---
 
 # Step 2: Analyze Agent
@@ -85,9 +85,9 @@ Load the agent file from the path provided in step 1:
 
 - Load and read the .agent.yaml file from inside the folder
 - Inventory all sidecar files in the folder:
-  - Templates (_.md, _.txt)
+  - Templates (`_.md`, `_.txt`)
   - Documentation files
-  - Knowledge base files (_.csv, _.json, \*.yaml)
+  - Knowledge base files (`_.csv`, `_.json`, `*.yaml`)
   - Any other resources referenced by the agent
 - Note: Expert agent with sidecar structure
 

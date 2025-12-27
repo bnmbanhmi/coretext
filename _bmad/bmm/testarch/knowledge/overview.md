@@ -31,7 +31,6 @@ npm install -D @seontechnologies/playwright-utils
 
 - `@playwright/test` >= 1.54.1 (required)
 - `ajv` >= 8.0.0 (optional - for JSON Schema validation)
-- `js-yaml` >= 4.0.0 (optional - for YAML schema support)
 - `zod` >= 3.0.0 (optional - for Zod schema validation)
 
 ## Available Utilities
@@ -262,7 +261,7 @@ import { apiRequest } from '@seontechnologies/playwright-utils/api-request'; // 
 
 The official `@seontechnologies/playwright-utils` repository provides working examples of all patterns described in these fragments.
 
-**Repository:** https://github.com/seontechnologies/playwright-utils
+**Repository:** <https://github.com/seontechnologies/playwright-utils>
 
 **Key resources:**
 

@@ -3,7 +3,7 @@ name: 'step-07-holistic-analysis'
 description: 'Analyze workflow flow, goal alignment, and meta-workflow failures'
 
 # Path Definitions
-workflow_path: '{project-root}/.bmad/bmb/workflows/workflow-compliance-check'
+workflow_path: '{project-root}/_bmad/bmb/workflows/workflow-compliance-check'
 
 # File References
 thisStepFile: '{workflow_path}/steps/step-07-holistic-analysis.md'
@@ -16,9 +16,9 @@ targetWorkflowFile: '{target_workflow_path}'
 complianceReportTemplate: '{workflow_path}/templates/compliance-report.md'
 
 # Documentation References
-stepTemplate: '{project-root}/.bmad/bmb/docs/workflows/step-template.md'
-workflowTemplate: '{project-root}/.bmad/bmb/docs/workflows/workflow-template.md'
-intentSpectrum: '{project-root}/.bmad/bmb/docs/workflows/intent-vs-prescriptive-spectrum.md'
+stepTemplate: '{project-root}/_bmad/bmb/docs/workflows/templates/step-template.md'
+workflowTemplate: '{project-root}/_bmad/bmb/docs/workflows/templates/workflow-template.md'
+intentSpectrum: '{project-root}/_bmad/bmb/docs/workflows/intent-vs-prescriptive-spectrum.md'
 ---
 
 # Step 7: Holistic Workflow Analysis
@@ -215,7 +215,7 @@ Evaluate workflow from user perspective:
 - **Optimization Opportunities:** [number key improvements identified]
 - **Meta-Workflow Failures:** [number issues that should have been prevented]
 
-**Ready for Phase 6:** Comprehensive compliance report generation
+**Ready for Phase 8:** Comprehensive compliance report generation
 
 - All findings compiled into structured report
 - Severity-ranked violation list

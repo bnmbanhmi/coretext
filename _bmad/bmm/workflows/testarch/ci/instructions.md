@@ -2,7 +2,7 @@
 
 # CI/CD Pipeline Setup
 
-**Workflow ID**: `.bmad/bmm/testarch/ci`
+**Workflow ID**: `_bmad/bmm/testarch/ci`
 **Version**: 4.0 (BMad v6)
 
 ---
@@ -10,6 +10,8 @@
 ## Overview
 
 Scaffolds a production-ready CI/CD quality pipeline with test execution, burn-in loops for flaky test detection, parallel sharding, artifact collection, and notification configuration. This workflow creates platform-specific CI configuration optimized for fast feedback and reliable test execution.
+
+Note: This is typically a one-time setup per repo; run it any time after the test framework exists, ideally before feature work starts.
 
 ---
 
@@ -61,8 +63,8 @@ Scaffolds a production-ready CI/CD quality pipeline with test execution, burn-in
      - Ask user if unable to auto-detect
 
 5. **Read Environment Configuration**
-   - Check for `.nvmrc` to determine Node version
-   - Default to Node 20 LTS if not found
+   - Use `.nvmrc` for Node version if present
+   - If missing, default to a current LTS (Node 24) or newer instead of a fixed old version
    - Read `package.json` to identify dependencies (affects caching strategy)
 
 **Halt Condition:** If preflight checks fail, stop immediately and report which requirement failed.

@@ -3,7 +3,7 @@ name: 'step-03-step-validation'
 description: 'Validate each step file against step-template.md standards'
 
 # Path Definitions
-workflow_path: '{project-root}/.bmad/bmb/workflows/workflow-compliance-check'
+workflow_path: '{project-root}/_bmad/bmb/workflows/workflow-compliance-check'
 
 # File References
 thisStepFile: '{workflow_path}/steps/step-03-step-validation.md'
@@ -16,8 +16,8 @@ targetWorkflowStepsPath: '{target_workflow_steps_path}'
 complianceReportTemplate: '{workflow_path}/templates/compliance-report.md'
 
 # Documentation References
-stepTemplate: '{project-root}/.bmad/bmb/docs/workflows/step-template.md'
-workflowTemplate: '{project-root}/.bmad/bmb/docs/workflows/workflow-template.md'
+stepTemplate: '{project-root}/_bmad/bmb/docs/workflows/templates/step-template.md'
+workflowTemplate: '{project-root}/_bmad/bmb/docs/workflows/templates/workflow-template.md'
 ---
 
 # Step 3: Step-by-Step Validation
@@ -138,8 +138,8 @@ Check for proper references:
 
 ```yaml
 # Task References
-advancedElicitationTask: '{project-root}/.bmad/core/tasks/advanced-elicitation.xml'
-partyModeWorkflow: '{project-root}/.bmad/core/workflows/party-mode/workflow.md'
+advancedElicitationTask: '{project-root}/_bmad/core/tasks/advanced-elicitation.xml'
+partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
 ```
 
 **Violations to document:**
@@ -186,7 +186,7 @@ For each step:
 
 "**Path Variable Validation:**"
 
-- Check format: `{project-root}/.bmad/bmb/...` vs `{project-root}/src/modules/bmb/...`
+- Check format: `{project-root}/_bmad/bmb/...` vs `{project-root}/bmb/...`
 - Ensure consistent variable usage across all step files
 - Validate relative vs absolute path usage
 
@@ -232,13 +232,13 @@ For each step file with violations:
 2. [Second most frequent]
 3. [Third most frequent]
 
-**Ready for Phase 3:** Holistic workflow analysis
+**Ready for Phase 4:** File Validation workflow analysis
 
 - Flow optimization assessment
 - Goal alignment verification
 - Meta-workflow failure analysis
 
-**Select an Option:** [C] Continue to Holistic Analysis [X] Exit"
+**Select an Option:** [C] Continue to File Validation [X] Exit"
 
 ## Menu Handling Logic:
 

@@ -3,22 +3,20 @@ name: 'step-02-gather'
 description: 'Gather comprehensive requirements for the workflow being created'
 
 # Path Definitions
-workflow_path: '{project-root}/.bmad/bmb/workflows/create-workflow'
+workflow_path: '{project-root}/_bmad/bmb/workflows/create-workflow'
 
 # File References
 thisStepFile: '{workflow_path}/steps/step-02-gather.md'
-nextStepFile: '{workflow_path}/steps/step-03-tools-overview.md'
-workflowFile: '{workflow_path}/workflow.md'
+nextStepFile: '{workflow_path}/steps/step-03-tools-configuration.md'
 # Output files for workflow creation process
-workflowPlanFile: '{output_folder}/workflow-plan-{new_workflow_name}.md'
-targetWorkflowPath: '{custom_workflow_location}/{new_workflow_name}'
+targetWorkflowPath: '{bmb_creations_output_folder}/workflows/{new_workflow_name}'
+workflowPlanFile: '{targetWorkflowPath}/workflow-plan-{new_workflow_name}.md'
 
 # Task References
-advancedElicitationTask: '{project-root}/.bmad/core/tasks/advanced-elicitation.xml'
-partyModeWorkflow: '{project-root}/.bmad/core/workflows/party-mode/workflow.md'
-
+advancedElicitationTask: '{project-root}/_bmad/core/tasks/advanced-elicitation.xml'
+partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
 # Template References
-requirementsTemplate: '{workflow_path}/templates/requirements-section.md'
+# No template needed - will append requirements directly to workflow plan
 ---
 
 # Step 2: Requirements Gathering
@@ -92,7 +90,7 @@ Let's load some examples to help you decide the workflow pattern:
 Load and reference the Meal Prep & Nutrition Plan workflow as an example:
 
 ```
-Read: {project-root}/.bmad/bmb/reference/workflows/meal-prep-nutrition/workflow.md
+Read: {project-root}/_bmad/bmb/reference/workflows/meal-prep-nutrition/workflow.md
 ```
 
 This shows a linear workflow structure. Now let's explore your desired pattern:
@@ -106,7 +104,7 @@ This shows a linear workflow structure. Now let's explore your desired pattern:
 **Based on our reference examples:**
 
 - **Linear**: Like Meal Prep Plan (Init → Profile → Assessment → Strategy → Shopping → Prep)
-  - See: `{project-root}/.bmad/bmb/reference/workflows/meal-prep-nutrition/`
+  - See: `{project-root}/_bmad/bmb/reference/workflows/meal-prep-nutrition/`
 - **Looping**: User Story Generator (Generate → Review → Refine → Generate more... until done)
 - **Branching**: Architecture Decision (Analyze → Choose pattern → Implement based on choice)
 - **Iterative**: Document Review (Load → Analyze → Suggest changes → Implement → Repeat until approved)
@@ -156,25 +154,7 @@ Define what the workflow produces:
 - Should outputs be saved automatically?
 - What format should outputs be in?
 
-### 8. Target Location and Module Configuration
-
-Determine where the workflow will be created:
-
-- For bmb module: Workflows go to `{custom_workflow_location}` (defaults to `.bmad/custom/src/workflows`)
-- For other modules: Check their install-config.yaml for custom workflow locations
-- Confirm the exact folder path where the workflow will be created
-- Ensure the folder name doesn't conflict with existing workflows
-
-### 9. Technical Constraints
-
-Discuss technical requirements:
-
-- Any specific tools or dependencies needed?
-- Does it need to integrate with other systems?
-- Any performance considerations?
-- Should it be standalone or callable by other workflows?
-
-### 10. Success Criteria
+### 8. Success Criteria
 
 Define what makes the workflow successful:
 
@@ -183,13 +163,11 @@ Define what makes the workflow successful:
 - Are there measurable outcomes?
 - What would make a user satisfied with the result?
 
-## STORE REQUIREMENTS:
+#### STORE REQUIREMENTS:
 
-After collecting all requirements, append them to {workflowPlanFile} using {requirementsTemplate}:
+After collecting all requirements, append them to {workflowPlanFile} in a format that will be be used later to design in more detail and create the workflow structure.
 
-This information will be used in the design phase to create the workflow structure.
-
-### 8. Present MENU OPTIONS
+### 9. Present MENU OPTIONS
 
 Display: **Select an Option:** [A] Advanced Elicitation [P] Party Mode [C] Continue
 
@@ -210,7 +188,7 @@ Display: **Select an Option:** [A] Advanced Elicitation [P] Party Mode [C] Conti
 
 ## CRITICAL STEP COMPLETION NOTE
 
-ONLY WHEN C is selected and requirements are stored, will you then load, read entire file, then execute {nextStepFile} to execute and begin workflow structure design step.
+ONLY WHEN C is selected and requirements are stored in the output file, will you then load, read entire file, then execute {nextStepFile} to execute and begin workflow structure design step.
 
 ---
 
