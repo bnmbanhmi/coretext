@@ -170,7 +170,6 @@ class GraphManager:
                      return first_result.get('result', [])
                 elif first_result.get('status') == 'ERR':
                      raise Exception(f"SurrealDB Search Error: {first_result.get('detail')}")
-            return first_result # Fallback for other formats (e.g. direct list if client unwraps)
             
         return []
 

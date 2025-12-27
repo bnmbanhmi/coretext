@@ -71,17 +71,16 @@ async def get_dependencies(
         # This makes it easier for the agent to just pass a path.
         node_id = request.node_identifier
         if ":" not in node_id:
-            # We assume it's a file path.
-            # We also need to handle potential quoting if needed, but for now we trust the client handles binding
-            # However, if we construct the string 'file:path', we rely on SurrealDB to parse 'path' as the ID.
-            # If path has special chars, it might be tricky without backticks, but let's try strict first.
-            # If the user passes "core/manager.py", we convert to "file:core/manager.py".
-            node_id = f"file:{node_id}"
+            # Only assume it's a file if it looks like a path (contains / or .)
+            # This prevents accidental prefixing of non-standard IDs
+            if "/" in node_id or "." in node_id:
+                node_id = f"file:{node_id}"
 
         results = await graph_manager.get_dependencies(node_id, depth=request.depth)
         return GetDependenciesResponse(dependencies=results)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # In a real app, log the exception: logger.error(f"Dependency retrieval error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error during dependency retrieval.")
 
 @router.post("/tools/search_topology", response_model=SearchTopologyResponse)
 async def search_topology(

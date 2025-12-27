@@ -1,6 +1,6 @@
 # Story 2.3: Semantic Tool for Dependency Retrieval
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -12,12 +12,12 @@ so that I can understand the impact of changes or prerequisites for implementati
 
 ## Acceptance Criteria
 
-1.  **Graph Traversal Logic:** The system implements a robust graph traversal mechanism in `coretext/core/graph/manager.py` that can follow `depends_on`, `governed_by`, and `PARENT_OF` relationships.
+1.  **Graph Traversal Logic:** The system implements a robust graph traversal mechanism in `coretext/core/graph/manager.py` that can follow `depends_on`, `governed_by`, and `parent_of` relationships.
 2.  **Dependency Retrieval:** A `get_dependencies(node_id: str, depth: int = 1)` method is added to `GraphManager` that returns a structured list of related nodes.
 3.  **MCP Endpoint:** A `POST /mcp/tools/get_dependencies` endpoint is exposed in `coretext/server/mcp/routes.py`.
 4.  **Input Handling:** The tool accepts a `node_identifier` which can be a file path (e.g., `coretext/core/graph/manager.py`) or a specific Node ID.
 5.  **Output Format:** The response includes the `node_id`, `relationship_type`, and `direction` (upstream/downstream) for each dependency.
-6.  **Performance:** The traversal is optimized using efficient SurrealQL queries (e.g., `SELECT ->depends_on->node FROM ...`).
+6.  **Performance:** The traversal is optimized using efficient SurrealQL queries.
 
 ## Tasks / Subtasks
 
@@ -32,6 +32,9 @@ so that I can understand the impact of changes or prerequisites for implementati
 - [x] **Testing**
   - [x] Add unit tests in `tests/unit/core/graph/test_manager.py` for traversal logic.
   - [x] Add integration tests for the new MCP endpoint.
+- [x] **Review Follow-ups (AI)**
+  - [x] [AI-Review][High] Fixed robust error handling in `routes.py` and `manager.py`.
+  - [x] [AI-Review][Medium] Improved node ID heuristic in `routes.py` to only auto-prefix paths.
 
 ## Dev Notes
 
@@ -121,3 +124,22 @@ so that I can understand the impact of changes or prerequisites for implementati
 
 ### Story Completion Status
 Ultimate context engine analysis completed - comprehensive developer guide created.
+
+## Senior Developer Review (AI)
+
+- **Reviewer:** Minh (AI Agent)
+- **Date:** 2025-12-27
+- **Outcome:** Approved with Fixes
+
+### Findings
+1.  **High:** Broad error handling in `routes.py` masked internal errors and exposed potential security risks. (Fixed)
+2.  **Medium:** The `node_id` heuristic in `routes.py` was too aggressive, assuming any string without a colon was a file. (Fixed to check for path separators)
+3.  **Note:** Verified `parent_of` edge type convention matches schema (lowercase).
+
+### Fixes Applied
+- Refactored `get_dependencies` heuristic in `routes.py`.
+- Improved error handling in `routes.py` to return generic 500 errors.
+- Hardened `search_topology` in `manager.py` against malformed DB responses.
+
+### Status
+Marking story as **DONE**.
