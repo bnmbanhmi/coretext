@@ -191,7 +191,8 @@ The system follows a layered architecture:
 
 ### 5.1. Experiment 1: Self-Reflexive Case Study (Project CoreText)
 - Context: Build the engine coretext with BMad Module (no graph)
-- Workflow: 
+- Workflow: Human + BMad
+- Pain Points Observed
 ### 5.2. Experiment 2: Application Case Study (Project Nhaminhbach)
 
 We applied this methodology to the "Nhaminhbach" (Rental Finding Platform) project.

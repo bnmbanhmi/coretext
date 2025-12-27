@@ -51,10 +51,9 @@ class VectorEmbedder:
         # Matryoshka slicing
         if dimension < len(embedding):
              embedding = embedding[:dimension]
-             # Matryoshka embeddings usually perform better if normalized after slicing
-             # but strictly following the AC "slicing" for now. 
-             # Ideally we should re-normalize: 
-             # norm = np.linalg.norm(embedding)
-             # if norm > 0: embedding = embedding / norm
+             # Re-normalize after slicing for optimal performance
+             norm = np.linalg.norm(embedding)
+             if norm > 0:
+                 embedding = embedding / norm
 
         return embedding.tolist()

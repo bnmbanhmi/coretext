@@ -1,6 +1,6 @@
 # Story 2.2: semantic-tool-for-topology-search
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -17,9 +17,9 @@ so that I can understand project structure and dependencies relevant to my task.
 3.  **Local Cache:** The model is downloaded to and loaded from `~/.coretext/cache/` (or similar local path) to ensure offline capability.
 4.  **Vector Storage:** The Graph Schema is updated (`coretext/db/migrations.py`) to include a vector field on relevant nodes (e.g., `embedding` on `Header` and `File` nodes) with an HNSW index.
 5.  **Semantic Search:** `coretext/core/graph/manager.py` implements a `search_topology(query: str, limit: int)` method that:
-    *   Generates an embedding for the query (with `search_query:` prefix).
-    *   Executes a SurrealQL vector similarity search (`vector::similarity::cosine` or `knn`).
-    *   Returns a list of matching nodes with their similarity scores.
+    *	Generates an embedding for the query (with `search_query:` prefix).
+    *	Executes a SurrealQL vector similarity search (`vector::similarity::cosine` or `knn`).
+    *	Returns a list of matching nodes with their similarity scores.
 6.  **MCP Tool Endpoint:** A `POST /mcp/tools/search_topology` endpoint is implemented in `coretext/server/mcp/routes.py` that wraps the graph manager's search method.
 7.  **Docstrings:** The endpoint includes a comprehensive docstring describing its usage for AI agents.
 
@@ -42,6 +42,10 @@ so that I can understand project structure and dependencies relevant to my task.
   - [x] Add `search_topology` route to `coretext/server/mcp/routes.py`.
   - [x] Define Pydantic models for `SearchTopologyRequest` and `SearchTopologyResponse`.
   - [x] Ensure docstrings are agent-friendly.
+
+### Review Follow-ups (AI)
+- [x] [AI-Review][Low] Re-normalize embedding after Matryoshka slicing in `VectorEmbedder`. [coretext/core/vector/embedder.py]
+- [x] [AI-Review][Medium] Improve dependency injection for `GraphManager` in `dependencies.py` to allow easier testing. [coretext/server/dependencies.py]
 
 ## Dev Notes
 
@@ -75,6 +79,7 @@ so that I can understand project structure and dependencies relevant to my task.
 - Implemented `search_topology` endpoint in `coretext/server/mcp/routes.py`.
 - Added dependency injection for `GraphManager` in `coretext/server/dependencies.py`.
 - Added comprehensive unit tests for all new components.
+- **AI Review Fixes**: Added normalization to Matryoshka slicing and improved dependency injection.
 
 ### File List
 - coretext/core/vector/embedder.py
@@ -87,3 +92,4 @@ so that I can understand project structure and dependencies relevant to my task.
 - tests/unit/db/test_migrations.py
 - tests/unit/core/graph/test_manager.py
 - tests/unit/server/test_mcp.py
+
