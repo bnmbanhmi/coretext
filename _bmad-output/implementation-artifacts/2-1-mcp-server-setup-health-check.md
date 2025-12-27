@@ -1,6 +1,6 @@
 # Story 2.1: mcp-server-setup-health-check
 
-Status: Ready for Review
+Status: Done
 
 ## Story
 
@@ -24,11 +24,13 @@ so that the Gemini CLI can communicate with it and verify its operational status
 - [x] Implement `coretext/server/app.py` as the main FastAPI entry point. (AC: 1, 2)
 - [x] Implement `coretext/server/health.py` with localhost-only validation logic. (AC: 3, 4)
 - [x] Create `coretext/server/mcp/routes.py` with an `APIRouter` and initial tool stubs. (AC: 5, 6, 7)
-- [x] Update `coretext/cli/commands.py` to manage the FastAPI daemon lifecycle. (AC: 8)
-  - [x] Add `uvicorn` as a dependency if missing.
-  - [x] Update `start` to launch the FastAPI server using `subprocess.Popen` or similar.
-  - [x] Update `stop` to terminate the FastAPI server process (using PID tracking).
-- [x] Add unit tests for the health check and initial stubs in `tests/unit/server/test_health.py`.
+- [x] Update `coretext/cli/commands.py` to manage FastAPI daemon lifecycle. (AC: 8)
+  - [x] Add `uvicorn` as a dependency.
+  - [x] Update `start` to launch FastAPI server.
+  - [x] Update `stop` to terminate FastAPI server.
+- [x] Add unit tests for health check and initial stubs in `tests/unit/server/test_health.py`.
+  - [x] Refactored health check to use `verify_localhost` dependency for better testability.
+  - [x] Verified localhost security guardrail with robust unit tests.
 
 ## Dev Context & Guardrails
 
@@ -70,6 +72,7 @@ gemini-2.0-flash
 - Implemented MCP router stub logic.
 - Updated CLI `start` and `stop` commands to manage FastAPI daemon.
 - Added comprehensive unit and integration tests.
+- **Code Review**: Fixed critical security testing gap. Refactored `health.py` to use dependency injection and implemented rigorous unit tests for localhost verification.
 
 ### File List
 - docs/sprint-artifacts/2-1-mcp-server-setup-health-check.md
