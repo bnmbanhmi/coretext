@@ -52,7 +52,7 @@ def test_duplicate_links_have_unique_ids(parser: MarkdownParser, create_md_file)
     # Find edges to valid_simple.md
     # Normalized path will be relative to tmp_path (parser.project_root)
     normalized_target_path = str(target_file_path.relative_to(parser.project_root))
-    target_edges = [e for e in edges if normalized_target_path in e.target and e.edge_type == "REFERENCES"]
+    target_edges = [e for e in edges if normalized_target_path in e.target and e.edge_type == "references"]
     assert len(target_edges) == 2
     
     # Verify IDs are unique

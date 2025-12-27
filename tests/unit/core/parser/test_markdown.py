@@ -49,7 +49,7 @@ def test_parse_valid_simple_md(parser: MarkdownParser, create_md_file):
     assert len(edges) == 1
 
     # File -> H1 (CONTAINS)
-    file_h1_edge = next(e for e in edges if e.source == file_nodes[0].id and e.target == h1.id and e.edge_type == "CONTAINS")
+    file_h1_edge = next(e for e in edges if e.source == file_nodes[0].id and e.target == h1.id and e.edge_type == "contains")
     assert file_h1_edge is not None
 
 
@@ -131,11 +131,11 @@ Implicit Link: subdir/target.md
     target_path = "tests/data/subdir/target.md"
 
     # Explicit link: [Explicit Link](./subdir/target.md)
-    explicit_ref_edge = next(e for e in edges if e.source == file_nodes[0].id and e.target == target_path and e.edge_type == "REFERENCES")
+    explicit_ref_edge = next(e for e in edges if e.source == file_nodes[0].id and e.target == target_path and e.edge_type == "references")
     assert explicit_ref_edge is not None
 
     # Implicit link: subdir/target.md
-    implicit_ref_edge = next(e for e in edges if e.source == file_nodes[0].id and e.target == target_path and e.edge_type == "REFERENCES")
+    implicit_ref_edge = next(e for e in edges if e.source == file_nodes[0].id and e.target == target_path and e.edge_type == "references")
     assert implicit_ref_edge is not None
     
     # Total edges = 11 (CONTAINS/PARENT_OF) + 2 (REFERENCES) = 13

@@ -20,7 +20,7 @@ def test_extract_valid_link(parser, tmp_path):
     # Verify
     assert len(edges) >= 1
     # Find the REFERENCES edge
-    ref_edges = [e for e in edges if e.edge_type == "REFERENCES"]
+    ref_edges = [e for e in edges if e.edge_type == "references"]
     assert len(ref_edges) == 1
     edge = ref_edges[0]
     assert edge.source == "file_a.md"
@@ -52,6 +52,6 @@ def test_extract_implicit_link(parser, tmp_path):
     nodes, edges = parser.parse(file_a)
 
     # Verify
-    ref_edges = [e for e in edges if e.edge_type == "REFERENCES"]
+    ref_edges = [e for e in edges if e.edge_type == "references"]
     assert len(ref_edges) == 1
     assert ref_edges[0].target == "file_c.md"

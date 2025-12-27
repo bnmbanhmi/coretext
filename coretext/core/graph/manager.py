@@ -2,12 +2,14 @@ from typing import Type, List
 from surrealdb import Surreal
 from coretext.core.graph.models import BaseNode, BaseEdge, ParsingErrorNode, SyncReport
 from coretext.core.parser.schema import SchemaMapper
+from coretext.core.vector.embedder import VectorEmbedder
 from datetime import datetime
 
 class GraphManager:
-    def __init__(self, db_client: Surreal, schema_mapper: SchemaMapper):
+    def __init__(self, db_client: Surreal, schema_mapper: SchemaMapper, embedder: VectorEmbedder | None = None):
         self.db = db_client
         self.schema_mapper = schema_mapper
+        self.embedder = embedder or VectorEmbedder()
 
     def _get_relation_id(self, node_id: str, node_type: str) -> str:
         table = self.schema_mapper.get_node_table(node_type)
@@ -133,6 +135,44 @@ class GraphManager:
 
     async def delete_edge(self, edge_id: str) -> None:
         await self.db.delete(edge_id)
+
+    async def search_topology(self, query: str, limit: int = 5) -> List[dict]:
+        """
+        Search for nodes semantically similar to the query.
+
+        Args:
+            query: The search query string.
+            limit: Maximum number of results to return.
+
+        Returns:
+            List of matching nodes with similarity scores.
+        """
+        embedding = await self.embedder.encode(query, task_type="search_query")
+        
+        # Use HNSW index for efficient vector search
+        # <|limit|> is the KNN syntax in SurrealDB
+        sql = f"""
+        SELECT *, vector::similarity::cosine(embedding, $embedding) AS score 
+        FROM node 
+        WHERE embedding <|{limit}|> $embedding
+        ORDER BY score DESC;
+        """
+        
+        results = await self.db.query(sql, {"embedding": embedding})
+        
+        # Handle SurrealDB response format
+        # results is a list of response objects for each query statement
+        if isinstance(results, list) and len(results) > 0:
+            # Check for error in result
+            first_result = results[0]
+            if isinstance(first_result, dict):
+                if first_result.get('status') == 'OK':
+                     return first_result.get('result', [])
+                elif first_result.get('status') == 'ERR':
+                     raise Exception(f"SurrealDB Search Error: {first_result.get('detail')}")
+            return first_result # Fallback for other formats (e.g. direct list if client unwraps)
+            
+        return []
 
     async def ingest(self, nodes: List[BaseNode], edges: List[BaseEdge], batch_size: int = 100) -> SyncReport:
         """

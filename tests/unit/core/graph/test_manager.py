@@ -1,8 +1,9 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from coretext.core.graph.manager import GraphManager
 from coretext.core.graph.models import BaseNode, BaseEdge
 from coretext.core.parser.schema import SchemaMapper
+from coretext.core.vector.embedder import VectorEmbedder
 from datetime import datetime
 
 @pytest.fixture
@@ -18,8 +19,12 @@ def mock_schema_mapper():
     return mapper
 
 @pytest.fixture
-def graph_manager(mock_surreal_client, mock_schema_mapper):
-    return GraphManager(mock_surreal_client, mock_schema_mapper)
+def mock_embedder():
+    return AsyncMock(spec=VectorEmbedder)
+
+@pytest.fixture
+def graph_manager(mock_surreal_client, mock_schema_mapper, mock_embedder):
+    return GraphManager(mock_surreal_client, mock_schema_mapper, embedder=mock_embedder)
 
 @pytest.mark.asyncio
 async def test_create_node(graph_manager, mock_surreal_client):
@@ -127,20 +132,20 @@ async def test_create_edge(graph_manager, mock_surreal_client):
     mock_return_value["in"] = mock_return_value.pop("source")
     mock_return_value["out"] = mock_return_value.pop("target")
 
-    mock_surreal_client.create.return_value = mock_return_value
+    # create_edge uses query (RELATE), so we mock query
+    mock_surreal_client.query.return_value = [mock_return_value]
 
     created_edge = await graph_manager.create_edge(edge_data)
 
-    mock_surreal_client.create.assert_awaited_once() # Check that create was called
-    assert call_args[0] == f"{edge_data.edge_type}:`{edge_data.id}`"
-
-    sent_data = call_args[1]
-    assert sent_data["in"] == edge_data.source
-    assert sent_data["out"] == edge_data.target
-    assert sent_data["edge_type"] == edge_data.edge_type
-    assert sent_data["metadata"] == edge_data.metadata
-    assert "created_at" in sent_data
-    assert "updated_at" in sent_data
+    mock_surreal_client.query.assert_awaited_once() # Check that query was called
+    call_args = mock_surreal_client.query.call_args.args
+    assert "RELATE" in call_args[0]
+    
+    sent_params = call_args[1]["data"]
+    assert sent_params["edge_type"] == edge_data.edge_type
+    assert sent_params["metadata"] == edge_data.metadata
+    assert "created_at" in sent_params
+    assert "updated_at" in sent_params
 
     assert isinstance(created_edge, BaseEdge)
     assert created_edge.id == edge_data.id
@@ -185,21 +190,21 @@ async def test_update_edge(graph_manager, mock_surreal_client):
     mock_return_value["updated_at"] = datetime.utcnow().isoformat()
     mock_return_value["in"] = mock_return_value.pop("source")
     mock_return_value["out"] = mock_return_value.pop("target")
-    mock_surreal_client.update.return_value = mock_return_value
+    
+    # update_edge uses query (RELATE), so we mock query
+    mock_surreal_client.query.return_value = [mock_return_value]
 
     updated_edge = await graph_manager.update_edge(edge_data)
 
-    mock_surreal_client.update.assert_awaited_once() # Check that update was called
-    call_args = mock_surreal_client.update.call_args.args
-    assert call_args[0] == f"{edge_data.edge_type}:`{edge_data.id}`"
+    mock_surreal_client.query.assert_awaited_once() # Check that query was called
+    call_args = mock_surreal_client.query.call_args.args
+    assert "RELATE" in call_args[0]
     
-    sent_data = call_args[1]
-    assert sent_data["in"] == edge_data.source
-    assert sent_data["out"] == edge_data.target
-    assert sent_data["edge_type"] == edge_data.edge_type
-    assert sent_data["metadata"] == edge_data.metadata
-    assert "created_at" in sent_data
-    assert "updated_at" in sent_data
+    sent_params = call_args[1]["data"]
+    assert sent_params["edge_type"] == edge_data.edge_type
+    assert sent_params["metadata"] == edge_data.metadata
+    assert "created_at" in sent_params
+    assert "updated_at" in sent_params
 
     assert isinstance(updated_edge, BaseEdge)
     assert updated_edge.metadata == {"weight": 2.0}
@@ -211,3 +216,43 @@ async def test_delete_edge(graph_manager, mock_surreal_client):
     await graph_manager.delete_edge(edge_id)
 
     mock_surreal_client.delete.assert_awaited_once_with(edge_id)
+
+@pytest.mark.asyncio
+async def test_search_topology(graph_manager, mock_surreal_client, mock_embedder):
+    query = "test query"
+    embedding = [0.1] * 768
+    
+    # Mock the VectorEmbedder to return a dummy embedding
+    mock_embedder.encode.return_value = embedding
+    
+    # Mock DB query result
+    # SurrealDB returns a list of results (one for each statement in the query string)
+    # Our query has one statement.
+    mock_surreal_client.query.return_value = [
+        {
+            "status": "OK",
+            "time": "100us",
+            "result": [
+                {"id": "node:1", "score": 0.9, "content": "result 1"},
+                {"id": "node:2", "score": 0.8, "content": "result 2"}
+            ]
+        }
+    ]
+    
+    results = await graph_manager.search_topology(query, limit=5)
+    
+    # Check if embedder was called with correct task type
+    mock_embedder.encode.assert_awaited_once_with(query, task_type="search_query")
+    
+    # Check if DB query was called
+    mock_surreal_client.query.assert_awaited_once()
+    call_args = mock_surreal_client.query.call_args
+    sql_query = call_args[0][0]
+    params = call_args[0][1]
+    
+    assert "vector::similarity::cosine" in sql_query
+    assert params["embedding"] == embedding
+    assert "embedding <|5|> $embedding" in sql_query or "embedding <| 5 |> $embedding" in sql_query.replace(" ", "")
+    
+    assert len(results) == 2
+    assert results[0]["id"] == "node:1"

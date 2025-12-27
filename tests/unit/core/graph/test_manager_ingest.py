@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, call
 from coretext.core.graph.manager import GraphManager, SyncReport
 from coretext.core.graph.models import BaseNode, BaseEdge, ParsingErrorNode
 from coretext.core.parser.schema import SchemaMapper
+from coretext.core.vector.embedder import VectorEmbedder
 
 @pytest.fixture
 def mock_surreal_client():
@@ -17,7 +18,8 @@ def mock_schema_mapper():
 
 @pytest.fixture
 def graph_manager(mock_surreal_client, mock_schema_mapper):
-    return GraphManager(mock_surreal_client, mock_schema_mapper)
+    mock_embedder = MagicMock(spec=VectorEmbedder)
+    return GraphManager(mock_surreal_client, mock_schema_mapper, embedder=mock_embedder)
 
 @pytest.mark.asyncio
 async def test_ingest_success(graph_manager, mock_surreal_client):

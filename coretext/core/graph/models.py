@@ -29,6 +29,7 @@ class BaseNode(BaseModel):
     content: str = Field(default="", description="The main content associated with the node.")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Arbitrary metadata for the node.")
     commit_hash: str = Field(default="", description="Git commit hash associated with this graph entity.")
+    embedding: list[float] | None = Field(default=None, description="Vector embedding of the node content.")
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Timestamp of node creation.")
     updated_at: datetime = Field(default_factory=datetime.utcnow, description="Timestamp of last node update.")
 

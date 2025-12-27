@@ -45,3 +45,21 @@ async def test_apply_schema(tmp_path):
     assert "DEFINE INDEX node_path ON TABLE node" in combined_query
     assert "DEFINE TABLE contains" in combined_query
     assert "DEFINE TABLE parent_of" in combined_query
+
+@pytest.mark.asyncio
+async def test_apply_schema_vector_search(tmp_path):
+    """Test that vector search schema definitions are applied."""
+    mock_db = AsyncMock()
+    manager = SchemaManager(mock_db, project_root=tmp_path)
+
+    with patch.object(SchemaManager, '_load_schema_map') as mock_load:
+        mock_load.return_value = {} # Minimal schema map
+
+        await manager.apply_schema()
+
+    queries = [call_args[0][0] for call_args in mock_db.query.call_args_list]
+    combined_query = "\n".join(queries)
+
+    # These should be present per AC 4
+    assert "DEFINE FIELD embedding ON node TYPE array<float>" in combined_query
+    assert "DEFINE INDEX node_embedding_index ON node FIELDS embedding HNSW DIMENSION 768" in combined_query

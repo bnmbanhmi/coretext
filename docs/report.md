@@ -45,7 +45,16 @@ $Performance = f(Model, Tools, Context)$.
 3. **Context:** The information provided to the model to inform its decisions.
 - This is where our research focuses: improving the "Context" component.
 
-### 2.2. Agentic Agile & The BMAD Framework
+### 2.2. Agentic Agile & The BMAD Method
+
+
+
+#### Why? (Problem)
+Unlike generic AI coding assistants, BMad Method provides structured, battle-tested workflows powered by specialized agents who understand agile development. Each agent has deep domain expertise—from product management to architecture to testing—working together seamlessly.
+- Scale-Adaptive
+- Complete Development Lifecycle: Analysis → Planning → Architecture → Implementation 
+#### What? (Solution)
+BMad Method Module is based on BMad Method
 
 ```mermaid
 flowchart TD
@@ -67,6 +76,8 @@ style SPRINT fill:#bfb,stroke:#333,stroke-width:2px,color:#000
 style RETRO fill:#fbf,stroke:#333,stroke-width:2px,color:#000
 ```
 
+#### How? (Result)
+
 
 
 ### 2.3. Knowledge Graph Theory
@@ -75,12 +86,14 @@ style RETRO fill:#fbf,stroke:#333,stroke-width:2px,color:#000
 
 ### 2.4. Technology Stack
 
-- **SurrealDB:** Selected for its multi-model capabilities (Graph + Document) and embedding support. (why not neo4j?)
+- **SurrealDB:** 
+Selected for its multi-model capabilities (Graph + Document) and embedding support. (why not neo4j?)
 - **Gemini CLI:** 
 	- Large context window
 	- Cached token (save a lot of token)
 	- Open Source
-	- 
+	- Easy to export chat history and token usage and modification
+	- Autom model selection
 - **Abstract Syntax Tree (AST) Parsing:** For analyzing Markdown structure.
 - **Model Context Protocol (MCP):** The standard interface for connecting AI agents to the Knowledge Graph.
 
@@ -176,15 +189,18 @@ The system follows a layered architecture:
 
 ## Chapter V. Results and Evaluation
 
-### 5.1. Case Study Implementation: "Nhaminhbach" Project
+### 5.1. Experiment 1: Self-Reflexive Case Study (Project CoreText)
+- Context: Build the engine coretext with BMad Module (no graph)
+- Workflow: 
+### 5.2. Experiment 2: Application Case Study (Project Nhaminhbach)
 
 We applied this methodology to the "Nhaminhbach" (Rental Finding Platform) project.
 
 - **Input:** A set of Markdown files describing User Stories and Database Schemas.
 - **Graph Construction:** The system generated a graph containing nodes and edges.
-- **Visualization:***\[PLACEHOLDER: Insert a screenshot or description of the generated graph topology for a specific Story file, showing how it links to other components.\]*
+- **Visualization:**
 
-### 5.2. Evaluation Metrics
+### 5.3. Evaluation Metrics
 
 *\[PLACEHOLDER: Compare the "Old BMAD" way vs. the "New Graph" way.\]*
 
@@ -192,11 +208,11 @@ We applied this methodology to the "Nhaminhbach" (Rental Finding Platform) proje
 - **Token Efficiency:** Reduced token usage per query due to targeted node retrieval.
 - **Scalability:** The system maintains performance as file count increases, whereas standard context windows degrade.
 
-### 5.3. Limitations & Future Work
+### 5.4. Limitations & Future Work
 
 - **Current Limitation:** Handling file deletions and renames (Ghost Nodes).
 - **Future Work:** Implementing Vector Embeddings for Semantic Search alongside Graph Traversal.
 
-### 5.4. Conclusion
+### 5.5. Conclusion
 
 The integration of a Knowledge Graph into the BMAD framework shifts the paradigm from "Document-Centric" to "Knowledge-Centric" development. This abstraction allows AI agents to operate with a structural understanding of the software, paving the way for more autonomous and accurate software engineering workflows.
