@@ -20,6 +20,18 @@ class SearchTopologyRequest(BaseModel):
 class SearchTopologyResponse(BaseModel):
     results: List[dict[str, Any]]
 
+class DependencyItem(BaseModel):
+    node_id: str
+    relationship_type: str
+    direction: str
+
+class GetDependenciesRequest(BaseModel):
+    node_identifier: str = Field(..., description="The ID or file path of the node (e.g., 'file:path/to/file').")
+    depth: int = Field(default=1, ge=1, le=5, description="Traversal depth.")
+
+class GetDependenciesResponse(BaseModel):
+    dependencies: List[DependencyItem]
+
 @router.get("/tools/{tool_name}", response_model=ToolResponse)
 async def get_tool(tool_name: str):
     """
@@ -38,6 +50,38 @@ async def get_tool(tool_name: str):
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail=f"Tool '{tool_name}' not implemented."
     )
+
+@router.post("/tools/get_dependencies", response_model=GetDependenciesResponse)
+async def get_dependencies(
+    request: GetDependenciesRequest,
+    graph_manager: GraphManager = Depends(get_graph_manager)
+):
+    """
+    Retrieve direct and indirect dependencies for a given node.
+    
+    Args:
+        request: The dependency retrieval request.
+        graph_manager: Injected GraphManager instance.
+        
+    Returns:
+        GetDependenciesResponse: List of dependencies with relationship details.
+    """
+    try:
+        # Simple heuristic: if no table prefix, assume it's a file path and prepend 'file:'
+        # This makes it easier for the agent to just pass a path.
+        node_id = request.node_identifier
+        if ":" not in node_id:
+            # We assume it's a file path.
+            # We also need to handle potential quoting if needed, but for now we trust the client handles binding
+            # However, if we construct the string 'file:path', we rely on SurrealDB to parse 'path' as the ID.
+            # If path has special chars, it might be tricky without backticks, but let's try strict first.
+            # If the user passes "core/manager.py", we convert to "file:core/manager.py".
+            node_id = f"file:{node_id}"
+
+        results = await graph_manager.get_dependencies(node_id, depth=request.depth)
+        return GetDependenciesResponse(dependencies=results)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/tools/search_topology", response_model=SearchTopologyResponse)
 async def search_topology(

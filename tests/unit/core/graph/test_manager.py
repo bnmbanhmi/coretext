@@ -256,3 +256,58 @@ async def test_search_topology(graph_manager, mock_surreal_client, mock_embedder
     
     assert len(results) == 2
     assert results[0]["id"] == "node:1"
+
+@pytest.mark.asyncio
+async def test_get_dependencies(graph_manager, mock_surreal_client):
+    node_id = "node:test_node_1"
+    depth = 1
+    
+    # Mock DB query result for dependencies
+    # Expecting a list of {node_id, relationship, direction}
+    # But the raw SQL result will be more complex, likely nodes with edge info.
+    # For now, let's assume the method normalizes it.
+    
+    # Mocking the raw response from SurrealDB for a graph traversal query
+    # The actual query structure will be determined in implementation, but we expect
+    # the manager to process it into a clean list.
+    mock_surreal_client.query.return_value = [
+        {
+            "status": "OK",
+            "time": "100us",
+            "result": [
+                {
+                    "dependency": "node:dep_1",
+                    "relationship": "depends_on",
+                    "direction": "outgoing"
+                },
+                {
+                    "dependency": "node:gov_1",
+                    "relationship": "governed_by",
+                    "direction": "outgoing"
+                },
+                 {
+                    "dependency": "node:parent_1",
+                    "relationship": "parent_of",
+                    "direction": "incoming"
+                }
+            ]
+        }
+    ]
+
+    dependencies = await graph_manager.get_dependencies(node_id, depth=depth)
+
+    mock_surreal_client.query.assert_awaited_once()
+    call_args = mock_surreal_client.query.call_args
+    sql_query = call_args[0][0]
+    params = call_args[0][1]
+
+    assert "SELECT" in sql_query
+    assert node_id in params.values() or node_id in sql_query
+    # Check if important edge types are mentioned
+    assert "depends_on" in sql_query
+    assert "governed_by" in sql_query
+    
+    assert len(dependencies) == 3
+    assert dependencies[0]["node_id"] == "node:dep_1"
+    assert dependencies[0]["relationship_type"] == "depends_on"
+    assert dependencies[0]["direction"] == "outgoing"

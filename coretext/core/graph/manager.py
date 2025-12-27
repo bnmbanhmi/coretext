@@ -302,3 +302,58 @@ class GraphManager:
             nodes_created=nodes_created,
             edges_created=edges_created
         )
+
+    async def get_dependencies(self, node_id: str, depth: int = 1) -> List[dict]:
+        """
+        Retrieves direct and indirect dependencies for a given node.
+
+        Args:
+            node_id: The ID of the node (e.g., 'file:path/to/file').
+            depth: The depth of traversal (default: 1).
+
+        Returns:
+            A list of dictionaries containing 'node_id', 'relationship_type', and 'direction'.
+        """
+        dependencies = []
+        visited = set()
+        queue = [(node_id, 0)] # (current_id, current_depth)
+        
+        # Avoid visiting the start node as a dependency
+        visited.add(node_id)
+
+        while queue:
+            current_id, current_depth = queue.pop(0)
+            
+            if current_depth >= depth:
+                continue
+            
+            # Query for outgoing dependencies and incoming parent (context)
+            # We fetch all 3 types of relations relevant to dependencies
+            sql = """
+            SELECT out as dependency, 'depends_on' as relationship, 'outgoing' as direction FROM $id->depends_on;
+            SELECT out as dependency, 'governed_by' as relationship, 'outgoing' as direction FROM $id->governed_by;
+            SELECT in as dependency, 'parent_of' as relationship, 'incoming' as direction FROM $id<-parent_of;
+            """
+            
+            results = await self.db.query(sql, {"id": current_id})
+            
+            # Process results
+            if isinstance(results, list):
+                for res_obj in results:
+                    if isinstance(res_obj, dict) and res_obj.get('status') == 'OK':
+                         for row in res_obj.get('result', []):
+                             dep_id = row.get('dependency')
+                             
+                             if dep_id and dep_id not in visited:
+                                 visited.add(dep_id)
+                                 
+                                 deps_item = {
+                                     "node_id": dep_id,
+                                     "relationship_type": row.get('relationship'),
+                                     "direction": row.get('direction')
+                                 }
+                                 dependencies.append(deps_item)
+                                 
+                                 queue.append((dep_id, current_depth + 1))
+                                 
+        return dependencies

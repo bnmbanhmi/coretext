@@ -27,6 +27,12 @@ def mock_graph_manager_class():
     with patch("coretext.server.dependencies.GraphManager") as MockGraphManager:
         yield MockGraphManager
 
+# Patch VectorEmbedder to avoid model download
+@pytest.fixture(autouse=True)
+def mock_vector_embedder():
+    with patch("coretext.server.dependencies.VectorEmbedder") as MockEmbedder:
+        yield MockEmbedder
+
 client = TestClient(app)
 
 def test_mcp_tool_stub_returns_501():
@@ -46,6 +52,9 @@ def test_search_topology(mock_graph_manager_class):
         json={"query": "test query", "limit": 5}
     )
     
+    if response.status_code != 200:
+        print(f"FAILED Response: {response.json()}")
+
     assert response.status_code == 200
     data = response.json()
     assert "results" in data
