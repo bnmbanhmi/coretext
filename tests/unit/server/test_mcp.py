@@ -35,11 +35,11 @@ def mock_vector_embedder():
 
 client = TestClient(app)
 
-def test_mcp_tool_stub_returns_501():
-    """Test that the MCP tool endpoint exists but returns 501 for now."""
-    response = client.get("/mcp/tools/test_tool")
-    assert response.status_code == 501
-    assert response.json() == {"detail": "Tool 'test_tool' not implemented."}
+def test_mcp_tool_not_found_returns_404():
+    """Test that requesting a non-existent tool returns 404."""
+    response = client.get("/mcp/tools/unknown_tool")
+    assert response.status_code == 404
+    assert "not found" in response.json()["detail"].lower()
 
 def test_search_topology(mock_graph_manager_class):
     """Test the search_topology endpoint."""

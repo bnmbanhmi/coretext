@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from pydantic import BaseModel, Field
 from typing import List, Any
 from coretext.core.graph.manager import GraphManager
 from coretext.server.dependencies import get_graph_manager
+from coretext.server.mcp.manifest import generate_manifest
 
 router = APIRouter()
 
@@ -10,42 +11,52 @@ class ToolResponse(BaseModel):
     """
     Schema for tool response.
     """
-    status: str
-    tool: str
+    status: str = Field(..., description="The status of the tool execution or retrieval.")
+    tool: str = Field(..., description="The name or identifier of the tool.")
 
 class SearchTopologyRequest(BaseModel):
     query: str = Field(..., description="The semantic search query.")
     limit: int = Field(default=5, ge=1, le=20, description="Max results to return.")
 
 class SearchTopologyResponse(BaseModel):
-    results: List[dict[str, Any]]
+    results: List[dict[str, Any]] = Field(..., description="List of nodes matching the search query with relevance scores.")
 
 class DependencyItem(BaseModel):
-    node_id: str
-    relationship_type: str
-    direction: str
+    node_id: str = Field(..., description="The unique identifier of the dependent node.")
+    relationship_type: str = Field(..., description="The type of relationship (e.g., 'IMPORTS', 'INHERITS').")
+    direction: str = Field(..., description="The direction of the dependency ('in' or 'out').")
 
 class GetDependenciesRequest(BaseModel):
     node_identifier: str = Field(..., description="The ID or file path of the node (e.g., 'file:path/to/file').")
     depth: int = Field(default=1, ge=1, le=5, description="Traversal depth.")
 
 class GetDependenciesResponse(BaseModel):
-    dependencies: List[DependencyItem]
+    dependencies: List[DependencyItem] = Field(..., description="List of direct and indirect dependencies found.")
 
 @router.get("/tools/{tool_name}", response_model=ToolResponse)
-async def get_tool(tool_name: str):
+async def get_tool(tool_name: str, request: Request):
     """
     Get a specific MCP tool.
 
     Args:
         tool_name: The name of the tool to retrieve.
+        request: The request object.
 
     Returns:
         ToolResponse: Details about the tool.
 
     Raises:
-        HTTPException: 501 Not Implemented (Tools are currently stubs).
+        HTTPException: 404 if tool not found, 501 if not implemented.
     """
+    manifest = generate_manifest(request.app.routes)
+    known_tools = [t["name"] for t in manifest["tools"]]
+    
+    if tool_name not in known_tools:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Tool '{tool_name}' not found."
+        )
+
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail=f"Tool '{tool_name}' not implemented."
@@ -105,5 +116,15 @@ async def search_topology(
         return SearchTopologyResponse(results=results)
     except Exception as e:
         # Log error here if logging is set up
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error during topology search.")
+
+@router.get("/manifest")
+async def get_manifest(request: Request):
+    """
+    Get the MCP tool manifest.
+    
+    Returns:
+        dict: The manifest containing available tools and their schemas.
+    """
+    return generate_manifest(request.app.routes)
 

@@ -41,3 +41,19 @@ def test_get_dependencies_endpoint(mock_graph_manager, override_dependency):
     
     # Verify graph manager called correctly
     mock_graph_manager.get_dependencies.assert_called_with("file:main.py", depth=1)
+
+def test_get_manifest_endpoint(override_dependency):
+    """
+    Test that the /mcp/manifest endpoint returns a valid tool list.
+    """
+    response = client.get("/mcp/manifest")
+    
+    # Note: If endpoint is not implemented yet, this will fail (404)
+    assert response.status_code == 200
+    data = response.json()
+    
+    assert "tools" in data
+    tool_names = [t["name"] for t in data["tools"]]
+    assert "search_topology" in tool_names
+    assert "get_dependencies" in tool_names
+
