@@ -33,6 +33,9 @@ class GetDependenciesRequest(BaseModel):
 class GetDependenciesResponse(BaseModel):
     dependencies: List[DependencyItem] = Field(..., description="List of direct and indirect dependencies found.")
 
+# Simple cache for the manifest to avoid re-generating on every get_tool call
+_manifest_cache = None
+
 @router.get("/tools/{tool_name}", response_model=ToolResponse)
 async def get_tool(tool_name: str, request: Request):
     """
@@ -48,8 +51,11 @@ async def get_tool(tool_name: str, request: Request):
     Raises:
         HTTPException: 404 if tool not found, 501 if not implemented.
     """
-    manifest = generate_manifest(request.app.routes)
-    known_tools = [t["name"] for t in manifest["tools"]]
+    global _manifest_cache
+    if _manifest_cache is None:
+        _manifest_cache = generate_manifest(request.app.routes)
+    
+    known_tools = [t["name"] for t in _manifest_cache["tools"]]
     
     if tool_name not in known_tools:
         raise HTTPException(
@@ -76,6 +82,10 @@ async def get_dependencies(
         
     Returns:
         GetDependenciesResponse: List of dependencies with relationship details.
+
+    Example I/O:
+        Input: {"node_identifier": "file:main.py", "depth": 1}
+        Output: {"dependencies": [{"node_id": "file:utils.py", "relationship_type": "IMPORTS", "direction": "out"}]}
     """
     try:
         # Simple heuristic: if no table prefix, assume it's a file path and prepend 'file:'
@@ -110,6 +120,10 @@ async def search_topology(
         
     Returns:
         SearchTopologyResponse: List of matching nodes with scores.
+
+    Example I/O:
+        Input: {"query": "authentication logic", "limit": 2}
+        Output: {"results": [{"id": "file:auth.py", "score": 0.92}, {"id": "file:main.py", "score": 0.85}]}
     """
     try:
         results = await graph_manager.search_topology(request.query, limit=request.limit)
@@ -126,5 +140,7 @@ async def get_manifest(request: Request):
     Returns:
         dict: The manifest containing available tools and their schemas.
     """
-    return generate_manifest(request.app.routes)
+    global _manifest_cache
+    _manifest_cache = generate_manifest(request.app.routes)
+    return _manifest_cache
 

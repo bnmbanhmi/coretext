@@ -24,10 +24,9 @@ def generate_manifest(routes: List[Any]) -> dict:
             
             # Extract description from docstring (route.description is populated from docstring by FastAPI)
             description = route.description or route.summary or ""
-            # Clean up: take the first paragraph/line to avoid cluttering with Args/Returns in the summary
-            # (Agents usually prefer a clear summary first)
-            if "Args:" in description:
-                description = description.split("Args:")[0]
+            # Clean up: take the first paragraph/line to avoid cluttering with Args/Returns/Examples
+            # (Agents prefer a concise summary first)
+            description = description.split("\n\n")[0].split("\r\n\r\n")[0].strip()
             
             input_schema = {}
             if route.body_field:

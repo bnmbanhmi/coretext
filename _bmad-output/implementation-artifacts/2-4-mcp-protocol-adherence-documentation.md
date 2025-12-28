@@ -1,4 +1,4 @@
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -48,3 +48,8 @@ Gemini 2.0 Flash
 
 ### Change Log
 - 2025-12-27: Completed story 2-4. Implemented MCP manifest generation and standardized tool documentation/error handling.
+- 2025-12-28: Fixed issues found during adversarial code review:
+  - Added missing Example I/O to tool docstrings (AC 1).
+  - Optimized `get_tool` by implementing manifest caching to reduce $O(N)$ scanning on every request.
+  - Improved docstring parsing in manifest generation to be more robust (paragraph-based).
+  - Enhanced documentation tests to dynamically discover Pydantic models.

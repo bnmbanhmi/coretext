@@ -11,12 +11,18 @@ def test_pydantic_models_have_descriptions():
     Verify that all fields in Pydantic models used in MCP routes have descriptions.
     This is critical for MCP manifest generation.
     """
-    models_to_check = [
-        ToolResponse,
-        SearchTopologyResponse,
-        DependencyItem,
-        GetDependenciesResponse
-    ]
+    # Dynamically find Pydantic models used in routes
+    models_to_check = set()
+    for route in router.routes:
+        if isinstance(route, APIRoute):
+            if route.body_field:
+                model = route.body_field.type_
+                if hasattr(model, "model_json_schema"):
+                    models_to_check.add(model)
+            if hasattr(route.response_model, "model_json_schema"):
+                models_to_check.add(route.response_model)
+
+    assert len(models_to_check) > 0, "No Pydantic models found in routes"
 
     for model in models_to_check:
         schema = model.model_json_schema()
