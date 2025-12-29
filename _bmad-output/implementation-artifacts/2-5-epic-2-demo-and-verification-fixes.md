@@ -54,6 +54,9 @@ so that I can confidently validate the AI Agent capabilities (MCP server and sem
     *   **Manifest:** Updated `manifest.py` to preserve full docstrings (including Example I/O) for better Agent context.
     *   **Demo Script:** Improved `scripts/demo_epic_2.py` robustness to skip specific file tests if the file is missing in the graph.
     *   **Dead Code:** Removed unimplemented `GET /tools/{tool_name}` endpoint from `routes.py` to avoid API confusion.
+7.  **SurrealDB Library Compatibility:** Updated `GraphManager` to use `query_raw` for multi-statement queries and transactions, ensuring correct response handling for `surrealdb==1.0.7` where `query` only returns the first result set.
+8.  **RecordID Serialization:** Implemented `_convert_ids` helper in `GraphManager` to recursively convert SurrealDB `RecordID` objects to strings, fixing Pydantic serialization errors in MCP tool responses.
+9.  **Semantic Search Robustness:** Updated `search_topology` query to explicitly filter out `NONE` embeddings (`WHERE embedding != NONE`), preventing SurrealDB errors during vector similarity calculation on nodes without embeddings.
 
 ### References
 *   [Epic 1 Demo Guide](docs/epic-1-demo-guide.md)

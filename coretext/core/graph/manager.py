@@ -1,5 +1,5 @@
 import asyncio
-from typing import Type, List
+from typing import Type, List, Any
 from surrealdb import Surreal
 from coretext.core.graph.models import BaseNode, BaseEdge, ParsingErrorNode, SyncReport
 from coretext.core.parser.schema import SchemaMapper
@@ -137,6 +137,20 @@ class GraphManager:
     async def delete_edge(self, edge_id: str) -> None:
         await self.db.delete(edge_id)
 
+    def _convert_ids(self, data: Any) -> Any:
+        """
+        Recursively converts SurrealDB RecordID objects to strings.
+        """
+        from surrealdb.data.types.record_id import RecordID
+        
+        if isinstance(data, RecordID):
+            return str(data)
+        elif isinstance(data, list):
+            return [self._convert_ids(item) for i, item in enumerate(data)]
+        elif isinstance(data, dict):
+            return {k: self._convert_ids(v) for k, v in data.items()}
+        return data
+
     async def search_topology(self, query: str, limit: int = 5) -> List[dict]:
         """
         Search for nodes semantically similar to the query.
@@ -154,12 +168,13 @@ class GraphManager:
         sql = f"""
         SELECT *, vector::similarity::cosine(embedding, $embedding) AS score 
         FROM node 
-        WHERE embedding != []
+        WHERE embedding != NONE AND embedding != []
         ORDER BY score DESC
         LIMIT {limit};
         """
         
-        results = await self.db.query(sql, {"embedding": embedding})
+        response = await self.db.query_raw(sql, {"embedding": embedding})
+        results = response.get('result', [])
         
         # Handle SurrealDB response format
         # results is a list of response objects for each query statement
@@ -168,9 +183,12 @@ class GraphManager:
             first_result = results[0]
             if isinstance(first_result, dict):
                 if first_result.get('status') == 'OK':
-                     return first_result.get('result', [])
+                     res = first_result.get('result')
+                     if isinstance(res, list):
+                         return self._convert_ids(res)
+                     return []
                 elif first_result.get('status') == 'ERR':
-                     raise Exception(f"SurrealDB Search Error: {first_result.get('detail')}")
+                     raise Exception(f"SurrealDB Search Error: {first_result.get('result')}")
             
         return []
 
@@ -216,19 +234,16 @@ class GraphManager:
                 transaction_query += f"UPSERT {table}:`{node.id}` CONTENT ${param_name};\n"
             
             transaction_query += "COMMIT TRANSACTION;"
-            results = await self.db.query(transaction_query, params)
+            response = await self.db.query_raw(transaction_query, params)
+            results = response.get('result', [])
             
             if isinstance(results, str):
                  raise Exception(f"SurrealDB Transaction Error (Nodes): {results}")
 
-            # Check for top-level error (SurrealDB 2.0 returns dict on error)
-            if isinstance(results, dict) and results.get('status') == 'ERR':
-                 raise Exception(f"SurrealDB Transaction Error (Nodes): {results.get('detail')}")
-
             if isinstance(results, list):
                 for res in results:
                     if isinstance(res, dict) and res.get('status') == 'ERR':
-                        raise Exception(f"SurrealDB Transaction Error (Nodes): {res.get('detail')}")
+                        raise Exception(f"SurrealDB Transaction Error (Nodes): {res.get('result')}")
             
             nodes_created += len(batch_nodes)
 
@@ -292,7 +307,8 @@ class GraphManager:
                 transaction_query += f"UPDATE {edge_rec_str} MERGE ${param_name};\n"
 
             transaction_query += "COMMIT TRANSACTION;"
-            results = await self.db.query(transaction_query, params)
+            response = await self.db.query_raw(transaction_query, params)
+            results = response.get('result', [])
             
             if isinstance(results, str):
                  raise Exception(f"SurrealDB Transaction Error (Edges): {results}")
@@ -301,7 +317,7 @@ class GraphManager:
             if isinstance(results, list):
                 for res in results:
                     if isinstance(res, dict) and res.get('status') == 'ERR':
-                        raise Exception(f"SurrealDB Transaction Error (Edges): {res.get('detail')}")
+                        raise Exception(f"SurrealDB Transaction Error (Edges): {res.get('result')}")
             
             edges_created += len(batch_edges)
         
@@ -347,25 +363,32 @@ class GraphManager:
             SELECT out as dependency, 'references' as relationship, 'outgoing' as direction FROM $rec->references;
             """
             
-            results = await self.db.query(sql, {"id": current_id})
+            response = await self.db.query_raw(sql, {"id": current_id})
+            results = response.get('result', [])
             
             # Process results
             if isinstance(results, list):
                 for res_obj in results:
                     if isinstance(res_obj, dict) and res_obj.get('status') == 'OK':
-                         for row in res_obj.get('result', []):
-                             dep_id = row.get('dependency')
-                             
-                             if dep_id and dep_id not in visited:
-                                 visited.add(dep_id)
+                         res = res_obj.get('result')
+                         if isinstance(res, list):
+                             for row in res:
+                                 dep_id = row.get('dependency')
                                  
-                                 deps_item = {
-                                     "node_id": dep_id,
-                                     "relationship_type": row.get('relationship'),
-                                     "direction": row.get('direction')
-                                 }
-                                 dependencies.append(deps_item)
+                                 if dep_id and str(dep_id) not in visited:
+                                     visited.add(str(dep_id))
+                                     
+                                     deps_item = {
+                                         "node_id": str(dep_id),
+                                         "relationship_type": row.get('relationship'),
+                                         "direction": row.get('direction')
+                                     }
+                                     dependencies.append(deps_item)
+                                     
                                  
-                                 queue.append((dep_id, current_depth + 1))
+                                     
+                                 queue.append((str(dep_id), current_depth + 1))
+                                     
                                  
-        return dependencies
+                                     
+        return self._convert_ids(dependencies)

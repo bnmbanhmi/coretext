@@ -1,0 +1,3 @@
+#V2
+SELECT id, path, node_type, array::len(embedding) FROM node;
+SELECT * FROM node;
