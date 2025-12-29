@@ -1,3 +1,2 @@
-# Demo Header\nThis is for Epic 2 verification.
-Update: Triggering another sync after schema fix.
-Update: Syncing with COSINE index.
+# Agent Context Retrieval
+This epic focuses on MCP tools and semantic search.
