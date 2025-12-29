@@ -77,8 +77,19 @@ def main():
     search_topology("graph")
     
     # Try to find a file to inspect dependencies on
-    get_dependencies("node:`demo_epic_2.md`")
-    get_dependencies("file:demo_epic_2.md")
+    # Check if demo_epic_2.md exists in the graph first
+    try:
+        # We can check existence by searching for it
+        response = requests.post(f"{BASE_URL}/mcp/tools/search_topology", json={"query": "demo_epic_2.md", "limit": 1})
+        if response.status_code == 200 and response.json().get('results'):
+             console.print("\n[bold]Found demo_epic_2.md in graph, testing dependency retrieval...[/bold]")
+             get_dependencies("node:`demo_epic_2.md`")
+             get_dependencies("file:demo_epic_2.md")
+        else:
+             console.print("\n[yellow]⚠️ 'demo_epic_2.md' not found in graph. Skipping specific dependency test.[/yellow]")
+             console.print("Tip: Run 'git add demo_epic_2.md && git commit' to add it.")
+    except Exception:
+        pass
 
 if __name__ == "__main__":
     main()

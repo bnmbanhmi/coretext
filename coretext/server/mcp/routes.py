@@ -37,38 +37,6 @@ class GetDependenciesResponse(BaseModel):
 # Simple cache for the manifest to avoid re-generating on every get_tool call
 _manifest_cache = None
 
-@router.get("/tools/{tool_name}", response_model=ToolResponse)
-async def get_tool(tool_name: str, request: Request):
-    """
-    Get a specific MCP tool.
-
-    Args:
-        tool_name: The name of the tool to retrieve.
-        request: The request object.
-
-    Returns:
-        ToolResponse: Details about the tool.
-
-    Raises:
-        HTTPException: 404 if tool not found, 501 if not implemented.
-    """
-    global _manifest_cache
-    if _manifest_cache is None:
-        _manifest_cache = generate_manifest(request.app.routes)
-    
-    known_tools = [t["name"] for t in _manifest_cache["tools"]]
-    
-    if tool_name not in known_tools:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Tool '{tool_name}' not found."
-        )
-
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail=f"Tool '{tool_name}' not implemented."
-    )
-
 @router.post("/tools/get_dependencies", response_model=GetDependenciesResponse)
 async def get_dependencies(
     request: GetDependenciesRequest,

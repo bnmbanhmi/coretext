@@ -50,6 +50,10 @@ so that I can confidently validate the AI Agent capabilities (MCP server and sem
 3.  **Schema Update:** Made `embedding` field optional with `DEFAULT []` in `migrations.py` to prevent sync failures on records without embeddings.
 4.  **Dependency Logic:** Updated `get_dependencies` to include `contains` and `references` relationships and added `type::record()` casting for robust Record ID lookup.
 5.  **Node ID Resolution:** Fixed `routes.py` to correctly resolve node type prefixes (e.g. `file:`) using `SchemaMapper` before querying.
+6.  **AI Review Fixes:**
+    *   **Manifest:** Updated `manifest.py` to preserve full docstrings (including Example I/O) for better Agent context.
+    *   **Demo Script:** Improved `scripts/demo_epic_2.py` robustness to skip specific file tests if the file is missing in the graph.
+    *   **Dead Code:** Removed unimplemented `GET /tools/{tool_name}` endpoint from `routes.py` to avoid API confusion.
 
 ### References
 *   [Epic 1 Demo Guide](docs/epic-1-demo-guide.md)
@@ -79,4 +83,5 @@ gemini-2.5-flash
 - coretext/core/graph/manager.py
 - coretext/db/migrations.py
 - coretext/server/mcp/routes.py
+- coretext/server/mcp/manifest.py
 - _bmad-output/implementation-artifacts/2-5-epic-2-demo-and-verification-fixes.md
