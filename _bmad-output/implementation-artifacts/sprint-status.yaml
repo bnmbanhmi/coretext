@@ -50,6 +50,7 @@ development_status:
   2-2-semantic-tool-for-topology-search: done
   2-3-semantic-tool-for-dependency-retrieval: done
   2-4-mcp-protocol-adherence-documentation: done
+  2-5-epic-2-demo-and-verification-fixes: done
   epic-2-retrospective: optional
 
   epic-3: backlog

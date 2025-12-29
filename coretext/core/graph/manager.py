@@ -1,3 +1,4 @@
+import asyncio
 from typing import Type, List
 from surrealdb import Surreal
 from coretext.core.graph.models import BaseNode, BaseEdge, ParsingErrorNode, SyncReport
@@ -149,13 +150,13 @@ class GraphManager:
         """
         embedding = await self.embedder.encode(query, task_type="search_query")
         
-        # Use HNSW index for efficient vector search
-        # <|limit|> is the KNN syntax in SurrealDB
+        # Use simple vector similarity search
         sql = f"""
         SELECT *, vector::similarity::cosine(embedding, $embedding) AS score 
         FROM node 
-        WHERE embedding <|{limit}|> $embedding
-        ORDER BY score DESC;
+        WHERE embedding != []
+        ORDER BY score DESC
+        LIMIT {limit};
         """
         
         results = await self.db.query(sql, {"embedding": embedding})
@@ -191,6 +192,15 @@ class GraphManager:
         # Process Nodes in batches
         for i in range(0, len(nodes), batch_size):
             batch_nodes = nodes[i:i + batch_size]
+            
+            # Generate embeddings for nodes that don't have them
+            for node in batch_nodes:
+                if not node.embedding:
+                    # Heuristic for text to embed: content first, then title, then ID
+                    text_to_embed = node.content or getattr(node, 'title', "") or str(node.id)
+                    if text_to_embed:
+                        node.embedding = await self.embedder.encode(text_to_embed, task_type="search_document")
+
             transaction_query = "BEGIN TRANSACTION;\n"
             params = {}
             
@@ -327,11 +337,14 @@ class GraphManager:
                 continue
             
             # Query for outgoing dependencies and incoming parent (context)
-            # We fetch all 3 types of relations relevant to dependencies
+            # We fetch all types of relations relevant to dependencies
             sql = """
-            SELECT out as dependency, 'depends_on' as relationship, 'outgoing' as direction FROM $id->depends_on;
-            SELECT out as dependency, 'governed_by' as relationship, 'outgoing' as direction FROM $id->governed_by;
-            SELECT in as dependency, 'parent_of' as relationship, 'incoming' as direction FROM $id<-parent_of;
+            LET $rec = type::record($id);
+            SELECT out as dependency, 'depends_on' as relationship, 'outgoing' as direction FROM $rec->depends_on;
+            SELECT out as dependency, 'governed_by' as relationship, 'outgoing' as direction FROM $rec->governed_by;
+            SELECT in as dependency, 'parent_of' as relationship, 'incoming' as direction FROM $rec<-parent_of;
+            SELECT out as dependency, 'contains' as relationship, 'outgoing' as direction FROM $rec->contains;
+            SELECT out as dependency, 'references' as relationship, 'outgoing' as direction FROM $rec->references;
             """
             
             results = await self.db.query(sql, {"id": current_id})

@@ -3,8 +3,11 @@ from fastapi import Depends
 from surrealdb import AsyncSurreal
 from coretext.core.parser.schema import SchemaMapper
 from coretext.core.graph.manager import GraphManager
-
 from coretext.core.vector.embedder import VectorEmbedder
+
+# Singletons to avoid reloading heavy resources on every request
+_schema_mapper: SchemaMapper | None = None
+_vector_embedder: VectorEmbedder | None = None
 
 async def get_db_client():
     """
@@ -22,19 +25,22 @@ async def get_db_client():
 def get_schema_mapper() -> SchemaMapper:
     """
     Dependency to provide SchemaMapper.
-    Assumes current working directory is the project root.
     """
-    project_root = Path.cwd() 
-    schema_map_path = project_root / ".coretext" / "schema_map.yaml"
-    # Fallback/Default handling could be added here if needed
-    return SchemaMapper(schema_map_path)
+    global _schema_mapper
+    if _schema_mapper is None:
+        project_root = Path.cwd() 
+        schema_map_path = project_root / ".coretext" / "schema_map.yaml"
+        _schema_mapper = SchemaMapper(schema_map_path)
+    return _schema_mapper
 
 def get_vector_embedder() -> VectorEmbedder:
     """
     Dependency to provide VectorEmbedder.
-    Uses default cache location.
     """
-    return VectorEmbedder()
+    global _vector_embedder
+    if _vector_embedder is None:
+        _vector_embedder = VectorEmbedder()
+    return _vector_embedder
 
 async def get_graph_manager(
     db: AsyncSurreal = Depends(get_db_client),

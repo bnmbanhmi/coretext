@@ -42,8 +42,8 @@ class SchemaManager:
         await self.db.query("DEFINE FIELD metadata ON TABLE node TYPE object")
         
         # Vector Search Embedding Support
-        await self.db.query("DEFINE FIELD embedding ON node TYPE array<float>")
-        await self.db.query("DEFINE INDEX node_embedding_index ON node FIELDS embedding HNSW DIMENSION 768")
+        await self.db.query("DEFINE FIELD embedding ON node TYPE array<float> DEFAULT []")
+        await self.db.query("DEFINE INDEX node_embedding_index ON node FIELDS embedding HNSW DIMENSION 768 DIST COSINE")
         
         # Apply specific property definitions from YAML for nodes
         node_types = schema_map.get("node_types", {})

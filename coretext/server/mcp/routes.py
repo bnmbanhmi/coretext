@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Request
 from pydantic import BaseModel, Field
 from typing import List, Any
+from coretext.core.parser.schema import SchemaMapper
 from coretext.core.graph.manager import GraphManager
-from coretext.server.dependencies import get_graph_manager
+from coretext.server.dependencies import get_graph_manager, get_schema_mapper
 from coretext.server.mcp.manifest import generate_manifest
 
 router = APIRouter()
@@ -71,7 +72,8 @@ async def get_tool(tool_name: str, request: Request):
 @router.post("/tools/get_dependencies", response_model=GetDependenciesResponse)
 async def get_dependencies(
     request: GetDependenciesRequest,
-    graph_manager: GraphManager = Depends(get_graph_manager)
+    graph_manager: GraphManager = Depends(get_graph_manager),
+    schema_mapper: SchemaMapper = Depends(get_schema_mapper)
 ):
     """
     Retrieve direct and indirect dependencies for a given node.
@@ -79,6 +81,7 @@ async def get_dependencies(
     Args:
         request: The dependency retrieval request.
         graph_manager: Injected GraphManager instance.
+        schema_mapper: Injected SchemaMapper instance.
         
     Returns:
         GetDependenciesResponse: List of dependencies with relationship details.
@@ -88,20 +91,29 @@ async def get_dependencies(
         Output: {"dependencies": [{"node_id": "file:utils.py", "relationship_type": "IMPORTS", "direction": "out"}]}
     """
     try:
-        # Simple heuristic: if no table prefix, assume it's a file path and prepend 'file:'
-        # This makes it easier for the agent to just pass a path.
         node_id = request.node_identifier
-        if ":" not in node_id:
-            # Only assume it's a file if it looks like a path (contains / or .)
-            # This prevents accidental prefixing of non-standard IDs
+        
+        # Resolve prefix if present
+        if ":" in node_id:
+            prefix, rest = node_id.split(":", 1)
+            try:
+                table = schema_mapper.get_node_table(prefix)
+                # If prefix is a known node type, use the mapped table
+                node_id = f"{table}:`{rest.strip('`')}`"
+            except KeyError:
+                # If prefix is not a known node type, it might be a raw table name (e.g. 'node')
+                pass
+        else:
+            # No prefix, handle path heuristic
             if "/" in node_id or "." in node_id:
-                node_id = f"file:{node_id}"
+                table = schema_mapper.get_node_table("file")
+                node_id = f"{table}:`{node_id}`"
 
         results = await graph_manager.get_dependencies(node_id, depth=request.depth)
         return GetDependenciesResponse(dependencies=results)
     except Exception as e:
         # In a real app, log the exception: logger.error(f"Dependency retrieval error: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error during dependency retrieval.")
+        raise HTTPException(status_code=500, detail=f"Internal server error during dependency retrieval: {str(e)}")
 
 @router.post("/tools/search_topology", response_model=SearchTopologyResponse)
 async def search_topology(
