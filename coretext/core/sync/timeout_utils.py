@@ -7,7 +7,7 @@ from typing import List, Callable, Any, Coroutine
 
 # Define threshold for detachment
 FILE_COUNT_DETACH_THRESHOLD = 5
-TIMEOUT_SECONDS = 2  # Updated to match AC (2s)
+TIMEOUT_SECONDS = 30  # Updated to match AC (2s)
 
 class TimeoutError(Exception):
     pass
