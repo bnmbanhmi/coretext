@@ -5,12 +5,16 @@ import subprocess
 import sys
 import os
 import signal
+import socket
+import time
 from pathlib import Path
-from typing import Optional # Keep Optional for now, as init uses Path.cwd() which is not Optional
+from typing import Optional
 from surrealdb import AsyncSurreal
 from coretext.db.client import SurrealDBClient
 from coretext.db.migrations import SchemaManager
 from coretext.core.parser.schema import DEFAULT_SCHEMA_MAP_CONTENT, SchemaMapper
+from coretext.config import DEFAULT_CONFIG_CONTENT, load_config
+from sentence_transformers import SentenceTransformer
 
 # Moved imports to module level for better testability and consistency
 from coretext.core.sync.engine import SyncEngine, SyncMode
@@ -35,6 +39,29 @@ def init(
 
     db_client = SurrealDBClient(project_root=project_root)
     
+    # AC 1: Create default config.yaml
+    config_path = project_root / ".coretext" / "config.yaml"
+    if not config_path.exists():
+        typer.echo(f"Creating default configuration at {config_path}...")
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        config_path.write_text(DEFAULT_CONFIG_CONTENT)
+        typer.echo("Default configuration created.")
+    else:
+        typer.echo("Configuration file already exists. Skipping creation.")
+
+    # AC 2: Download and cache embedding model
+    typer.echo("Downloading and caching embedding model (nomic-embed-text-v1.5)...")
+    try:
+        # Use a global cache directory for the model to avoid re-downloading per project
+        cache_dir = Path.home() / ".coretext" / "cache"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        # nomic-embed-text-v1.5 requires trust_remote_code=True
+        SentenceTransformer('nomic-ai/nomic-embed-text-v1.5', trust_remote_code=True, cache_folder=str(cache_dir))
+        typer.echo(f"Embedding model cached successfully in {cache_dir}.")
+    except Exception as e:
+        typer.echo(f"Warning: Failed to download/cache embedding model: {e}", err=True)
+        typer.echo("You may need an internet connection for the first initialization.", err=True)
+
     # AC 3: Download SurrealDB binary
     typer.echo(f"Downloading SurrealDB binary (version: {surreal_version})...")
     try:
@@ -63,18 +90,8 @@ def init(
     if pause_file.exists():
         pause_file.unlink()
 
-    typer.echo("CoreText project initialized successfully.")
-
     if typer.confirm("Do you want to start the coretext daemon now?", default=True):
         try:
-            # Trigger the start command logic
-            # We invoke the logic directly or via subprocess to ensure it runs
-            # Since 'start' will detach, we can just call it (if we factor out logic) or call subprocess.
-            # But here, we can just call the start command function directly if we move the logic to a helper or just subprocess call here.
-            # However, calling another typer command directly is tricky if it relies on context.
-            # Let's just execute the start logic here or call the cli command via subprocess?
-            # Calling via subprocess `coretext start` assumes coretext is in path.
-            # Calling the function `start` directly is better if we just pass arguments.
             start(project_root=project_root)
         except Exception as e:
             typer.echo(f"Error starting CoreText daemon: {e}", err=True)
@@ -82,12 +99,26 @@ def init(
 
     typer.echo("CoreText project initialized successfully.")
 
+def is_port_in_use(port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('127.0.0.1', port)) == 0
+
+def check_pid_running(pid_file: Path) -> bool:
+    if pid_file.exists():
+        try:
+            pid = int(pid_file.read_text().strip())
+            os.kill(pid, 0)
+            return True
+        except (ValueError, OSError):
+            return False
+    return False
+
 @app.command()
 def start(
     project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p", help="Root directory of the project.")
 ):
     """
-    Starts the CoreText daemon (SurrealDB) in the background.
+    Starts the CoreText daemon (SurrealDB and FastAPI server) in the background.
     """
     # Unpause hooks
     pause_file = project_root / ".coretext" / PAUSE_FILE_NAME
@@ -95,83 +126,112 @@ def start(
         pause_file.unlink()
         typer.echo("CoreText hooks unpaused.")
 
+    config = load_config(project_root)
     db_client = SurrealDBClient(project_root=project_root)
+    
+    # Robustness checks
+    server_pid_file = project_root / ".coretext" / "server.pid"
+    
+    db_running = asyncio.run(db_client.is_running())
+    server_running = check_pid_running(server_pid_file)
+    
+    if db_running and server_running:
+        typer.echo("CoreText daemon and server are already running.")
+        if not typer.confirm("Do you want to attempt restarting?", default=False):
+            return
+
     if not db_client.surreal_path.exists():
          typer.echo("SurrealDB binary not found. Please run 'coretext init' first.", err=True)
          raise typer.Exit(code=1)
 
-    typer.echo(f"Starting CoreText daemon from {db_client.surreal_path}...")
-    
-    # Construct command
-    cmd = [
-        str(db_client.surreal_path),
-        "start",
-        "--log", "trace",
-        "--user", "root",
-        "--pass", "root",
-        f"rocksdb:{db_client.db_path}",
-        "--unauthenticated" # Disable authentication for local development
-    ]
-    
-    try:
-        cmd.extend(["--bind", "127.0.0.1:8000"]) # Explicitly bind to localhost:8000
-
-        proc = subprocess.Popen(
-            cmd, 
-            start_new_session=True, 
-            # Remove stdout/stderr redirection to see output directly
-            # stdout=subprocess.DEVNULL, 
-            # stderr=subprocess.DEVNULL
-        )
-        
-        # Write PID file
-        pid_file = project_root / ".coretext" / "daemon.pid"
-        pid_file.write_text(str(proc.pid))
-        
-        typer.echo("CoreText daemon started in background.")
-
-        # Start FastAPI server
-        typer.echo("Starting FastAPI server...")
-        fastapi_cmd = [
-             sys.executable, "-m", "uvicorn", 
-             "coretext.server.app:app", 
-             "--host", "127.0.0.1", 
-             "--port", "8001"
-        ]
-        
-        proc_server = subprocess.Popen(
-            fastapi_cmd,
-            start_new_session=True,
-            # stdout=subprocess.DEVNULL,
-            # stderr=subprocess.DEVNULL
-        )
-        
-        # Write Server PID file
-        server_pid_file = project_root / ".coretext" / "server.pid"
-        server_pid_file.write_text(str(proc_server.pid))
-        typer.echo("FastAPI server started in background (port 8001).")
-        
-        # AC6: Automatically apply schema after daemon starts
-        typer.echo("Applying schema automatically...")
+    # Start SurrealDB
+    if not db_running:
+        typer.echo(f"Starting SurrealDB from {db_client.surreal_path}...")
         try:
-            # We need to wait a moment for the subprocess to fully start and listen
-            asyncio.run(asyncio.sleep(2)) # Give it 2 seconds to start
-            asyncio.run(_apply_schema_logic(project_root))
-            typer.echo("Schema applied successfully during initialization.")
-        except Exception as e:
-            typer.echo(f"Warning: Failed to apply schema automatically after daemon start: {e}", err=True)
-            typer.echo("Please run 'coretext apply-schema' manually if schema was not applied.", err=True)
+            if is_port_in_use(config.daemon_port):
+                typer.echo(f"Warning: Port {config.daemon_port} is already in use. DB start might fail.", err=True)
+            
+            db_client.start_detached(port=config.daemon_port)
+            
+            # Wait for DB to be up
+            retries = 10
+            while retries > 0:
+                if is_port_in_use(config.daemon_port):
+                    break
+                time.sleep(0.5)
+                retries -= 1
+            
+            if retries == 0:
+                typer.echo("Warning: SurrealDB process started but port is not yet open. It might be initializing...", err=True)
+            else:
+                 typer.echo(f"SurrealDB started on port {config.daemon_port}.")
 
+        except Exception as e:
+            typer.echo(f"Error starting SurrealDB: {e}", err=True)
+            raise typer.Exit(code=1)
+    else:
+        typer.echo("SurrealDB is already running.")
+
+    # Start FastAPI Server
+    if not server_running:
+        typer.echo("Starting FastAPI server...")
+        try:
+            if is_port_in_use(config.mcp_port):
+                 typer.echo(f"Warning: Port {config.mcp_port} is already in use. Server start might fail.", err=True)
+
+            fastapi_cmd = [
+                 sys.executable, "-m", "uvicorn", 
+                 "coretext.server.app:app", 
+                 "--host", "127.0.0.1", 
+                 "--port", str(config.mcp_port)
+            ]
+            
+            proc_server = subprocess.Popen(
+                fastapi_cmd,
+                start_new_session=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            
+            server_pid_file.parent.mkdir(parents=True, exist_ok=True)
+            server_pid_file.write_text(str(proc_server.pid))
+            
+            # Wait for Server to be up
+            retries = 10
+            while retries > 0:
+                if is_port_in_use(config.mcp_port):
+                    break
+                time.sleep(0.5)
+                retries -= 1
+                
+            if retries == 0:
+                 typer.echo("Warning: FastAPI server process started but port is not yet open.", err=True)
+            else:
+                 typer.echo(f"FastAPI server started on port {config.mcp_port}.")
+
+        except Exception as e:
+            typer.echo(f"Error starting FastAPI server: {e}", err=True)
+            raise typer.Exit(code=1)
+    else:
+        typer.echo("FastAPI server is already running.")
+        
+    # AC6: Automatically apply schema after daemon starts
+    typer.echo("Applying schema automatically...")
+    try:
+        # Give a little more time for the socket to be fully ready for HTTP/WS protocol
+        time.sleep(1)
+        asyncio.run(_apply_schema_logic(project_root))
+        typer.echo("Schema applied successfully during initialization.")
     except Exception as e:
-        typer.echo(f"Error starting CoreText daemon: {e}", err=True)
-        raise typer.Exit(code=1)
+        typer.echo(f"Warning: Failed to apply schema automatically after daemon start: {e}", err=True)
+        typer.echo("Please run 'coretext apply-schema' manually if schema was not applied.", err=True)
 
 @app.command()
 def stop(
     project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p", help="Root directory of the project.")
 ):
     """
-    Stops the CoreText daemon.
+    Stops the CoreText daemon (SurrealDB and FastAPI server).
     """
     typer.echo("Stopping CoreText daemon...")
     
@@ -187,14 +247,26 @@ def stop(
     if server_pid_file.exists():
         try:
             pid = int(server_pid_file.read_text().strip())
+            typer.echo(f"Stopping FastAPI server (PID {pid})...")
             os.kill(pid, signal.SIGTERM)
-            typer.echo(f"FastAPI server (PID {pid}) stopped.")
-            server_pid_file.unlink()
-        except ProcessLookupError:
-            typer.echo("FastAPI server process not found (already stopped?). Removing PID file.")
-            server_pid_file.unlink()
+            # Wait a bit for it to stop
+            for _ in range(20):
+                try:
+                    os.kill(pid, 0)
+                    asyncio.run(asyncio.sleep(0.1))
+                except OSError:
+                    break
+            else:
+                # Force kill if still running
+                os.kill(pid, signal.SIGKILL)
+            typer.echo("FastAPI server stopped.")
+        except (ProcessLookupError, ValueError, OverflowError):
+            typer.echo("FastAPI server process not found (already stopped?).")
         except Exception as e:
             typer.echo(f"Warning: Failed to stop FastAPI server: {e}", err=True)
+        finally:
+            if server_pid_file.exists():
+                server_pid_file.unlink()
 
     db_client = SurrealDBClient(project_root=project_root)
     try:
@@ -210,19 +282,21 @@ async def _apply_schema_logic(project_root: Path):
     Starts the DB temporarily if not running.
     """
     client = SurrealDBClient(project_root=project_root)
+    config = load_config(project_root)
     
     # Ensure DB is up
     started_by_us = False
     if not await client.is_running(): # Check if it's already running
          typer.echo("SurrealDB is not running, attempting to start temporarily for schema application.", err=True)
-         await client.start_surreal_db()
+         await client.start_surreal_db(port=config.daemon_port)
          started_by_us = True
 
     # Retry loop for connection
     max_retries = 10
+    url = f"ws://localhost:{config.daemon_port}/rpc"
     for i in range(max_retries):
         try:
-            async with AsyncSurreal("ws://localhost:8000/rpc") as db:
+            async with AsyncSurreal(url) as db:
                 await db.use("coretext", "coretext") # Namespace, Database
                 
                 migration = SchemaManager(db, project_root)
@@ -385,6 +459,7 @@ async def _post_commit_hook_logic(project_root: Path, detached: bool):
 
     # Set up DB client
     db_client = SurrealDBClient(project_root=project_root)
+    config = load_config(project_root)
     
     try:
         files = get_last_commit_files(project_root)
@@ -417,11 +492,11 @@ async def _post_commit_hook_logic(project_root: Path, detached: bool):
             # This is a simplified approach; a robust solution would use a daemonized DB.
             if not await db_client.is_running():
                 typer.echo("SurrealDB is not running, attempting to start for synchronization.", err=True)
-                await db_client.start_surreal_db()
+                await db_client.start_surreal_db(port=config.daemon_port)
                 started_db_by_us = True
 
             # Connect to SurrealDB
-            async with AsyncSurreal("ws://localhost:8000/rpc") as db:
+            async with AsyncSurreal(f"ws://localhost:{config.daemon_port}/rpc") as db:
                 await db.use("coretext", "coretext")
 
                 schema_map_path = project_root / ".coretext" / "schema_map.yaml"
@@ -460,4 +535,5 @@ async def _post_commit_hook_logic(project_root: Path, detached: bool):
     else:
         # Decide whether to detach or run with timeout
         await run_with_timeout_or_detach(project_root, files, _run_sync_logic)
+
 
