@@ -53,8 +53,8 @@ development_status:
   2-5-epic-2-demo-and-verification-fixes: done
   epic-2-retrospective: optional
 
-  epic-3: backlog
-  3-1-cli-for-coretext-init-and-daemon-management: backlog
+  epic-3: in-progress
+  3-1-cli-for-coretext-init-and-daemon-management: ready-for-dev
   3-2-cli-for-coretext-status: backlog
   3-3-cli-for-coretext-inspect-node-dependency-tree: backlog
   3-4-cli-for-coretext-lint-graph-integrity-check: backlog
