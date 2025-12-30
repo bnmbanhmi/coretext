@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Request, HTTPException, status, Depends
 from typing import Dict
+from importlib.metadata import version
 
 router = APIRouter()
-
 
 async def verify_localhost(request: Request):
     """
@@ -21,13 +21,11 @@ async def verify_localhost(request: Request):
 async def health_check() -> Dict[str, str]:
     """
     Health check endpoint to verify service status.
-    
-    Verifies that the request originates from localhost (127.0.0.1 or ::1).
-    
-    Returns:
-        Dict[str, str]: {"status": "OK", "version": "0.1.0"}
-        
-    Raises:
-        HTTPException: 403 Forbidden if request is not from localhost.
+    Returns version from package metadata.
     """
-    return {"status": "OK", "version": "0.1.0"}
+    try:
+        pkg_version = version("coretext")
+    except Exception:
+        pkg_version = "unknown"
+        
+    return {"status": "OK", "version": pkg_version}

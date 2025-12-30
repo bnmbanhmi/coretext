@@ -8,7 +8,6 @@ import signal
 import socket
 import time
 from pathlib import Path
-from typing import Optional
 from surrealdb import AsyncSurreal
 from coretext.db.client import SurrealDBClient
 from coretext.db.migrations import SchemaManager
@@ -26,6 +25,8 @@ from coretext.cli.utils import check_daemon_health, get_hooks_paused_path
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+
+from coretext.core.sync.timeout_utils import run_with_timeout_or_detach
 
 PAUSE_FILE_NAME = "hooks_paused"
 
@@ -46,23 +47,33 @@ def status(
         raise typer.Exit(code=1)
         
     config = load_config(project_root)
-    # We ping the FastAPI server which is on mcp_port
-    health_info = check_daemon_health(config.mcp_port, project_root=project_root)
+    # Check health of both components
+    health_info = check_daemon_health(server_port=config.mcp_port, db_port=config.daemon_port, project_root=project_root)
     
-    status_str = health_info["status"]
-    status_color = "green" if status_str == "Running" else "red" if status_str == "Stopped" else "yellow"
+    # -- Server Status --
+    server_status = health_info["server"]["status"]
+    server_color = "green" if server_status == "Running" else "red" if server_status == "Stopped" else "yellow"
     
-    # Hook status
+    # -- DB Status --
+    db_status = health_info["database"]["status"]
+    db_color = "green" if db_status == "Running" else "red" if db_status == "Stopped" else "yellow"
+    
+    # -- Hook Status --
     hooks_paused_file = get_hooks_paused_path(project_root)
     hook_status = "Paused" if hooks_paused_file.exists() else "Active"
     hook_color = "yellow" if hook_status == "Paused" else "green"
     
     table = Table(show_header=False, box=None)
-    table.add_row("Daemon Status:", f"[{status_color}]{status_str}[/{status_color}]")
-    table.add_row("Daemon PID:", str(health_info["pid"]) if health_info["pid"] else "N/A")
-    table.add_row("Daemon Port:", str(health_info["port"]))
+    table.add_row("Server Status:", f"[{server_color}]{server_status}[/{server_color}]")
+    table.add_row("Server Port:", str(health_info["server"]["port"]))
+    table.add_row("Server PID:", str(health_info["server"]["pid"]) if health_info["server"]["pid"] else "N/A")
+    table.add_row("Server Version:", health_info["server"]["version"])
+    table.add_section()
+    table.add_row("Database Status:", f"[{db_color}]{db_status}[/{db_color}]")
+    table.add_row("Database Port:", str(health_info["database"]["port"]))
+    table.add_row("Database PID:", str(health_info["database"]["pid"]) if health_info["database"]["pid"] else "N/A")
+    table.add_section()
     table.add_row("Sync Hook Status:", f"[{hook_color}]{hook_status}[/{hook_color}]")
-    table.add_row("Coretext Version:", health_info["version"])
     
     console.print(Panel(table, title="CoreText Status", expand=False))
 
@@ -469,8 +480,6 @@ def pre_commit_hook(
         raise typer.Exit(code=1)
 
 
-from coretext.core.sync.timeout_utils import run_with_timeout_or_detach, FILE_COUNT_DETACH_THRESHOLD, TIMEOUT_SECONDS
-
 @hook_app.command("post-commit")
 def post_commit_hook(
     project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p"),
@@ -575,5 +584,3 @@ async def _post_commit_hook_logic(project_root: Path, detached: bool):
     else:
         # Decide whether to detach or run with timeout
         await run_with_timeout_or_detach(project_root, files, _run_sync_logic)
-
-

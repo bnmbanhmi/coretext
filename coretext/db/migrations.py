@@ -21,10 +21,14 @@ class SchemaManager:
         if isinstance(prop_def, dict):
              pt = prop_def.get("type", "str")
         
-        if pt == "int": surreal_type = "int"
-        elif pt == "float": surreal_type = "float"
-        elif pt == "bool": surreal_type = "bool"
-        elif pt == "datetime": surreal_type = "string"
+        if pt == "int":
+            surreal_type = "int"
+        elif pt == "float":
+            surreal_type = "float"
+        elif pt == "bool":
+            surreal_type = "bool"
+        elif pt == "datetime":
+            surreal_type = "string"
         return surreal_type
 
     async def apply_schema(self):

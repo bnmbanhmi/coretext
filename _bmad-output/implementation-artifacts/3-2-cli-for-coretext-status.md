@@ -87,17 +87,26 @@ gemini-2.0-flash-exp
 - Implemented health check helper in `coretext/cli/utils.py`.
 - Updated `/health` endpoint to return version information.
 - Added comprehensive unit tests for health check and CLI command.
+- **Code Review Fixes (2025-12-30):**
+    - Split status reporting for FastAPI Server and SurrealDB Daemon.
+    - Added comprehensive health check logic covering both services.
+    - Fixed stale PID detection logic (added `os.kill` check).
+    - Explicitly added `httpx` to `pyproject.toml`.
+    - Corrected port usage to match config (`daemon_port` vs `mcp_port`).
 
 ### File List
 - `coretext/cli/utils.py` (New)
 - `coretext/cli/commands.py` (Modified)
 - `coretext/server/health.py` (Modified)
+- `coretext/db/migrations.py` (Modified - Lint Fixes)
+- `pyproject.toml` (Modified)
 - `tests/unit/cli/test_status_command.py` (New)
 - `tests/unit/cli/test_status_cli.py` (New)
 - `extension.yaml` (Modified)
 
 ### Change Log
 - 2025-12-30: Implemented `coretext status` command and supporting health check logic.
+- 2025-12-30: Fixed critical issues from code review (Split status, Stale PID, Dependency).
 
 ### Status
-review
+done
