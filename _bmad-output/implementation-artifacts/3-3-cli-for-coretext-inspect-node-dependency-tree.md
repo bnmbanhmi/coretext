@@ -95,6 +95,11 @@ Gemini 2.0 Flash
 - ✅ Updated `extension.yaml` with the new command.
 - ✅ Verified all ACs with new unit tests and full regression suite.
 
+#### Code Review Fixes
+- **Visuals**: Corrected CLI tree visualization to properly label incoming/outgoing relationships (e.g., "Parent", "Depends On") in `coretext/cli/utils.py`.
+- **Error Handling**: Updated `coretext/server/mcp/routes.py` to return 404 when a node is missing, ensuring the CLI reports "Node not found" accurately instead of just an empty tree.
+- **Testing**: Validated 404 error handling with updated tests in `tests/unit/server/mcp/test_routes.py`.
+
 ### File List
 
 - `coretext/cli/commands.py` (Modified: added `inspect` command)

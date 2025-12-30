@@ -93,7 +93,16 @@ async def get_dependencies(
                 node_id = f"{table}:`{node_id}`"
 
         results = await graph_manager.get_dependencies(node_id, depth=request.depth)
+        
+        # If no dependencies found, verify if node exists to distinguish between "leaf node" and "node not found"
+        if not results:
+             node = await graph_manager.get_node(node_id)
+             if not node:
+                 raise HTTPException(status_code=404, detail=f"Node not found: {node_id}")
+
         return GetDependenciesResponse(dependencies=results)
+    except HTTPException:
+        raise
     except Exception as e:
         # In a real app, log the exception: logger.error(f"Dependency retrieval error: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error during dependency retrieval: {str(e)}")

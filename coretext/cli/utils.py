@@ -126,11 +126,21 @@ def build_dependency_tree(root_id: str, dependencies: list[dict[str, Any]]) -> T
         "contains": "yellow",
         "references": "magenta"
     }
+    
+    # Label map for clearer visualization
+    label_map = {
+        ("parent_of", "incoming"): "Parent",
+        ("depends_on", "outgoing"): "Depends On",
+        ("governed_by", "outgoing"): "Governed By",
+        ("contains", "outgoing"): "Contains",
+        ("references", "outgoing"): "References"
+    }
 
     for dep in dependencies:
         from_id = dep["from_node_id"]
         to_id = dep["node_id"]
         rel_type = dep["relationship_type"]
+        direction = dep.get("direction", "outgoing") # Default to outgoing if missing
         
         parent_node = nodes_in_tree.get(from_id)
         if not parent_node:
@@ -138,13 +148,16 @@ def build_dependency_tree(root_id: str, dependencies: list[dict[str, Any]]) -> T
             
         if from_id not in node_branches:
             node_branches[from_id] = {}
+        
+        # Group by (rel_type, direction)
+        branch_key = (rel_type, direction)
             
-        if rel_type not in node_branches[from_id]:
+        if branch_key not in node_branches[from_id]:
             color = rel_colors.get(rel_type, "white")
-            label = rel_type.replace("_", " ").title()
-            node_branches[from_id][rel_type] = parent_node.add(f"[bold {color}]{label}[/bold {color}]")
+            label = label_map.get(branch_key, rel_type.replace("_", " ").title())
+            node_branches[from_id][branch_key] = parent_node.add(f"[bold {color}]{label}[/bold {color}]")
             
-        branch = node_branches[from_id][rel_type]
+        branch = node_branches[from_id][branch_key]
         child_node = branch.add(to_id)
         nodes_in_tree[to_id] = child_node
         
