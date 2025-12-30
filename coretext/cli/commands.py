@@ -7,6 +7,7 @@ import os
 import signal
 import socket
 import time
+import httpx
 from pathlib import Path
 from surrealdb import AsyncSurreal
 from coretext.db.client import SurrealDBClient
@@ -21,7 +22,7 @@ from coretext.core.sync.git_utils import get_staged_files, get_staged_content, g
 from coretext.core.parser.markdown import MarkdownParser
 from coretext.core.graph.manager import GraphManager
 
-from coretext.cli.utils import check_daemon_health, get_hooks_paused_path
+from coretext.cli.utils import check_daemon_health, get_hooks_paused_path, build_dependency_tree
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -584,3 +585,53 @@ async def _post_commit_hook_logic(project_root: Path, detached: bool):
     else:
         # Decide whether to detach or run with timeout
         await run_with_timeout_or_detach(project_root, files, _run_sync_logic)
+
+@app.command()
+def inspect(
+    node_id: str = typer.Argument(..., help="Node ID or File Path to inspect."),
+    depth: int = typer.Option(1, "--depth", "-d", help="Traversal depth."),
+    project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p", help="Root directory of the project.")
+):
+    """
+    Inspects the dependency tree of a specific node by querying the daemon.
+    """
+    console = Console()
+    
+    config_path = project_root / ".coretext" / "config.yaml"
+    if not config_path.exists():
+        console.print(Panel("[red]Coretext not initialized.[/red] Run 'coretext init' first.", title="Error"))
+        raise typer.Exit(code=1)
+        
+    config = load_config(project_root)
+    
+    # Check if daemon is running
+    health_info = check_daemon_health(server_port=config.mcp_port, db_port=config.daemon_port, project_root=project_root)
+    if health_info["server"]["status"] != "Running":
+        console.print(Panel("[red]Daemon is not running.[/red] Run 'coretext start' first.", title="Error"))
+        raise typer.Exit(code=1)
+        
+    try:
+        with console.status(f"[bold green]Inspecting {node_id}..."):
+            response = httpx.post(
+                f"http://localhost:{config.mcp_port}/tools/get_dependencies",
+                json={"node_identifier": node_id, "depth": depth},
+                timeout=10.0
+            )
+            
+        if response.status_code == 200:
+            data = response.json()
+            dependencies = data.get("dependencies", [])
+            
+            if not dependencies:
+                console.print(f"No dependencies found for [bold blue]{node_id}[/bold blue] (depth {depth}).")
+                return
+                
+            tree = build_dependency_tree(node_id, dependencies)
+            console.print(tree)
+        elif response.status_code == 404:
+            console.print(f"[red]Node not found:[/red] {node_id}. Ensure the file is indexed.")
+        else:
+            console.print(f"[red]Error {response.status_code}:[/red] {response.text}")
+            
+    except httpx.RequestError as e:
+        console.print(f"[red]Connection error:[/red] {e}")

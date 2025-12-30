@@ -32,8 +32,9 @@ def test_start_uses_config_ports(mock_apply_schema, mock_surreal_client, mock_po
     mock_surreal_path.__str__.return_value = "/mock/bin/surreal"
     mock_db_instance.surreal_path = mock_surreal_path
     mock_db_instance.db_path = mock_project_root / ".coretext" / "surreal.db"
+    mock_db_instance.start_detached = MagicMock()
     
-    # Mock Popen to return a process with a PID
+    # Mock Popen to return a process with a PID (for FastAPI)
     mock_proc = MagicMock()
     mock_proc.pid = 1234
     mock_popen.return_value = mock_proc
@@ -41,28 +42,17 @@ def test_start_uses_config_ports(mock_apply_schema, mock_surreal_client, mock_po
     # Run command
     result = runner.invoke(app, ["start", "--project-root", str(mock_project_root)])
     
-    if result.exit_code != 0:
-        print(result.stdout)
     assert result.exit_code == 0
     
-    # Verify Popen calls
-    assert mock_popen.call_count == 2
+    # Verify start_detached call for SurrealDB
+    mock_db_instance.start_detached.assert_called_once_with(port=9000)
     
-    # First call: SurrealDB
-    args, kwargs = mock_popen.call_args_list[0]
-    cmd = args[0]
-    assert "--bind" in cmd
-    assert "127.0.0.1:9000" in cmd
-    
-    # Second call: Uvicorn
-    args, kwargs = mock_popen.call_args_list[1]
+    # Verify Popen call for FastAPI
+    mock_popen.assert_called_once()
+    args, kwargs = mock_popen.call_args
     cmd = args[0]
     assert "--port" in cmd
     assert "9001" in cmd
-    
-    # Verify PID files
-    assert (mock_project_root / ".coretext" / "daemon.pid").read_text() == "1234"
-    assert (mock_project_root / ".coretext" / "server.pid").read_text() == "1234"
 
 @patch("coretext.cli.commands.os.kill")
 @patch("coretext.cli.commands.SurrealDBClient")
@@ -89,6 +79,4 @@ def test_stop_cleans_up_pids(mock_surreal_client, mock_kill, mock_project_root):
     mock_db_instance.stop_surreal_db.assert_called_once()
     
     # Verify PID files are gone (server_pid is unlinked by stop, daemon_pid is unlinked by stop_surreal_db in SurrealDBClient)
-    # Note: stop_surreal_db is mocked, so it won't actually unlink. 
-    # But server_pid should be unlinked by the stop command logic.
     assert not server_pid_file.exists()

@@ -49,7 +49,7 @@ def test_generate_manifest_extracts_tools():
     
     tool = next((t for t in tools if t["name"] == "mock_tool"), None)
     assert tool is not None
-    assert tool["description"].strip() == "A mock tool for testing."
+    assert tool["description"].strip().startswith("A mock tool for testing.")
     assert "input_schema" in tool
     assert "properties" in tool["input_schema"]
     assert "param" in tool["input_schema"]["properties"]

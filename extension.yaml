@@ -16,3 +16,5 @@ commands:
     description: Installs Git hooks for coretext synchronization.
   - name: ping
     description: Pings the CLI.
+  - name: inspect
+    description: Inspects the dependency tree of a specific node.

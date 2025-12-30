@@ -173,22 +173,14 @@ class GraphManager:
         LIMIT {limit};
         """
         
-        response = await self.db.query_raw(sql, {"embedding": embedding})
-        results = response.get('result', [])
+        response = await self.db.query(sql, {"embedding": embedding})
         
         # Handle SurrealDB response format
-        # results is a list of response objects for each query statement
-        if isinstance(results, list) and len(results) > 0:
-            # Check for error in result
-            first_result = results[0]
-            if isinstance(first_result, dict):
-                if first_result.get('status') == 'OK':
-                     res = first_result.get('result')
-                     if isinstance(res, list):
-                         return self._convert_ids(res)
-                     return []
-                elif first_result.get('status') == 'ERR':
-                     raise Exception(f"SurrealDB Search Error: {first_result.get('result')}")
+        if isinstance(response, list) and len(response) > 0:
+            result_obj = response[0]
+            if isinstance(result_obj, dict) and result_obj.get('status') == 'OK':
+                return self._convert_ids(result_obj.get('result', []))
+            return self._convert_ids(response)
             
         return []
 
@@ -234,16 +226,10 @@ class GraphManager:
                 transaction_query += f"UPSERT {table}:`{node.id}` CONTENT ${param_name};\n"
             
             transaction_query += "COMMIT TRANSACTION;"
-            response = await self.db.query_raw(transaction_query, params)
-            results = response.get('result', [])
+            results = await self.db.query(transaction_query, params)
             
             if isinstance(results, str):
                  raise Exception(f"SurrealDB Transaction Error (Nodes): {results}")
-
-            if isinstance(results, list):
-                for res in results:
-                    if isinstance(res, dict) and res.get('status') == 'ERR':
-                        raise Exception(f"SurrealDB Transaction Error (Nodes): {res.get('result')}")
             
             nodes_created += len(batch_nodes)
 
@@ -307,17 +293,10 @@ class GraphManager:
                 transaction_query += f"UPDATE {edge_rec_str} MERGE ${param_name};\n"
 
             transaction_query += "COMMIT TRANSACTION;"
-            response = await self.db.query_raw(transaction_query, params)
-            results = response.get('result', [])
+            results = await self.db.query(transaction_query, params)
             
             if isinstance(results, str):
                  raise Exception(f"SurrealDB Transaction Error (Edges): {results}")
-
-            # Check for transaction errors
-            if isinstance(results, list):
-                for res in results:
-                    if isinstance(res, dict) and res.get('status') == 'ERR':
-                        raise Exception(f"SurrealDB Transaction Error (Edges): {res.get('result')}")
             
             edges_created += len(batch_edges)
         
@@ -363,30 +342,30 @@ class GraphManager:
             SELECT out as dependency, 'references' as relationship, 'outgoing' as direction FROM $rec->references;
             """
             
-            response = await self.db.query_raw(sql, {"id": current_id})
-            results = response.get('result', [])
+            results = await self.db.query(sql, {"id": current_id})
             
             # Process results
             if isinstance(results, list):
                 for res_obj in results:
-                    if isinstance(res_obj, dict) and res_obj.get('status') == 'OK':
-                         res = res_obj.get('result')
-                         if isinstance(res, list):
-                             for row in res:
-                                 dep_id = row.get('dependency')
+                     res = res_obj
+                     if isinstance(res_obj, dict) and res_obj.get('status') == 'OK':
+                         res = res_obj.get('result', [])
+                         
+                     if isinstance(res, list):
+                         for row in res:
+                             dep_id = row.get('dependency')
+                             
+                             if dep_id and str(dep_id) not in visited:
+                                 visited.add(str(dep_id))
                                  
-                                 if dep_id and str(dep_id) not in visited:
-                                     visited.add(str(dep_id))
-                                     
-                                     deps_item = {
-                                         "node_id": str(dep_id),
-                                         "relationship_type": row.get('relationship'),
-                                         "direction": row.get('direction')
-                                     }
-                                     dependencies.append(deps_item)
-                                     
+                                 deps_item = {
+                                     "node_id": str(dep_id),
+                                     "from_node_id": current_id,
+                                     "relationship_type": row.get('relationship'),
+                                     "direction": row.get('direction')
+                                 }
+                                 dependencies.append(deps_item)
                                  
-                                     
                                  queue.append((str(dep_id), current_depth + 1))
                                      
                                  

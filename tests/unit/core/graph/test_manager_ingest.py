@@ -18,7 +18,7 @@ def mock_schema_mapper():
 
 @pytest.fixture
 def graph_manager(mock_surreal_client, mock_schema_mapper):
-    mock_embedder = MagicMock(spec=VectorEmbedder)
+    mock_embedder = AsyncMock(spec=VectorEmbedder)
     return GraphManager(mock_surreal_client, mock_schema_mapper, embedder=mock_embedder)
 
 @pytest.mark.asyncio

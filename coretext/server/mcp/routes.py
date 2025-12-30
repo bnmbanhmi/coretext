@@ -24,6 +24,7 @@ class SearchTopologyResponse(BaseModel):
 
 class DependencyItem(BaseModel):
     node_id: str = Field(..., description="The unique identifier of the dependent node.")
+    from_node_id: str = Field(..., description="The ID of the node that this dependency originates from.")
     relationship_type: str = Field(..., description="The type of relationship (e.g., 'IMPORTS', 'INHERITS').")
     direction: str = Field(..., description="The direction of the dependency ('in' or 'out').")
 
@@ -61,9 +62,23 @@ async def get_dependencies(
     try:
         node_id = request.node_identifier
         
+        # Basic path normalization for relative paths
+        if node_id.startswith("./"):
+            node_id = node_id[2:]
+        elif node_id.startswith("../"):
+             import os
+             node_id = os.path.normpath(node_id)
+
         # Resolve prefix if present
         if ":" in node_id:
             prefix, rest = node_id.split(":", 1)
+            # Normalize the path part even if prefixed
+            if rest.startswith("./"):
+                rest = rest[2:]
+            elif rest.startswith("../"):
+                import os
+                rest = os.path.normpath(rest)
+
             try:
                 table = schema_mapper.get_node_table(prefix)
                 # If prefix is a known node type, use the mapped table

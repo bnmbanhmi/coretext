@@ -20,8 +20,8 @@ def override_dependency(mock_graph_manager):
 def test_get_dependencies_endpoint(mock_graph_manager, override_dependency):
     # Setup mock return
     mock_graph_manager.get_dependencies.return_value = [
-        {"node_id": "file:test.py", "relationship_type": "depends_on", "direction": "outgoing"},
-        {"node_id": "file:parent.py", "relationship_type": "parent_of", "direction": "incoming"}
+        {"node_id": "file:test.py", "from_node_id": "file:main.py", "relationship_type": "depends_on", "direction": "outgoing"},
+        {"node_id": "file:parent.py", "from_node_id": "file:main.py", "relationship_type": "parent_of", "direction": "incoming"}
     ]
     
     payload = {
@@ -40,7 +40,7 @@ def test_get_dependencies_endpoint(mock_graph_manager, override_dependency):
     assert data["dependencies"][0]["relationship_type"] == "depends_on"
     
     # Verify graph manager called correctly
-    mock_graph_manager.get_dependencies.assert_called_with("file:main.py", depth=1)
+    mock_graph_manager.get_dependencies.assert_called_with("node:`main.py`", depth=1)
 
 def test_get_manifest_endpoint(override_dependency):
     """
