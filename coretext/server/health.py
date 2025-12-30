@@ -25,9 +25,9 @@ async def health_check() -> Dict[str, str]:
     Verifies that the request originates from localhost (127.0.0.1 or ::1).
     
     Returns:
-        Dict[str, str]: {"status": "OK"}
+        Dict[str, str]: {"status": "OK", "version": "0.1.0"}
         
     Raises:
         HTTPException: 403 Forbidden if request is not from localhost.
     """
-    return {"status": "OK"}
+    return {"status": "OK", "version": "0.1.0"}

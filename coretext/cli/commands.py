@@ -22,9 +22,49 @@ from coretext.core.sync.git_utils import get_staged_files, get_staged_content, g
 from coretext.core.parser.markdown import MarkdownParser
 from coretext.core.graph.manager import GraphManager
 
+from coretext.cli.utils import check_daemon_health, get_hooks_paused_path
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
 PAUSE_FILE_NAME = "hooks_paused"
 
 app = typer.Typer()
+
+@app.command()
+def status(
+    project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p", help="Root directory of the project.")
+):
+    """
+    Checks the operational status and health of the CoreText daemon.
+    """
+    console = Console()
+    
+    config_path = project_root / ".coretext" / "config.yaml"
+    if not config_path.exists():
+        console.print(Panel("[red]Coretext not initialized.[/red] Run 'coretext init' first.", title="Error"))
+        raise typer.Exit(code=1)
+        
+    config = load_config(project_root)
+    # We ping the FastAPI server which is on mcp_port
+    health_info = check_daemon_health(config.mcp_port, project_root=project_root)
+    
+    status_str = health_info["status"]
+    status_color = "green" if status_str == "Running" else "red" if status_str == "Stopped" else "yellow"
+    
+    # Hook status
+    hooks_paused_file = get_hooks_paused_path(project_root)
+    hook_status = "Paused" if hooks_paused_file.exists() else "Active"
+    hook_color = "yellow" if hook_status == "Paused" else "green"
+    
+    table = Table(show_header=False, box=None)
+    table.add_row("Daemon Status:", f"[{status_color}]{status_str}[/{status_color}]")
+    table.add_row("Daemon PID:", str(health_info["pid"]) if health_info["pid"] else "N/A")
+    table.add_row("Daemon Port:", str(health_info["port"]))
+    table.add_row("Sync Hook Status:", f"[{hook_color}]{hook_status}[/{hook_color}]")
+    table.add_row("Coretext Version:", health_info["version"])
+    
+    console.print(Panel(table, title="CoreText Status", expand=False))
 
 @app.command()
 def init(

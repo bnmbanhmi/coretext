@@ -13,43 +13,43 @@ so that I can quickly verify the system is running correctly.
 ## Acceptance Criteria
 
 1.  **Status Command (`coretext status`)**:
-    *   [ ] Command is available via `coretext status`.
-    *   [ ] Pings the daemon's `/health` endpoint (default `http://localhost:8000/health`).
-    *   [ ] Reads port configuration from `~/.coretext/config.yaml` (or project local `.coretext/config.yaml`).
+    *   [x] Command is available via `coretext status`.
+    *   [x] Pings the daemon's `/health` endpoint (default `http://localhost:8000/health`).
+    *   [x] Reads port configuration from `~/.coretext/config.yaml` (or project local `.coretext/config.yaml`).
 
 2.  **Output Information**:
-    *   [ ] Displays Daemon Status: "Running" (Green) or "Stopped" (Red) or "Unresponsive" (Yellow).
-    *   [ ] Displays Daemon PID and Port.
-    *   [ ] Displays "Sync Hook Status": "Active" (Green) or "Paused" (Yellow) (based on `hooks_paused` file presence).
-    *   [ ] Displays Coretext Version.
+    *   [x] Displays Daemon Status: "Running" (Green) or "Stopped" (Red) or "Unresponsive" (Yellow).
+    *   [x] Displays Daemon PID and Port.
+    *   [x] Displays "Sync Hook Status": "Active" (Green) or "Paused" (Yellow) (based on `hooks_paused` file presence).
+    *   [x] Displays Coretext Version.
 
 3.  **Error Handling**:
-    *   [ ] Gracefully handles connection refused errors (interprets as "Daemon Stopped").
-    *   [ ] Checks for stale PID file (PID file exists but process/port not responding).
+    *   [x] Gracefully handles connection refused errors (interprets as "Daemon Stopped").
+    *   [x] Checks for stale PID file (PID file exists but process/port not responding).
 
 4.  **UX/Formatting**:
-    *   [ ] Uses `Rich` library (Panels, Tables, or bold text) for clear, readable output.
+    *   [x] Uses `Rich` library (Panels, Tables, or bold text) for clear, readable output.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Implement Health Check Logic**
-    - [ ] Create `check_daemon_health(port: int) -> dict` helper function in `coretext/cli/utils.py` (or `commands.py`).
-    - [ ] Use `httpx` (or `requests`) to ping `/health`.
-    - [ ] Implement logic to cross-reference with `daemon.pid` file in `.coretext/`.
+- [x] **Task 1: Implement Health Check Logic**
+    - [x] Create `check_daemon_health(port: int) -> dict` helper function in `coretext/cli/utils.py` (or `commands.py`).
+    - [x] Use `httpx` (or `requests`) to ping `/health`.
+    - [x] Implement logic to cross-reference with `daemon.pid` file in `.coretext/`.
 
-- [ ] **Task 2: Implement `status` Command**
-    - [ ] Add `status` command to `coretext/cli/commands.py`.
-    - [ ] Load config to get correct port.
-    - [ ] Check for `hooks_paused` file to report hook status.
+- [x] **Task 2: Implement `status` Command**
+    - [x] Add `status` command to `coretext/cli/commands.py`.
+    - [x] Load config to get correct port.
+    - [x] Check for `hooks_paused` file to report hook status.
 
-- [ ] **Task 3: UX Polish**
-    - [ ] Design `Rich` output format (e.g., a summary panel).
-    - [ ] Ensure "Stopped" state is clearly distinguishable from "Error".
+- [x] **Task 3: UX Polish**
+    - [x] Design `Rich` output format (e.g., a summary panel).
+    - [x] Ensure "Stopped" state is clearly distinguishable from "Error".
 
-- [ ] **Task 4: Testing**
-    - [ ] Add unit tests in `tests/unit/cli/test_status_command.py`.
-    - [ ] Mock `httpx` responses for Running/Stopped/Error states.
-    - [ ] Mock file system for PID and hook status checks.
+- [x] **Task 4: Testing**
+    - [x] Add unit tests in `tests/unit/cli/test_status_command.py`.
+    - [x] Mock `httpx` responses for Running/Stopped/Error states.
+    - [x] Mock file system for PID and hook status checks.
 
 ## Dev Notes
 
@@ -75,10 +75,29 @@ so that I can quickly verify the system is running correctly.
 ## Dev Agent Record
 
 ### Agent Model Used
-{{agent_model_name_version}}
+gemini-2.0-flash-exp
 
 ### Debug Log References
+- Verified health check logic with `tests/unit/cli/test_status_command.py`.
+- Verified CLI output with `tests/unit/cli/test_status_cli.py`.
+- Encountered pre-existing test failures in `tests/unit/cli/test_commands_new.py`, `test_daemon_lifecycle.py`, and `test_daemon_management.py`. These were confirmed to fail even after reverting local changes.
 
 ### Completion Notes List
+- Implemented `coretext status` command with `Rich` formatting.
+- Implemented health check helper in `coretext/cli/utils.py`.
+- Updated `/health` endpoint to return version information.
+- Added comprehensive unit tests for health check and CLI command.
 
 ### File List
+- `coretext/cli/utils.py` (New)
+- `coretext/cli/commands.py` (Modified)
+- `coretext/server/health.py` (Modified)
+- `tests/unit/cli/test_status_command.py` (New)
+- `tests/unit/cli/test_status_cli.py` (New)
+- `extension.yaml` (Modified)
+
+### Change Log
+- 2025-12-30: Implemented `coretext status` command and supporting health check logic.
+
+### Status
+review
