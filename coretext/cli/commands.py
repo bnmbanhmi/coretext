@@ -103,9 +103,12 @@ def lint(
         
     try:
         with console.status("[bold green]Running lint check..."):
+            payload = {"files": files} if files else {}
+            payload["project_root"] = str(project_root.resolve())
+            
             response = httpx.post(
                 f"http://localhost:{config.mcp_port}/lint",
-                json={"files": files} if files else {},
+                json=payload,
                 timeout=30.0
             )
             

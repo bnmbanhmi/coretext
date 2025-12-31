@@ -25,6 +25,39 @@ class MarkdownParser:
         """
         self.md = MarkdownIt("commonmark")
         self.project_root = project_root
+        self._file_anchors_cache = {}
+
+    def _generate_slug(self, text: str) -> str:
+        """Generates a robust slug for header IDs."""
+        slug = re.sub(r'[^a-z0-9]+', '-', text.lower()) # Replace non-alphanumeric with dashes
+        return slug.strip('-') # Remove leading/trailing dashes
+
+    def _get_anchors_for_file(self, file_path: Path) -> set[str]:
+        """Parses a file to extract all header anchors (slugs). Caches results."""
+        if file_path in self._file_anchors_cache:
+            return self._file_anchors_cache[file_path]
+
+        anchors = set()
+        if not file_path.exists():
+            return anchors
+
+        try:
+            content = file_path.read_text()
+            tokens = self.md.parse(content)
+            
+            for i, token in enumerate(tokens):
+                if token.type == "heading_open":
+                    header_content_token_index = i + 1
+                    if header_content_token_index < len(tokens) and tokens[header_content_token_index].type == "inline":
+                        header_content = tokens[header_content_token_index].content
+                        slug = self._generate_slug(header_content)
+                        anchors.add(slug)
+        except Exception:
+            # If we can't read/parse, assume no anchors (file error will be caught elsewhere)
+            pass
+
+        self._file_anchors_cache[file_path] = anchors
+        return anchors
 
     def _process_link_token(self, link_token: Token, parent_token: Token, current_file_path: Path, file_node: FileNode, nodes: List[BaseNode], edges: List[BaseEdge], content_lines: List[str], link_index: int):
         """Helper function to process link_open tokens and create REFERENCES edges or ParsingErrorNodes."""
@@ -43,34 +76,69 @@ class MarkdownParser:
                 return
 
             try:
-                # Normalize the link target path
-                normalized_link_path = normalize_path_to_project_root(current_file_path, href, project_root=self.project_root)
-                
-                # VALIDATION: Check if target exists
-                # We need to resolve the full path to check existence
-                full_target_path = self.project_root / normalized_link_path
+                # Handle Anchor
+                target_anchor = None
+                href_path = href
+                if "#" in href:
+                    href_path, target_anchor = href.split("#", 1)
 
+                # Normalize the link target path
+                # If href_path is empty, it's an internal link (e.g., #section)
+                if not href_path:
+                    normalized_link_path = current_file_path.relative_to(self.project_root)
+                    full_target_path = current_file_path
+                else:
+                    normalized_link_path = normalize_path_to_project_root(current_file_path, href_path, project_root=self.project_root)
+                    full_target_path = self.project_root / normalized_link_path
+                
+                # VALIDATION 1: Check if target file exists
                 if not full_target_path.exists():
                      # Treat as broken link -> Parsing Error
                     error_node = ParsingErrorNode(
                         id=f"{file_node.id}#link-error-line-{line_number}-{link_index}",
                         file_path=file_node.path,
                         line_number=line_number,
-                        error_message=f"Dangling Reference: Target '{href}' does not exist.",
+                        error_message=f"Dangling Reference: Target file '{href_path}' does not exist.",
                         raw_content_snippet=raw_snippet
                     )
                     nodes.append(error_node)
                     return
 
+                # VALIDATION 2: Check if anchor exists (if applicable)
+                if target_anchor:
+                    # We need to check if this anchor exists in the target file
+                    # Note: For the *current* file, we might be parsing it right now.
+                    # Ideally we should do a 2-pass or post-validation for current file, 
+                    # but _get_anchors_for_file reads from disk.
+                    # If we are linting, the file on disk is likely the one we are parsing (unless dirty buffer).
+                    # Assuming disk content is source of truth for now.
+                    
+                    target_anchors = self._get_anchors_for_file(full_target_path)
+                    if target_anchor not in target_anchors:
+                        error_node = ParsingErrorNode(
+                            id=f"{file_node.id}#anchor-error-line-{line_number}-{link_index}",
+                            file_path=file_node.path,
+                            line_number=line_number,
+                            error_message=f"Dangling Reference: Anchor '#{target_anchor}' not found in '{href_path or current_file_path.name}'.",
+                            raw_content_snippet=raw_snippet
+                        )
+                        nodes.append(error_node)
+                        return
+
                 # Create a REFERENCES edge
                 # Ensure unique ID by appending index
-                edge_id = f"{file_node.id}-REFERENCES-{normalized_link_path}-{link_index}"
+                # Include anchor in the edge target ID if present
+                target_id = str(normalized_link_path)
+                if target_anchor:
+                    target_id = f"{target_id}#{target_anchor}"
+
+                edge_id = f"{file_node.id}-REFERENCES-{target_id}-{link_index}"
                 
                 edges.append(BaseEdge(
                     id=edge_id,
                     edge_type="references",
                     source=file_node.id,
-                    target=str(normalized_link_path)
+                    target=target_id
                 ))
             except ValueError as e:
                 # Handle cases where link target cannot be normalized (e.g., external links, invalid paths)
@@ -98,6 +166,11 @@ class MarkdownParser:
             if not file_path.is_file():
                 raise FileNotFoundError(f"Markdown file not found: {file_path}")
             content = file_path.read_text()
+            # Prime the anchor cache for this file since we have the content
+            # (In case we self-reference later, though we read from disk in _get_anchors usually)
+            # Actually, to be safe for self-references during this parse, 
+            # we might want to pre-scan anchors here if we wanted to avoid reading disk twice.
+            # But kept simple for now relying on _get_anchors_for_file reading disk.
 
         if file_path.is_absolute():
             try:
@@ -150,9 +223,7 @@ class MarkdownParser:
                     continue
                 # --- END ERROR DETECTION ---
                 
-                # Generate a robust slug for the header ID
-                slug = re.sub(r'[^a-z0-9]+', '-', header_content.lower()) # Replace non-alphanumeric with dashes
-                slug = slug.strip('-') # Remove leading/trailing dashes
+                slug = self._generate_slug(header_content)
                 
                 header_id = f"{normalized_file_path}#{slug}"
 

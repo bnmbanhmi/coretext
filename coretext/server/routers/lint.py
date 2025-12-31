@@ -10,6 +10,7 @@ router = APIRouter()
 
 class LintRequest(BaseModel):
     files: Optional[List[str]] = None
+    project_root: Optional[str] = None
 
 def get_project_root() -> Path:
     return Path.cwd()
@@ -20,21 +21,28 @@ def get_lint_manager(project_root: Path = Depends(get_project_root)) -> LintMana
 @router.post("/lint", response_model=LintReport)
 async def lint_endpoint(
     request: LintRequest,
-    manager: LintManager = Depends(get_lint_manager),
     project_root: Path = Depends(get_project_root)
 ):
     """
     Triggers a dry-run integrity check on Markdown files.
     """
+    # Override project_root if provided in request
+    if request.project_root:
+        root_path = Path(request.project_root)
+    else:
+        root_path = project_root
+        
+    manager = LintManager(root_path)
+
     if request.files:
         # Resolve paths relative to project root
-        files_to_lint = [project_root / f for f in request.files]
+        files_to_lint = [root_path / f for f in request.files]
     else:
         # Find all .md files in project, excluding hidden directories
-        all_md = list(project_root.glob("**/*.md"))
+        all_md = list(root_path.glob("**/*.md"))
         files_to_lint = [
             f for f in all_md
-            if not any(part.startswith('.') for part in f.relative_to(project_root).parts)
+            if not any(part.startswith('.') for part in f.relative_to(root_path).parts)
         ]
 
     return await manager.lint_files(files_to_lint)

@@ -38,3 +38,28 @@ async def test_lint_manager_check_markdown_syntax(tmp_path):
     link_issues = [i for i in report.issues if "Dangling Reference" in i.message]
     assert len(link_issues) == 1
     assert str(broken_link_file.name) in link_issues[0].file_path
+
+@pytest.mark.asyncio
+async def test_lint_manager_anchor_validation(tmp_path):
+    # Setup
+    target_file = tmp_path / "target.md"
+    target_file.write_text("# Target Header\nContent")
+    
+    # Valid anchor link
+    valid_anchor_file = tmp_path / "valid_anchor.md"
+    valid_anchor_file.write_text("[Valid](./target.md#target-header)")
+    
+    # Invalid anchor link
+    invalid_anchor_file = tmp_path / "invalid_anchor.md"
+    invalid_anchor_file.write_text("[Invalid](./target.md#non-existent-header)")
+    
+    manager = LintManager(project_root=tmp_path)
+    
+    # Execution
+    report = await manager.lint_files([target_file, valid_anchor_file, invalid_anchor_file])
+    
+    # Verification
+    # Should have 1 issue for the invalid anchor
+    anchor_issues = [i for i in report.issues if "Anchor '#non-existent-header' not found" in i.message]
+    assert len(anchor_issues) == 1
+    assert str(invalid_anchor_file.name) in anchor_issues[0].file_path
