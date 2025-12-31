@@ -57,7 +57,7 @@ development_status:
   3-1-cli-for-coretext-init-and-daemon-management: done
   3-2-cli-for-coretext-status: done
   3-3-cli-for-coretext-inspect-node-dependency-tree: done
-  3-4-cli-for-coretext-lint-graph-integrity-check: review
+  3-4-cli-for-coretext-lint-graph-integrity-check: done
   3-5-bmad-template-provisioning: backlog
   epic-3-retrospective: optional
 

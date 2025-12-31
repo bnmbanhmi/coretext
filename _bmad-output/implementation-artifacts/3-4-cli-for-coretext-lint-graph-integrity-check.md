@@ -1,6 +1,6 @@
 # Story 3.4: CLI for `coretext lint` (Graph Integrity Check)
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -13,24 +13,24 @@ so that I can identify and fix any malformed Markdown or broken links before com
 ## Acceptance Criteria
 
 1.  **Lint Command (`coretext lint`)**:
-    *   [ ] Command is available via `coretext lint`.
-    *   [ ] Triggers a "dry-run" integrity check within the daemon.
-    *   [ ] Does NOT modify the persistent graph state in SurrealDB.
+    *   [x] Command is available via `coretext lint`.
+    *   [x] Triggers a "dry-run" integrity check within the daemon.
+    *   [x] Does NOT modify the persistent graph state in SurrealDB.
 
 2.  **Integrity Checks**:
-    *   [ ] **Malformed Markdown**: Identifies files that fail the BMAD parsing rules (FR7).
-    *   [ ] **Dangling References**: Identifies Standard Markdown Links (`[Label](./path)`) that point to non-existent files or anchors (FR6).
-    *   [ ] **Graph Consistency**: (Optional/Advanced) Identifies "Ghost Nodes" in DB that no longer exist on disk (if not handled by sync).
+    *   [x] **Malformed Markdown**: Identifies files that fail the BMAD parsing rules (FR7).
+    *   [x] **Dangling References**: Identifies Standard Markdown Links (`[Label](./path)`) that point to non-existent files or anchors (FR6).
+    *   [x] **Graph Consistency**: (Optional/Advanced) Identifies "Ghost Nodes" in DB that no longer exist on disk (if not handled by sync).
 
 3.  **Reporting**:
-    *   [ ] Displays a summary of issues found (e.g., "3 issues found in 2 files").
-    *   [ ] Detailed report includes:
+    *   [x] Displays a summary of issues found (e.g., "3 issues found in 2 files").
+    *   [x] Detailed report includes:
         *   File Path
         *   Line Number (if available/applicable)
         *   Error Type (e.g., "Parse Error", "Broken Link")
         *   Message / Details
-    *   [ ] Uses `Rich` for formatted output (e.g., Tables or formatted lists with colors).
-    *   [ ] Returns a non-zero exit code if issues are found (for CI/Hook integration).
+    *   [x] Uses `Rich` for formatted output (e.g., Tables or formatted lists with colors).
+    *   [x] Returns a non-zero exit code if issues are found (for CI/Hook integration).
 
 ## Tasks / Subtasks
 
@@ -56,6 +56,11 @@ so that I can identify and fix any malformed Markdown or broken links before com
     - [x] Unit tests for `LintManager`/Logic.
     - [x] Integration test: Mock a file with a broken link and verify `lint` catches it.
     - [x] Verify exit codes.
+
+- [x] **Review Follow-ups (AI)**
+    - [x] [AI-Review][High] Missing Anchor Validation [coretext/core/parser/markdown.py]
+    - [x] [AI-Review][Medium] Fragile Project Root Detection [coretext/server/routers/lint.py]
+    - [x] [AI-Review][Medium] CLI/Server Path Synchronization [coretext/cli/commands.py]
 
 ## Dev Notes
 
@@ -92,6 +97,7 @@ so that I can identify and fix any malformed Markdown or broken links before com
 - coretext/core/lint/__init__.py
 - coretext/core/lint/manager.py
 - coretext/core/lint/models.py
+- coretext/server/app.py
 - coretext/server/routers/lint.py
 - tests/unit/core/lint/test_lint_manager.py
 - tests/unit/server/test_lint_router.py
@@ -99,7 +105,8 @@ so that I can identify and fix any malformed Markdown or broken links before com
 
 ## Change Log
 - 2025-12-31: Implemented linting logic, API endpoint, and CLI command. All tests passed.
+- 2025-12-31: Code Review Fixes - Implemented robust anchor validation, fixed project root handling between CLI and Server.
 
 ## Status
 
-review
+done
