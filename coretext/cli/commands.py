@@ -8,6 +8,7 @@ import signal
 import socket
 import time
 import httpx
+from typing import List, Optional
 from pathlib import Path
 from surrealdb import AsyncSurreal
 from coretext.db.client import SurrealDBClient
@@ -77,6 +78,71 @@ def status(
     table.add_row("Sync Hook Status:", f"[{hook_color}]{hook_status}[/{hook_color}]")
     
     console.print(Panel(table, title="CoreText Status", expand=False))
+
+@app.command()
+def lint(
+    files: Optional[List[str]] = typer.Argument(None, help="List of files to lint. If empty, lints all files."),
+    project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p", help="Root directory of the project.")
+):
+    """
+    Runs integrity checks (linting) on Markdown files via the daemon.
+    """
+    console = Console()
+    
+    config_path = project_root / ".coretext" / "config.yaml"
+    if not config_path.exists():
+        console.print(Panel("[red]Coretext not initialized.[/red] Run 'coretext init' first.", title="Error"))
+        raise typer.Exit(code=1)
+        
+    config = load_config(project_root)
+    
+    health_info = check_daemon_health(server_port=config.mcp_port, db_port=config.daemon_port, project_root=project_root)
+    if health_info["server"]["status"] != "Running":
+        console.print(Panel("[red]Daemon is not running.[/red] Run 'coretext start' first.", title="Error"))
+        raise typer.Exit(code=1)
+        
+    try:
+        with console.status("[bold green]Running lint check..."):
+            response = httpx.post(
+                f"http://localhost:{config.mcp_port}/lint",
+                json={"files": files} if files else {},
+                timeout=30.0
+            )
+            
+        if response.status_code == 200:
+            report = response.json()
+            issues = report.get("issues", [])
+            
+            if not issues:
+                console.print("[bold green]✅ No issues found.[/bold green]")
+                raise typer.Exit(code=0)
+            
+            # Display issues using Rich Table
+            table = Table(title=f"Lint Issues Found: {len(issues)}")
+            table.add_column("File", style="cyan")
+            table.add_column("Line", style="magenta")
+            table.add_column("Type", style="yellow")
+            table.add_column("Message", style="white")
+            
+            for issue in issues:
+                table.add_row(
+                    issue["file_path"],
+                    str(issue["line_number"]),
+                    issue["error_type"],
+                    issue["message"]
+                )
+                
+            console.print(table)
+            console.print(f"[bold red]Found {len(issues)} issues.[/bold red]")
+            raise typer.Exit(code=1)
+            
+        else:
+            console.print(f"[red]Error {response.status_code}:[/red] {response.text}")
+            raise typer.Exit(code=1)
+            
+    except httpx.RequestError as e:
+        console.print(f"[red]Connection error:[/red] {e}")
+        raise typer.Exit(code=1)
 
 @app.command()
 def init(
