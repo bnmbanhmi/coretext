@@ -1,6 +1,6 @@
 # Story 3.5: BMAD Template Provisioning
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -13,55 +13,55 @@ so that I can quickly create new project documentation that is compliant with th
 ## Acceptance Criteria
 
 1.  **New Command (`coretext new`)**:
-    *   [ ] Command is available via `coretext new <template_name> <output_path>`.
-    *   [ ] Example usage: `coretext new prd docs/new-prd.md`.
+    *   [x] Command is available via `coretext new <template_name> <output_path>`.
+    *   [x] Example usage: `coretext new prd docs/new-prd.md`.
 
 2.  **Template Generation**:
-    *   [ ] Creates a new Markdown file at the specified `output_path`.
-    *   [ ] Populates the file with the content of the selected BMAD template.
-    *   [ ] Ensures the output directory exists (creates if missing).
-    *   [ ] Prevents accidental overwrite of existing files (prompts user or requires `--force` flag).
+    *   [x] Creates a new Markdown file at the specified `output_path`.
+    *   [x] Populates the file with the content of the selected BMAD template.
+    *   [x] Ensures the output directory exists (creates if missing).
+    *   [x] Prevents accidental overwrite of existing files (prompts user or requires `--force` flag).
 
 3.  **Template Inventory**:
-    *   [ ] Supports the following standard templates:
+    *   [x] Supports the following standard templates:
         *   `prd` (Product Requirements Document)
         *   `architecture` (Architecture Decision Record)
         *   `epic` (Epic Breakdown)
         *   `story` (User Story)
-    *   [ ] Templates are stored within the `coretext` package distribution.
+    *   [x] Templates are stored within the `coretext` package distribution.
 
 4.  **List Templates**:
-    *   [ ] If no `template_name` is provided (or user runs `coretext new --list`), lists all available templates.
+    *   [x] If no `template_name` is provided (or user runs `coretext new --list`), lists all available templates.
 
 5.  **Output Feedback**:
-    *   [ ] Displays a success message with the full path of the created file.
-    *   [ ] Uses `Rich` for consistent CLI styling.
+    *   [x] Displays a success message with the full path of the created file.
+    *   [x] Uses `Rich` for consistent CLI styling.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Create Template Resources**
-    - [ ] Create `coretext/templates/` package directory.
-    - [ ] Add `__init__.py`.
-    - [ ] Add `prd.md`, `architecture.md`, `epic.md`, `story.md` with standard BMAD content (copied from `_bmad` standards or simplified versions).
+- [x] **Task 1: Create Template Resources**
+    - [x] Create `coretext/templates/` package directory.
+    - [x] Add `__init__.py`.
+    - [x] Add `prd.md`, `architecture.md`, `epic.md`, `story.md` with standard BMAD content (copied from `_bmad` standards or simplified versions).
 
-- [ ] **Task 2: Implement `TemplateManager`**
-    - [ ] Create `coretext/core/templates/manager.py`.
-    - [ ] Implement `list_templates()` -> `List[str]`.
-    - [ ] Implement `get_template_content(name: str)` -> `str`.
-    - [ ] Use `importlib.resources.files("coretext.templates")` to access files (Python 3.10+ standard).
+- [x] **Task 2: Implement `TemplateManager`**
+    - [x] Create `coretext/core/templates/manager.py`.
+    - [x] Implement `list_templates()` -> `List[str]`.
+    - [x] Implement `get_template_content(name: str)` -> `str`.
+    - [x] Use `importlib.resources.files("coretext.templates")` to access files (Python 3.10+ standard).
 
-- [ ] **Task 3: Implement `new` Command**
-    - [ ] Add `new` command to `coretext/cli/commands.py`.
-    - [ ] Arguments: `template_name` (optional/argument), `output_path` (optional/argument).
-    - [ ] Logic:
+- [x] **Task 3: Implement `new` Command**
+    - [x] Add `new` command to `coretext/cli/commands.py`.
+    - [x] Arguments: `template_name` (optional/argument), `output_path` (optional/argument).
+    - [x] Logic:
         - If args missing, show list of templates.
         - Check if output file exists.
         - Write content.
-    - [ ] Add `--force` option to overwrite.
+    - [x] Add `--force` option to overwrite.
 
-- [ ] **Task 4: Testing**
-    - [ ] Unit tests for `TemplateManager` (mocking `importlib.resources` or checking actual bundled files).
-    - [ ] Integration test: Run `coretext new story tmp/test.md` and verify file content.
+- [x] **Task 4: Testing**
+    - [x] Unit tests for `TemplateManager` (mocking `importlib.resources` or checking actual bundled files).
+    - [x] Integration test: Run `coretext new story tmp/test.md` and verify file content.
 
 ## Dev Notes
 
@@ -89,5 +89,20 @@ Gemini Pro 1.5
 ### Debug Log References
 
 ### Completion Notes List
+*   Implemented `TemplateManager` using `importlib.resources`.
+*   Added `coretext new` command with support for `prd`, `architecture`, `epic`, `story` templates.
+*   Implemented unit tests for `TemplateManager` and integration tests for CLI command.
+*   Added overwrite protection and `--force` flag.
+*   Used Rich for output formatting.
 
 ### File List
+coretext/templates/__init__.py
+coretext/templates/prd.md
+coretext/templates/architecture.md
+coretext/templates/epic.md
+coretext/templates/story.md
+coretext/core/templates/__init__.py
+coretext/core/templates/manager.py
+coretext/cli/commands.py
+tests/unit/core/templates/test_template_manager.py
+tests/integration/cli/test_new_command.py

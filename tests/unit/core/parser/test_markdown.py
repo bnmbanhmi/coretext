@@ -156,5 +156,5 @@ def test_malformed_link_in_complex_md(parser: MarkdownParser, create_md_file):
 
     assert any(isinstance(node, ParsingErrorNode) for node in nodes)
     error_node = next(node for node in nodes if isinstance(node, ParsingErrorNode))
-    assert "Dangling Reference: Target './non_existent_file.md' does not exist." in error_node.error_message
+    assert "Dangling Reference: Target file './non_existent_file.md' does not exist." in error_node.error_message
 

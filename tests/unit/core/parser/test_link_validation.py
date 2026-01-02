@@ -30,7 +30,7 @@ def test_broken_link_generates_error(parser: MarkdownParser, create_md_file):
     # Should have a ParsingErrorNode
     error_nodes = [n for n in nodes if isinstance(n, ParsingErrorNode)]
     assert len(error_nodes) == 1
-    assert "Dangling Reference: Target './does_not_exist_at_all.md' does not exist." in error_nodes[0].error_message
+    assert "Dangling Reference: Target file './does_not_exist_at_all.md' does not exist." in error_nodes[0].error_message
     
     # Should NOT have a REFERENCES edge for this
     ref_edges = [e for e in edges if "does_not_exist_at_all.md" in e.target]

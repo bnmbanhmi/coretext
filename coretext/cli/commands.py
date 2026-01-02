@@ -22,6 +22,7 @@ from coretext.core.sync.engine import SyncEngine, SyncMode
 from coretext.core.sync.git_utils import get_staged_files, get_staged_content, get_last_commit_files, get_head_content, get_current_commit_hash
 from coretext.core.parser.markdown import MarkdownParser
 from coretext.core.graph.manager import GraphManager
+from coretext.core.templates.manager import TemplateManager
 
 from coretext.cli.utils import check_daemon_health, get_hooks_paused_path, build_dependency_tree
 from rich.console import Console
@@ -448,7 +449,66 @@ def apply_schema(
     except Exception:
         raise typer.Exit(code=1)
 
+@app.command()
+def new(
+    template_name: Optional[str] = typer.Argument(None, help="Name of the template to use."),
+    output_path: Optional[str] = typer.Argument(None, help="Path where the new file should be created."),
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite existing file if it exists."),
+    list_templates: bool = typer.Option(False, "--list", "-l", help="List available templates.")
+):
+    """
+    Generates a new Markdown file from a BMAD template.
+    """
+    console = Console()
+    
+    # Check if we should just list templates
+    if list_templates or (template_name is None and output_path is None):
+        try:
+            templates = TemplateManager.list_templates()
+            table = Table(title="Available Templates")
+            table.add_column("Template Name", style="cyan")
+            for t in templates:
+                table.add_row(t)
+            console.print(table)
+            raise typer.Exit()
+        except Exception as e:
+            if isinstance(e, typer.Exit):
+                raise
+            console.print(f"[red]Error listing templates: {e}[/red]")
+            raise typer.Exit(code=1)
 
+    if template_name is None:
+        console.print("[red]Error: Template name is required.[/red]")
+        raise typer.Exit(code=1)
+
+    if output_path is None:
+        console.print("[red]Error: Output path is required.[/red]")
+        raise typer.Exit(code=1)
+
+    try:
+        content = TemplateManager.get_template_content(template_name)
+    except FileNotFoundError:
+        console.print(f"[red]Error: Template '{template_name}' not found.[/red]")
+        console.print("Run 'coretext new --list' to see available templates.")
+        raise typer.Exit(code=1)
+
+    target_path = Path(output_path)
+    
+    # Check for existing file
+    if target_path.exists() and not force:
+        console.print(f"[red]Error: File '{target_path}' already exists.[/red]")
+        console.print("Use --force to overwrite.")
+        raise typer.Exit(code=1)
+
+    # Ensure directory exists
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    try:
+        target_path.write_text(content, encoding="utf-8")
+        console.print(f"[green]Successfully created '{target_path}' using template '{template_name}'.[/green]")
+    except Exception as e:
+        console.print(f"[red]Error writing file: {e}[/red]")
+        raise typer.Exit(code=1)
 
 @app.command()
 def ping():
