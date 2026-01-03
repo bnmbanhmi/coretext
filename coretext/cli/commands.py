@@ -151,7 +151,7 @@ def lint(
 @app.command()
 def init(
     project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p", help="Root directory of the project."),
-    surreal_version: str = typer.Option("1.4.1", "--surreal-version", "-s", help="Version of SurrealDB to download.")
+    surreal_version: str = typer.Option("2.0.4", "--surreal-version", "-s", help="Version of SurrealDB to download.")
 ):
     """
     Initializes the CoreText project.

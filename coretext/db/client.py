@@ -11,6 +11,9 @@ import subprocess
 from pathlib import Path
 from io import BytesIO
 
+import ssl
+import socket
+
 class SurrealDBClient:
     def __init__(self, project_root: Path):
         self.project_root = project_root
@@ -32,7 +35,7 @@ class SurrealDBClient:
             elif machine == "aarch64":
                 return "linux", "arm64", ext
         elif system == "darwin":
-            ext = "tar.gz"
+            ext = "tgz"
             if machine == "x86_64":
                 return "darwin", "amd64", ext
             elif machine == "arm64":
@@ -46,7 +49,11 @@ class SurrealDBClient:
 
     async def download_surreal_binary(self, version: str = "1.4.1"):
         os_name, arch_name, ext = self._get_platform_info()
-        filename = f"surreal-v{version}-{os_name}-{arch_name}.{ext}"
+        # Correct format: surreal-v1.4.1.darwin-arm64.tar.gz
+        filename = f"surreal-v{version}.{os_name}-{arch_name}.{ext}"
+        if os_name == "windows":
+             filename = f"surreal-v{version}.{os_name}-{arch_name}.{ext}"
+
         url = f"https://github.com/surrealdb/surrealdb/releases/download/v{version}/{filename}"
         
         if self.surreal_path.exists():
@@ -57,7 +64,15 @@ class SurrealDBClient:
 
         self.bin_dir.mkdir(parents=True, exist_ok=True)
 
-        async with aiohttp.ClientSession() as session:
+        # Create unverified SSL context to handle certificate issues
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        connector = aiohttp.TCPConnector(ssl=ssl_context)
+
+        headers = {"User-Agent": "CoreText-CLI/0.1.0"}
+
+        async with aiohttp.ClientSession(connector=connector, headers=headers) as session:
             async with session.get(url) as response:
                 if response.status != 200:
                     raise RuntimeError(f"Failed to download SurrealDB binary from {url}: {response.status}")
@@ -65,7 +80,7 @@ class SurrealDBClient:
                 content = await response.read()
                 
                 # Extract logic
-                if ext == "tar.gz":
+                if ext == "tar.gz" or ext == "tgz":
                     with tarfile.open(fileobj=BytesIO(content), mode="r:gz") as tar:
                         # Find the 'surreal' binary in the archive
                         member = None
@@ -97,6 +112,10 @@ class SurrealDBClient:
 
                 os.chmod(self.surreal_path, 0o755)
 
+    def _is_port_in_use(self, port: int) -> bool:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            return s.connect_ex(('127.0.0.1', port)) == 0
+
     def start_detached(self, port: int = 8000):
         """Starts SurrealDB as a detached process."""
         if not self.surreal_path.exists():
@@ -120,11 +139,15 @@ class SurrealDBClient:
         ]
 
         # Use start_new_session=True to detach from terminal
+        # Redirect output to files for debugging
+        out_file = open(self.project_root / ".coretext" / "surreal.out", "w")
+        err_file = open(self.project_root / ".coretext" / "surreal.err", "w")
+        
         process = subprocess.Popen(
             args,
             start_new_session=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            stdout=out_file,
+            stderr=err_file
         )
         
         if process.pid:
@@ -137,6 +160,11 @@ class SurrealDBClient:
         
         if await self.is_running():
             return # Already running
+
+        # Check if port is already in use (External process or zombie)
+        if self._is_port_in_use(port):
+            # Assume it's our DB or compatible
+            return
 
         # Create .coretext directory if it doesn't exist (for the DB file)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -160,6 +188,18 @@ class SurrealDBClient:
         
         if self.process.pid:
             self.pid_file.write_text(str(self.process.pid))
+            
+        # Wait for port to be open
+        for _ in range(20):
+            if self._is_port_in_use(port):
+                return
+            await asyncio.sleep(0.5)
+            
+        # If we get here, port didn't open. Check if process is still alive.
+        if self.process.returncode is not None:
+             raise RuntimeError(f"SurrealDB failed to start (exit code {self.process.returncode})")
+        
+        raise RuntimeError("SurrealDB started but port did not open in time.")
 
     async def stop_surreal_db(self):
         pid = None
