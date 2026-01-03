@@ -1,6 +1,6 @@
 # Story 3.5: BMAD Template Provisioning
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -94,6 +94,10 @@ Gemini Pro 1.5
 *   Implemented unit tests for `TemplateManager` and integration tests for CLI command.
 *   Added overwrite protection and `--force` flag.
 *   Used Rich for output formatting.
+*   **Code Review Fixes**:
+    *   Refactored `TemplateManager.get_template_content` to remove redundant exception handling.
+    *   Updated integration tests to verify all template types (`epic`, `architecture`) are listed.
+    *   Documented previously untracked test file changes.
 
 ### File List
 coretext/templates/__init__.py
@@ -106,3 +110,5 @@ coretext/core/templates/manager.py
 coretext/cli/commands.py
 tests/unit/core/templates/test_template_manager.py
 tests/integration/cli/test_new_command.py
+tests/unit/core/parser/test_link_validation.py
+tests/unit/core/parser/test_markdown.py

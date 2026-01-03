@@ -32,12 +32,7 @@ class TemplateManager:
         Raises:
             FileNotFoundError: If the template does not exist.
         """
-        try:
-            template_file = importlib.resources.files("coretext.templates").joinpath(f"{name}.md")
-            if not template_file.is_file():
-                 raise FileNotFoundError(f"Template '{name}' not found.")
-            return template_file.read_text(encoding="utf-8")
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Template '{name}' not found.")
-        except Exception as e:
-             raise e
+        template_file = importlib.resources.files("coretext.templates").joinpath(f"{name}.md")
+        if not template_file.is_file():
+             raise FileNotFoundError(f"Template '{name}' not found.")
+        return template_file.read_text(encoding="utf-8")

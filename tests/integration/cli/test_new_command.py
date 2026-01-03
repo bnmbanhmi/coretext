@@ -11,6 +11,8 @@ def test_new_command_list():
     assert "Template Name" in result.stdout
     assert "prd" in result.stdout
     assert "story" in result.stdout
+    assert "epic" in result.stdout
+    assert "architecture" in result.stdout
 
 def test_new_command_create_file(tmp_path):
     output_file = tmp_path / "test_story.md"
