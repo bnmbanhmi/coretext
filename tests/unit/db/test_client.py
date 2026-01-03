@@ -50,7 +50,7 @@ async def test_download_surreal_binary_success(mock_surreal_client):
     with patch("aiohttp.ClientSession.get", new=mock_get):
         # Patch chmod to prevent actual permission changes during test
         with patch("os.chmod") as mock_chmod:
-            await client.download_surreal_binary(version="1.4.1")
+            await client.download_surreal_binary(version="2.0.4")
 
             # Verify get was called
             assert mock_get.called
@@ -69,7 +69,7 @@ async def test_download_surreal_binary_already_exists(mock_surreal_client):
 
     mock_get = MagicMock()
     with patch("aiohttp.ClientSession.get", new=mock_get):
-        await client.download_surreal_binary(version="1.4.1")
+        await client.download_surreal_binary(version="2.0.4")
         mock_get.assert_not_called()
     
     assert client.surreal_path.read_text() == "existing content"
@@ -91,7 +91,7 @@ async def test_download_surreal_binary_failure(mock_surreal_client):
 
     with patch("aiohttp.ClientSession.get", new=mock_get):
         with pytest.raises(RuntimeError, match="Failed to download SurrealDB binary"):
-            await client.download_surreal_binary(version="1.4.1")
+            await client.download_surreal_binary(version="2.0.4")
         
         assert not client.surreal_path.exists()
 

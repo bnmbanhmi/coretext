@@ -46,3 +46,5 @@ so that I can confidently validate the developer workflow integration before we 
 *   `docs/epic-3-demo-guide.md`
 *   `coretext/db/client.py` (Patched)
 *   `coretext/cli/commands.py` (Updated default version)
+*   `coretext/cli/utils.py`
+*   `coretext/core/network.py`

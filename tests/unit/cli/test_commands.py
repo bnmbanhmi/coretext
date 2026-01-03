@@ -38,7 +38,7 @@ def test_init_command_success_new_schema_map(tmp_path: Path, mock_db_client: Asy
     assert "Creating default schema_map.yaml" in result.stdout
     assert "Default schema_map.yaml created." in result.stdout
 
-    mock_db_client.download_surreal_binary.assert_awaited_once_with(version="1.4.1")
+    mock_db_client.download_surreal_binary.assert_awaited_once_with(version="2.0.4")
     mock_db_client.db_path.parent.mkdir.assert_called_once_with(parents=True, exist_ok=True)
 
     # Verify file was created on real filesystem (tmp_path)
@@ -60,7 +60,7 @@ def test_init_command_success_existing_schema_map(tmp_path: Path, mock_db_client
     assert result.exit_code == 0
     assert "schema_map.yaml already exists. Skipping creation." in result.stdout
     
-    mock_db_client.download_surreal_binary.assert_awaited_once_with(version="1.4.1")
+    mock_db_client.download_surreal_binary.assert_awaited_once_with(version="2.0.4")
     
     # Verify content was NOT changed
     schema_map_path = tmp_path / ".coretext" / "schema_map.yaml"

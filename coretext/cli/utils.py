@@ -6,10 +6,7 @@ from typing import Any
 
 from rich.tree import Tree
 from coretext.db.client import SurrealDBClient
-
-def is_port_in_use(port: int) -> bool:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('127.0.0.1', port)) == 0
+from coretext.core.network import is_port_in_use
 
 def get_pid_file_path(project_root: Path) -> Path:
     """Returns the path to the server PID file."""

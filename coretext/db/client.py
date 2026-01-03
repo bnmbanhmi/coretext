@@ -13,6 +13,7 @@ from io import BytesIO
 
 import ssl
 import socket
+from coretext.core.network import is_port_in_use
 
 class SurrealDBClient:
     def __init__(self, project_root: Path):
@@ -51,8 +52,6 @@ class SurrealDBClient:
         os_name, arch_name, ext = self._get_platform_info()
         # Correct format: surreal-v1.4.1.darwin-arm64.tar.gz
         filename = f"surreal-v{version}.{os_name}-{arch_name}.{ext}"
-        if os_name == "windows":
-             filename = f"surreal-v{version}.{os_name}-{arch_name}.{ext}"
 
         url = f"https://github.com/surrealdb/surrealdb/releases/download/v{version}/{filename}"
         
@@ -112,18 +111,15 @@ class SurrealDBClient:
 
                 os.chmod(self.surreal_path, 0o755)
 
-    def _is_port_in_use(self, port: int) -> bool:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            return s.connect_ex(('127.0.0.1', port)) == 0
-
     def start_detached(self, port: int = 8000):
         """Starts SurrealDB as a detached process."""
         if not self.surreal_path.exists():
             raise RuntimeError("SurrealDB binary not found. Run 'coretext init' first.")
         
-        # Note: We don't check is_running() here because the caller might handle logic differently
-        # or we might want to start even if we think it's running (stale pid handling by caller).
-        # But generally caller should check.
+        # Check if port is already in use (External process or zombie)
+        if is_port_in_use(port):
+            # Assume it's our DB or compatible
+            return
 
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -162,7 +158,7 @@ class SurrealDBClient:
             return # Already running
 
         # Check if port is already in use (External process or zombie)
-        if self._is_port_in_use(port):
+        if is_port_in_use(port):
             # Assume it's our DB or compatible
             return
 
@@ -191,7 +187,7 @@ class SurrealDBClient:
             
         # Wait for port to be open
         for _ in range(20):
-            if self._is_port_in_use(port):
+            if is_port_in_use(port):
                 return
             await asyncio.sleep(0.5)
             

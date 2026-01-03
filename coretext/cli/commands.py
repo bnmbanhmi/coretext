@@ -30,6 +30,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from coretext.core.sync.timeout_utils import run_with_timeout_or_detach
+from coretext.core.network import is_port_in_use
 
 PAUSE_FILE_NAME = "hooks_paused"
 
@@ -220,10 +221,6 @@ def init(
             raise typer.Exit(code=1)
 
     typer.echo("CoreText project initialized successfully.")
-
-def is_port_in_use(port: int) -> bool:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('127.0.0.1', port)) == 0
 
 def check_pid_running(pid_file: Path) -> bool:
     if pid_file.exists():
