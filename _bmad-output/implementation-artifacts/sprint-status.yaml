@@ -2,13 +2,15 @@
 # project: coretext
 # project_key: coretext
 # tracking_system: file-system
-# story_location: docs/sprint-artifacts
+# story_location: _bmad-output/implementation-artifacts
 
 # STATUS DEFINITIONS:
 # ==================
 # Epic Status:
 #   - backlog: Epic exists in epic file but not contexted
 #   - contexted: Epic tech context created (required before drafting stories)
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
 #
 # Story Status:
 #   - backlog: Story only exists in epic file
@@ -21,6 +23,7 @@
 # Retrospective Status:
 #   - optional: Can be completed but not required
 #   - completed: Retrospective has been done
+#   - done: Retrospective has been done
 #
 # WORKFLOW NOTES:
 # ===============
@@ -33,10 +36,10 @@ generated: 2025-12-04
 project: coretext
 project_key: coretext
 tracking_system: file-system
-story_location: docs/sprint-artifacts
+story_location: _bmad-output/implementation-artifacts
 
 development_status:
-  epic-1: in-progress
+  epic-1: done
   1-1-project-initialization-core-scaffolding: done
   1-2-surrealdb-management-schema-application: done
   1-3-bmad-markdown-parsing-to-graph-nodes: done
@@ -45,7 +48,7 @@ development_status:
   1-6-epic-1-demo-and-verification-fixes: done
   epic-1-retrospective: done
 
-  epic-2: in-progress
+  epic-2: done
   2-1-mcp-server-setup-health-check: done
   2-2-semantic-tool-for-topology-search: done
   2-3-semantic-tool-for-dependency-retrieval: done
@@ -53,18 +56,19 @@ development_status:
   2-5-epic-2-demo-and-verification-fixes: done
   epic-2-retrospective: optional
 
-  epic-3: in-progress
+  epic-3: done
   3-1-cli-for-coretext-init-and-daemon-management: done
   3-2-cli-for-coretext-status: done
   3-3-cli-for-coretext-inspect-node-dependency-tree: done
   3-4-cli-for-coretext-lint-graph-integrity-check: done
   3-5-bmad-template-provisioning: done
   3-6-epic-3-demo-and-verification-fixes: done
-  epic-3-retrospective: optional
+  epic-3-retrospective: done
 
-  epic-4: backlog
+  epic-4: in-progress
   4-1-git-hook-async-mode-fail-open-policy: backlog
   4-2-mcp-query-latency-optimization: backlog
   4-3-resource-consumption-management: backlog
   4-4-graph-self-healing-integrity-checks: backlog
+  4-5-epic-4-stress-testing-and-verification: backlog
   epic-4-retrospective: optional
