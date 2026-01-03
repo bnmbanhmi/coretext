@@ -563,6 +563,9 @@ def pre_commit_hook(
     """
     Executed by Git pre-commit hook. Runs in dry-run/lint mode.
     """
+    # Prevent deadlock/hangs with HuggingFace/PyTorch in forked processes
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
     if (project_root / ".coretext" / PAUSE_FILE_NAME).exists():
         return
 
@@ -616,6 +619,9 @@ def post_commit_hook(
     Executed by Git post-commit hook. Runs in write/sync mode.
     Wrapper to run async logic.
     """
+    # Prevent deadlock/hangs with HuggingFace/PyTorch in forked processes
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
     if (project_root / ".coretext" / PAUSE_FILE_NAME).exists():
         if not detached: # Only verify on main process to avoid noise
              pass # Silent exit
@@ -743,7 +749,7 @@ def inspect(
     try:
         with console.status(f"[bold green]Inspecting {node_id}..."):
             response = httpx.post(
-                f"http://localhost:{config.mcp_port}/tools/get_dependencies",
+                f"http://localhost:{config.mcp_port}/mcp/tools/get_dependencies",
                 json={"node_identifier": node_id, "depth": depth},
                 timeout=10.0
             )

@@ -115,9 +115,17 @@ def build_dependency_tree(root_id: str, dependencies: list[dict[str, Any]]) -> T
     Returns:
         Tree: A Rich Tree object.
     """
+    def normalize_id(id_str: str) -> str:
+        # Remove table prefix and special brackets/backticks for matching
+        if ":" in id_str:
+            id_str = id_str.split(":", 1)[1]
+        return id_str.replace("⟨", "").replace("⟩", "").replace("`", "").strip()
+
     tree = Tree(f"[bold blue]{root_id}[/bold blue]")
     
-    nodes_in_tree = {root_id: tree}
+    # Map normalized IDs to tree nodes for matching
+    normalized_root = normalize_id(root_id)
+    nodes_in_tree = {normalized_root: tree}
     node_branches = {}
 
     # relationship color map
@@ -144,23 +152,26 @@ def build_dependency_tree(root_id: str, dependencies: list[dict[str, Any]]) -> T
         rel_type = dep["relationship_type"]
         direction = dep.get("direction", "outgoing") # Default to outgoing if missing
         
-        parent_node = nodes_in_tree.get(from_id)
+        norm_from = normalize_id(from_id)
+        norm_to = normalize_id(to_id)
+        
+        parent_node = nodes_in_tree.get(norm_from)
         if not parent_node:
             continue
             
-        if from_id not in node_branches:
-            node_branches[from_id] = {}
+        if norm_from not in node_branches:
+            node_branches[norm_from] = {}
         
         # Group by (rel_type, direction)
         branch_key = (rel_type, direction)
             
-        if branch_key not in node_branches[from_id]:
+        if branch_key not in node_branches[norm_from]:
             color = rel_colors.get(rel_type, "white")
             label = label_map.get(branch_key, rel_type.replace("_", " ").title())
-            node_branches[from_id][branch_key] = parent_node.add(f"[bold {color}]{label}[/bold {color}]")
+            node_branches[norm_from][branch_key] = parent_node.add(f"[bold {color}]{label}[/bold {color}]")
             
-        branch = node_branches[from_id][branch_key]
-        child_node = branch.add(to_id)
-        nodes_in_tree[to_id] = child_node
+        branch = node_branches[norm_from][branch_key]
+        child_node = branch.add(to_id) # Use original to_id for display
+        nodes_in_tree[norm_to] = child_node
         
     return tree

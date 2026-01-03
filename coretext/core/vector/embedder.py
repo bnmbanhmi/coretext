@@ -16,15 +16,21 @@ class VectorEmbedder:
             model_name: The HuggingFace model ID to load.
             cache_dir: Directory to cache the model. Defaults to ~/.coretext/cache.
         """
-        from sentence_transformers import SentenceTransformer
-
+        self.model_name = model_name
+        
         if cache_dir is None:
              cache_dir = str(Path.home() / ".coretext" / "cache")
         
         # Ensure cache directory exists
         Path(cache_dir).mkdir(parents=True, exist_ok=True)
+        self.cache_dir = cache_dir
+        self.model = None
 
-        self.model = SentenceTransformer(model_name, trust_remote_code=True, cache_folder=cache_dir)
+    def _load_model(self):
+        """Lazily loads the SentenceTransformer model."""
+        if self.model is None:
+            from sentence_transformers import SentenceTransformer
+            self.model = SentenceTransformer(self.model_name, trust_remote_code=True, cache_folder=self.cache_dir)
 
     async def encode(self, text: str, task_type: str = "search_document", dimension: int = 768) -> list[float]:
         """
@@ -41,6 +47,10 @@ class VectorEmbedder:
         # Nomic specific prefixes
         prefix = f"{task_type}: "
         input_text = prefix + text
+        
+        # Ensure model is loaded
+        if self.model is None:
+            await asyncio.to_thread(self._load_model)
         
         # Run in thread pool to avoid blocking event loop
         embedding = await asyncio.to_thread(

@@ -39,14 +39,19 @@ so that I can confidently validate the developer workflow integration before we 
 *   **Process Management:**
     *   Addressed a critical race condition where `post-commit` hook would fail to connect to the DB because it tried to start a new instance (due to PID file visibility issues or flaky `is_running` checks) instead of reusing the existing daemon.
     *   The "Port Guard" ensures that if port 8000 is open, the client assumes the DB is running and proceeds to connect, solving the `[Errno 61]` and `no close frame` errors.
-    *   **Hook Termination:** Fixed a hang in the `post-commit` hook caused by background threads from `SentenceTransformer` (PyTorch). Implemented lazy-loading for the embedder and added `os._exit(0)` to the hook commands to ensure clean process termination.
+    *   **Hook Termination:** Fixed a hang in the `post-commit` hook caused by background threads from `SentenceTransformer` (PyTorch). Implemented lazy-loading for the embedder, added `os._exit(0)` to the hook commands, and set `TOKENIZERS_PARALLELISM=false` to ensure clean process termination.
 *   **Linting:** Verified that `coretext lint` correctly detects broken links in newly created files.
-*   **Sync & Inspect:** Confirmed that `post-commit` sync works (after fixes) and updates the graph. Resolved "Node not found" errors during inspection by ensuring sync completion and clean termination.
+*   **Sync & Inspect:**
+    *   **Endpoint Path:** Fixed a bug where `coretext inspect` was calling the base `/tools` path instead of the correct `/mcp/tools` prefixed endpoint.
+    *   **Record Handling:** Updated `GraphManager` to handle SurrealDB's list-return format and convert `RecordID` objects to strings, resolving Pydantic validation errors during inspection.
+    *   **Query Reliability:** Refactored dependency traversal to use sequential queries, as multi-statement blocks were returning inconsistent results in the current environment.
+    *   **ID Normalization:** Implemented flexible ID matching in the CLI tree visualization to handle inconsistent prefixing/escaping (e.g., `node:⟨path⟩` vs `path`).
 
 ### Artifacts
 *   `docs/epic-3-demo-guide.md`
 *   `coretext/db/client.py` (Patched)
-*   `coretext/cli/commands.py` (Lazy loading & hard exit for hooks)
-*   `coretext/cli/utils.py`
+*   `coretext/cli/commands.py` (Lazy loading, env vars & endpoint correction)
+*   `coretext/cli/utils.py` (Normalized tree matching)
 *   `coretext/core/network.py`
+*   `coretext/core/graph/manager.py` (Robust record handling & sequential deps)
 *   `coretext/core/vector/embedder.py` (Refactored for lazy loading)

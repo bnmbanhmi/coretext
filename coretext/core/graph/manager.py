@@ -67,9 +67,12 @@ class GraphManager:
 
     async def get_node(self, node_id: str, node_model: Type[BaseNode] = BaseNode) -> BaseNode | None:
         # SurrealDB select returns a list of records
-        fetched_record = await self.db.select(node_id)
-        if fetched_record:
-            return node_model.model_validate(fetched_record)
+        fetched_records = await self.db.select(node_id)
+        if fetched_records:
+            # If it's a list, take the first item
+            record = fetched_records[0] if isinstance(fetched_records, list) else fetched_records
+            record = self._convert_ids(record)
+            return node_model.model_validate(record)
         return None
 
     async def update_node(self, node: BaseNode) -> BaseNode:
@@ -105,12 +108,15 @@ class GraphManager:
         return BaseEdge.model_validate(created_record)
 
     async def get_edge(self, edge_id: str, edge_model: Type[BaseEdge] = BaseEdge) -> BaseEdge | None:
-        fetched_record = await self.db.select(edge_id)
-        if fetched_record:
+        fetched_records = await self.db.select(edge_id)
+        if fetched_records:
+            # If it's a list, take the first item
+            record = fetched_records[0] if isinstance(fetched_records, list) else fetched_records
+            record = self._convert_ids(record)
             # Map 'in' and 'out' to 'source' and 'target' for Pydantic model
-            fetched_record['source'] = fetched_record.pop('in')
-            fetched_record['target'] = fetched_record.pop('out')
-            return edge_model.model_validate(fetched_record)
+            record['source'] = record.pop('in')
+            record['target'] = record.pop('out')
+            return edge_model.model_validate(record)
         return None
 
     async def update_edge(self, edge: BaseEdge) -> BaseEdge:
@@ -312,62 +318,81 @@ class GraphManager:
         Retrieves direct and indirect dependencies for a given node.
 
         Args:
-            node_id: The ID of the node (e.g., 'file:path/to/file').
+            node_id: The ID of the node (e.g., 'file:path/to/file' or 'node:`path`').
             depth: The depth of traversal (default: 1).
 
         Returns:
             A list of dictionaries containing 'node_id', 'relationship_type', and 'direction'.
         """
-        dependencies = []
-        visited = set()
-        queue = [(node_id, 0)] # (current_id, current_depth)
+        from surrealdb.data.types.record_id import RecordID
         
-        # Avoid visiting the start node as a dependency
-        visited.add(node_id)
+        # Normalize input node_id to RecordID
+        try:
+            # Strip backticks if present for parsing as RecordID.parse handles escaping
+            clean_id = node_id.replace("`", "")
+            root_rid = RecordID.parse(clean_id)
+        except Exception:
+            # Fallback if parsing fails (shouldn't happen with valid IDs)
+            return []
 
+        dependencies = []
+        # RecordID is not hashable in some versions of the library, use string representation for visited set
+        visited = {str(root_rid)}
+        queue = [(root_rid, 0)] # (current_rid, current_depth)
+        
         while queue:
-            current_id, current_depth = queue.pop(0)
+            current_rid, current_depth = queue.pop(0)
             
             if current_depth >= depth:
                 continue
             
             # Query for outgoing dependencies and incoming parent (context)
-            # We fetch all types of relations relevant to dependencies
-            sql = """
-            LET $rec = type::record($id);
-            SELECT out as dependency, 'depends_on' as relationship, 'outgoing' as direction FROM $rec->depends_on;
-            SELECT out as dependency, 'governed_by' as relationship, 'outgoing' as direction FROM $rec->governed_by;
-            SELECT in as dependency, 'parent_of' as relationship, 'incoming' as direction FROM $rec<-parent_of;
-            SELECT out as dependency, 'contains' as relationship, 'outgoing' as direction FROM $rec->contains;
-            SELECT out as dependency, 'references' as relationship, 'outgoing' as direction FROM $rec->references;
-            """
+            # Using multiple queries for reliability with v1 client vs SurrealDB 2.0
             
-            results = await self.db.query(sql, {"id": current_id})
+            queries = [
+                ("SELECT out as dependency, 'depends_on' as relationship, 'outgoing' as direction FROM type::record($id)->depends_on", "depends_on"),
+                ("SELECT out as dependency, 'governed_by' as relationship, 'outgoing' as direction FROM type::record($id)->governed_by", "governed_by"),
+                ("SELECT in as dependency, 'parent_of' as relationship, 'incoming' as direction FROM type::record($id)<-parent_of", "parent_of"),
+                ("SELECT out as dependency, 'contains' as relationship, 'outgoing' as direction FROM type::record($id)->contains", "contains"),
+                ("SELECT out as dependency, 'references' as relationship, 'outgoing' as direction FROM type::record($id)->references", "references"),
+            ]
             
-            # Process results
-            if isinstance(results, list):
-                for res_obj in results:
-                     res = res_obj
-                     if isinstance(res_obj, dict) and res_obj.get('status') == 'OK':
-                         res = res_obj.get('result', [])
-                         
-                     if isinstance(res, list):
-                         for row in res:
-                             dep_id = row.get('dependency')
-                             
-                             if dep_id and str(dep_id) not in visited:
-                                 visited.add(str(dep_id))
-                                 
-                                 deps_item = {
-                                     "node_id": str(dep_id),
-                                     "from_node_id": current_id,
-                                     "relationship_type": row.get('relationship'),
-                                     "direction": row.get('direction')
-                                 }
-                                 dependencies.append(deps_item)
-                                 
-                                 queue.append((str(dep_id), current_depth + 1))
-                                     
-                                 
+            param_id = f"{current_rid.table_name}:`{current_rid.id}`"
+
+            for sql, rel_name in queries:
+                try:
+                    results = await self.db.query(sql, {"id": param_id})
+                    
+                    if isinstance(results, list) and len(results) > 0:
+                        # Check if results are wrapped in a Status object (common in v1 client)
+                        # or if it's already a flat list of records
+                        first = results[0]
+                        if isinstance(first, dict) and first.get('status') == 'OK' and 'result' in first:
+                            items = first.get('result', [])
+                        elif isinstance(first, dict) and 'dependency' in first:
+                            # It's already a list of records
+                            items = results
+                        else:
+                            # Might be empty or unexpected format
+                            items = []
+                        
+                        if isinstance(items, list):
+                            for row in items:
+                                dep_rid = row.get('dependency')
+                                if isinstance(dep_rid, RecordID):
+                                    dep_str = str(dep_rid)
+                                    if dep_str not in visited:
+                                        visited.add(dep_str)
+                                        
+                                        deps_item = {
+                                            "node_id": dep_str,
+                                            "from_node_id": str(current_rid),
+                                            "relationship_type": row.get('relationship'),
+                                            "direction": row.get('direction')
+                                        }
+                                        dependencies.append(deps_item)
+                                        queue.append((dep_rid, current_depth + 1))
+                except Exception:
+                    continue
                                      
         return self._convert_ids(dependencies)
