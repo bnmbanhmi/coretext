@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 from typing import Any
 import numpy as np
-from sentence_transformers import SentenceTransformer
 
 class VectorEmbedder:
     """
@@ -17,6 +16,8 @@ class VectorEmbedder:
             model_name: The HuggingFace model ID to load.
             cache_dir: Directory to cache the model. Defaults to ~/.coretext/cache.
         """
+        from sentence_transformers import SentenceTransformer
+
         if cache_dir is None:
              cache_dir = str(Path.home() / ".coretext" / "cache")
         

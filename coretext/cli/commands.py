@@ -15,7 +15,6 @@ from coretext.db.client import SurrealDBClient
 from coretext.db.migrations import SchemaManager
 from coretext.core.parser.schema import DEFAULT_SCHEMA_MAP_CONTENT, SchemaMapper
 from coretext.config import DEFAULT_CONFIG_CONTENT, load_config
-from sentence_transformers import SentenceTransformer
 
 # Moved imports to module level for better testability and consistency
 from coretext.core.sync.engine import SyncEngine, SyncMode
@@ -175,6 +174,7 @@ def init(
     # AC 2: Download and cache embedding model
     typer.echo("Downloading and caching embedding model (nomic-embed-text-v1.5)...")
     try:
+        from sentence_transformers import SentenceTransformer
         # Use a global cache directory for the model to avoid re-downloading per project
         cache_dir = Path.home() / ".coretext" / "cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
@@ -708,9 +708,13 @@ async def _post_commit_hook_logic(project_root: Path, detached: bool):
     if detached:
         # If detached, run the logic directly
         await _run_sync_logic()
+        # Force exit to kill any lingering threads (e.g. PyTorch)
+        os._exit(0)
     else:
         # Decide whether to detach or run with timeout
         await run_with_timeout_or_detach(project_root, files, _run_sync_logic)
+        # Even the parent process should exit hard if it initialized heavy libs
+        os._exit(0)
 
 @app.command()
 def inspect(

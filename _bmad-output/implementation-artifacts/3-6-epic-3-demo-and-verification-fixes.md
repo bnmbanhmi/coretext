@@ -39,12 +39,14 @@ so that I can confidently validate the developer workflow integration before we 
 *   **Process Management:**
     *   Addressed a critical race condition where `post-commit` hook would fail to connect to the DB because it tried to start a new instance (due to PID file visibility issues or flaky `is_running` checks) instead of reusing the existing daemon.
     *   The "Port Guard" ensures that if port 8000 is open, the client assumes the DB is running and proceeds to connect, solving the `[Errno 61]` and `no close frame` errors.
+    *   **Hook Termination:** Fixed a hang in the `post-commit` hook caused by background threads from `SentenceTransformer` (PyTorch). Implemented lazy-loading for the embedder and added `os._exit(0)` to the hook commands to ensure clean process termination.
 *   **Linting:** Verified that `coretext lint` correctly detects broken links in newly created files.
-*   **Sync & Inspect:** Confirmed that `post-commit` sync works (after fixes) and updates the graph. Note: `inspect` must wait for the background sync to complete.
+*   **Sync & Inspect:** Confirmed that `post-commit` sync works (after fixes) and updates the graph. Resolved "Node not found" errors during inspection by ensuring sync completion and clean termination.
 
 ### Artifacts
 *   `docs/epic-3-demo-guide.md`
 *   `coretext/db/client.py` (Patched)
-*   `coretext/cli/commands.py` (Updated default version)
+*   `coretext/cli/commands.py` (Lazy loading & hard exit for hooks)
 *   `coretext/cli/utils.py`
 *   `coretext/core/network.py`
+*   `coretext/core/vector/embedder.py` (Refactored for lazy loading)
