@@ -489,14 +489,21 @@ def new(
         console.print(f"[red]Error: Template '{template_name}' not found.[/red]")
         console.print("Run 'coretext new --list' to see available templates.")
         raise typer.Exit(code=1)
+    except ValueError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        raise typer.Exit(code=1)
+    except (ImportError, ModuleNotFoundError) as e:
+        console.print(f"[red]Error: Internal template system error ({e}).[/red]")
+        console.print("The installation might be corrupted.")
+        raise typer.Exit(code=1)
 
     target_path = Path(output_path)
     
     # Check for existing file
     if target_path.exists() and not force:
-        console.print(f"[red]Error: File '{target_path}' already exists.[/red]")
-        console.print("Use --force to overwrite.")
-        raise typer.Exit(code=1)
+        if not typer.confirm(f"File '{target_path}' already exists. Overwrite?"):
+            console.print("Operation cancelled.")
+            raise typer.Exit(code=0)
 
     # Ensure directory exists
     target_path.parent.mkdir(parents=True, exist_ok=True)

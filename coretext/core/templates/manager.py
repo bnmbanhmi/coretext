@@ -31,7 +31,12 @@ class TemplateManager:
             
         Raises:
             FileNotFoundError: If the template does not exist.
+            ValueError: If the template name contains invalid characters.
         """
+        import re
+        if not re.match(r"^[a-zA-Z0-9_-]+$", name):
+             raise ValueError("Template name must contain only letters, numbers, underscores, and hyphens.")
+
         template_file = importlib.resources.files("coretext.templates").joinpath(f"{name}.md")
         if not template_file.is_file():
              raise FileNotFoundError(f"Template '{name}' not found.")

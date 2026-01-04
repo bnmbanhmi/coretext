@@ -46,3 +46,17 @@ def test_get_template_content_not_found():
         
         with pytest.raises(FileNotFoundError):
             TemplateManager.get_template_content("nonexistent")
+
+def test_get_template_content_invalid_name():
+    with pytest.raises(ValueError):
+        TemplateManager.get_template_content("../bad_path")
+        
+    with pytest.raises(ValueError):
+        TemplateManager.get_template_content("invalid char!")
+
+def test_get_template_content_real_load():
+    """Integration test to verify real file loading without mocks."""
+    # This assumes 'story' template exists in the package, which it should.
+    content = TemplateManager.get_template_content("story")
+    assert "# Story {{story_id}}: {{story_title}}" in content
+
