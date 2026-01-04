@@ -171,8 +171,13 @@ class GraphManager:
         embedding = await self.embedder.encode(query, task_type="search_query")
         
         # Use simple vector similarity search
+        # Explicitly select fields to avoid returning 'embedding' (large vector)
         sql = f"""
-        SELECT *, vector::similarity::cosine(embedding, $embedding) AS score 
+        SELECT 
+            id, path, node_type, content, metadata, 
+            created_at, updated_at, commit_hash,
+            title, summary, level, content_hash,
+            vector::similarity::cosine(embedding, $embedding) AS score 
         FROM node 
         WHERE embedding != NONE AND embedding != []
         ORDER BY score DESC
@@ -379,19 +384,23 @@ class GraphManager:
                         if isinstance(items, list):
                             for row in items:
                                 dep_rid = row.get('dependency')
+                                dep_str = None
                                 if isinstance(dep_rid, RecordID):
                                     dep_str = str(dep_rid)
-                                    if dep_str not in visited:
-                                        visited.add(dep_str)
-                                        
-                                        deps_item = {
-                                            "node_id": dep_str,
-                                            "from_node_id": str(current_rid),
-                                            "relationship_type": row.get('relationship'),
-                                            "direction": row.get('direction')
-                                        }
-                                        dependencies.append(deps_item)
-                                        queue.append((dep_rid, current_depth + 1))
+                                elif isinstance(dep_rid, str):
+                                    dep_str = dep_rid
+                                
+                                if dep_str and dep_str not in visited:
+                                    visited.add(dep_str)
+                                    
+                                    deps_item = {
+                                        "node_id": dep_str,
+                                        "from_node_id": str(current_rid),
+                                        "relationship_type": row.get('relationship'),
+                                        "direction": row.get('direction')
+                                    }
+                                    dependencies.append(deps_item)
+                                    queue.append((dep_rid if isinstance(dep_rid, RecordID) else RecordID.parse(dep_str.replace("`", "")), current_depth + 1))
                 except Exception:
                     continue
                                      

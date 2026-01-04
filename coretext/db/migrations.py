@@ -42,6 +42,7 @@ class SchemaManager:
         await self.db.query("DEFINE INDEX node_path ON TABLE node COLUMNS path")
         # 'node_type' is the discriminator (e.g., 'file', 'header')
         await self.db.query("DEFINE FIELD node_type ON TABLE node TYPE string") 
+        await self.db.query("DEFINE INDEX node_type_idx ON TABLE node COLUMNS node_type")
         await self.db.query("DEFINE FIELD content ON TABLE node TYPE string")
         await self.db.query("DEFINE FIELD metadata ON TABLE node TYPE object")
         

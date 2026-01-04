@@ -226,15 +226,13 @@ async def test_search_topology(graph_manager, mock_surreal_client, mock_embedder
     mock_embedder.encode.return_value = embedding
     
     # Mock DB query result
-    # SurrealDB returns a list of results (one for each statement in the query string)
-    # Our query has one statement.
     mock_surreal_client.query.return_value = [
         {
             "status": "OK",
             "time": "100us",
             "result": [
-                {"id": "node:1", "score": 0.9, "content": "result 1"},
-                {"id": "node:2", "score": 0.8, "content": "result 2"}
+                {"id": "node:1", "score": 0.9, "content": "result 1", "node_type": "file"},
+                {"id": "node:2", "score": 0.8, "content": "result 2", "node_type": "header"}
             ]
         }
     ]
@@ -253,6 +251,8 @@ async def test_search_topology(graph_manager, mock_surreal_client, mock_embedder
     assert "vector::similarity::cosine" in sql_query
     assert params["embedding"] == embedding
     assert f"LIMIT {5}" in sql_query
+    # Check that we are selecting specific fields
+    assert "id, path, node_type" in sql_query
     
     assert len(results) == 2
     assert results[0]["id"] == "node:1"
@@ -263,10 +263,8 @@ async def test_get_dependencies(graph_manager, mock_surreal_client):
     depth = 1
     
     # Mock DB query result for dependencies
-    # SurrealDB query() returns a list of results for each statement.
-    # We have 6 statements in get_dependencies (LET + 5 SELECTs)
-    mock_surreal_client.query.return_value = [
-        None, # LET
+    # graph_manager.get_dependencies iterates and makes multiple calls
+    mock_surreal_client.query.side_effect = [
         [{"dependency": "node:dep_1", "relationship": "depends_on", "direction": "outgoing"}],
         [{"dependency": "node:gov_1", "relationship": "governed_by", "direction": "outgoing"}],
         [{"dependency": "node:parent_1", "relationship": "parent_of", "direction": "incoming"}],
@@ -276,16 +274,16 @@ async def test_get_dependencies(graph_manager, mock_surreal_client):
 
     dependencies = await graph_manager.get_dependencies(node_id, depth=depth)
 
-    mock_surreal_client.query.assert_awaited_once()
-    call_args = mock_surreal_client.query.call_args
+    assert mock_surreal_client.query.await_count == 5
+    
+    # Check one of the calls
+    call_args = mock_surreal_client.query.call_args_list[0]
     sql_query = call_args[0][0]
     params = call_args[0][1]
 
     assert "SELECT" in sql_query
     assert "id" in params
-    # Check if important edge types are mentioned
     assert "depends_on" in sql_query
-    assert "governed_by" in sql_query
     
     assert len(dependencies) == 3
     assert dependencies[0]["node_id"] == "node:dep_1"
