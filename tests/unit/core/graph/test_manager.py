@@ -250,7 +250,8 @@ async def test_search_topology(graph_manager, mock_surreal_client, mock_embedder
     
     assert "vector::similarity::cosine" in sql_query
     assert params["embedding"] == embedding
-    assert f"LIMIT {5}" in sql_query
+    assert "LIMIT $limit" in sql_query
+    assert params["limit"] == 5
     # Check that we are selecting specific fields
     assert "id, path, node_type" in sql_query
     

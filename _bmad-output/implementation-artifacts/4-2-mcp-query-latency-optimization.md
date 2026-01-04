@@ -1,6 +1,6 @@
 # Story 4.2: mcp-query-latency-optimization
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -79,6 +79,7 @@ Gemini-2.0-Flash-Thinking-Exp
 *   scripts/benchmark_latency.py
 *   coretext/db/migrations.py
 *   coretext/core/graph/manager.py
+*   coretext/core/vector/embedder.py
 *   tests/unit/core/graph/test_manager.py
 *   tests/integration/server/test_story_2_1.py
 

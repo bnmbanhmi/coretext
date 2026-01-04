@@ -10,11 +10,15 @@ async def benchmark():
     print("Initializing benchmark...")
     
     # Connect to DB
-    # Assuming default port 8000 based on config.py/dependencies.py
-    db = AsyncSurreal("ws://localhost:8000/rpc")
+    from coretext.config import load_config
+    from pathlib import Path
+    
+    config = load_config(Path.cwd())
+    
+    db = AsyncSurreal(config.surreal_url)
     try:
         await db.connect()
-        await db.use("coretext", "coretext")
+        await db.use(config.surreal_ns, config.surreal_db)
     except Exception as e:
         print(f"Failed to connect to SurrealDB: {e}")
         print("Please ensure the coretext daemon is running.")

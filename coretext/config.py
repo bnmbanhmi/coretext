@@ -6,6 +6,9 @@ class Config(BaseModel):
     daemon_port: int = 8000
     mcp_port: int = 8001
     log_level: str = "INFO"
+    surreal_url: str = "ws://localhost:8000/rpc"
+    surreal_ns: str = "coretext"
+    surreal_db: str = "coretext"
 
 def load_config(project_root: Path) -> Config:
     config_path = project_root / ".coretext" / "config.yaml"

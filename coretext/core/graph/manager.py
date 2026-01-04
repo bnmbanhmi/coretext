@@ -172,7 +172,7 @@ class GraphManager:
         
         # Use simple vector similarity search
         # Explicitly select fields to avoid returning 'embedding' (large vector)
-        sql = f"""
+        sql = """
         SELECT 
             id, path, node_type, content, metadata, 
             created_at, updated_at, commit_hash,
@@ -181,10 +181,10 @@ class GraphManager:
         FROM node 
         WHERE embedding != NONE AND embedding != []
         ORDER BY score DESC
-        LIMIT {limit};
+        LIMIT $limit;
         """
         
-        response = await self.db.query(sql, {"embedding": embedding})
+        response = await self.db.query(sql, {"embedding": embedding, "limit": limit})
         
         # Handle SurrealDB response format
         if isinstance(response, list) and len(response) > 0:
@@ -333,9 +333,18 @@ class GraphManager:
         
         # Normalize input node_id to RecordID
         try:
-            # Strip backticks if present for parsing as RecordID.parse handles escaping
-            clean_id = node_id.replace("`", "")
-            root_rid = RecordID.parse(clean_id)
+            # Handle various input formats:
+            # 1. "file:path/to/file"
+            # 2. "file:`path/to/file`"
+            # 3. RecordID object (if passed directly)
+            
+            if isinstance(node_id, RecordID):
+                root_rid = node_id
+            else:
+                # Remove backticks that might be wrapping the ID part
+                # e.g. "table:`id`" -> "table:id"
+                clean_id = node_id.replace("`", "")
+                root_rid = RecordID.parse(clean_id)
         except Exception:
             # Fallback if parsing fails (shouldn't happen with valid IDs)
             return []
