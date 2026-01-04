@@ -4,9 +4,8 @@ import subprocess
 import asyncio
 from pathlib import Path
 from typing import List, Callable, Any, Coroutine
+from coretext.core.sync.engine import SyncEngine
 
-# Define threshold for detachment
-FILE_COUNT_DETACH_THRESHOLD = 5
 TIMEOUT_SECONDS = 30  # Updated to match AC (2s)
 
 class TimeoutError(Exception):
@@ -54,8 +53,8 @@ async def run_with_timeout_or_detach(
     If the number of files is above a threshold, it detaches the operation using subprocess.
     Otherwise, it runs the operation with a strict timeout.
     """
-    if len(file_paths) > FILE_COUNT_DETACH_THRESHOLD:
-        print(f"Processing {len(file_paths)} files, detaching sync operation...")
+    if SyncEngine.should_detach(len(file_paths)):
+        print(f"[Coretext] Large commit detected ({len(file_paths)} files). Syncing in background...")
         # Detach using subprocess.Popen
         try:
             cmd_args = [
@@ -73,12 +72,13 @@ async def run_with_timeout_or_detach(
                              stderr=subprocess.DEVNULL,
                              start_new_session=True # Detach from current session
                             )
-            print("Sync operation detached successfully.")
+            # AC 4: Feedback - "Syncing in background..." (already printed above)
         except Exception as e:
             print(f"Error: Failed to detach sync operation: {e}", file=sys.stderr)
             # Fail-open: continue, do not block original commit
     else:
-        print(f"Processing {len(file_paths)} files, running sync operation with strict timeout...")
+        # AC 1: "If fast, it runs synchronously to provide immediate feedback."
+        print(f"Processing {len(file_paths)} files, running sync operation...")
         # Run synchronously with timeout
         sync_coro = sync_coro_factory()
         await _run_sync_operation(sync_coro)

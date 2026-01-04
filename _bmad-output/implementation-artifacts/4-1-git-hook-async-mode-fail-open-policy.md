@@ -1,6 +1,6 @@
 # Story 4.1: git-hook-async-mode-fail-open-policy
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -29,22 +29,22 @@ so that my workflow remains uninterrupted.
 
 ## Tasks / Subtasks
 
-- [ ] **Analysis & Design:**
-    - [ ] Review `coretext/core/sync/engine.py` and `post-commit` hook structure.
-    - [ ] Design the "Detach" mechanism using `subprocess.Popen` with independent session.
-- [ ] **Implement Async Trigger Logic:**
-    - [ ] Add logic to count changed files in `SyncEngine`.
-    - [ ] Define threshold constant (e.g., `SYNC_ASYNC_THRESHOLD_FILES = 5`).
-- [ ] **Implement Background Spawning:**
-    - [ ] Create a new hidden CLI command (e.g., `coretext internal-sync`) if needed to act as the entry point for the detached process.
-    - [ ] Implement `subprocess.Popen` call to trigger this command.
-- [ ] **Implement Fail-Open Wrapper:**
-    - [ ] Wrap the main hook execution block in a broad `try...except Exception`.
-    - [ ] in `except`: Log full traceback to file, print generic warning to console, `sys.exit(0)`.
-- [ ] **Integration Testing:**
-    - [ ] Test with small commit (Sync).
-    - [ ] Test with large commit (Async/Background).
-    - [ ] Test with induced crash (Fail-Open).
+- [x] **Analysis & Design:**
+    - [x] Review `coretext/core/sync/engine.py` and `post-commit` hook structure.
+    - [x] Design the "Detach" mechanism using `subprocess.Popen` with independent session.
+- [x] **Implement Async Trigger Logic:**
+    - [x] Add logic to count changed files in `SyncEngine`.
+    - [x] Define threshold constant (e.g., `SYNC_ASYNC_THRESHOLD_FILES = 5`).
+- [x] **Implement Background Spawning:**
+    - [x] Create a new hidden CLI command (e.g., `coretext internal-sync`) if needed to act as the entry point for the detached process.
+    - [x] Implement `subprocess.Popen` call to trigger this command.
+- [x] **Implement Fail-Open Wrapper:**
+    - [x] Wrap the main hook execution block in a broad `try...except Exception`.
+    - [x] in `except`: Log full traceback to file, print generic warning to console, `sys.exit(0)`.
+- [x] **Integration Testing:**
+    - [x] Test with small commit (Sync).
+    - [x] Test with large commit (Async/Background).
+    - [x] Test with induced crash (Fail-Open).
 
 ## Dev Notes
 
@@ -91,9 +91,18 @@ Gemini-2.0-Flash-Thinking-Exp
 *   See `docs/technical_debt.md` for any recurring hook issues.
 
 ### Completion Notes List
-*   [To be filled by Dev Agent]
+*   Implemented `SyncEngine.should_detach` and `SYNC_ASYNC_THRESHOLD_FILES` constant.
+*   Refactored `coretext/core/sync/timeout_utils.py` to use `SyncEngine` logic.
+*   Updated `coretext/cli/commands.py` to remove `&` from `post-commit` hook (allowing Python to control detachment).
+*   Implemented Fail-Open policy in `post_commit_hook` with `logging` to `.coretext/coretext.log`.
+*   Added comprehensive tests for detach logic, timeout utils, and fail-open behavior.
 
 ### File List
 *   coretext/core/sync/engine.py
 *   coretext/cli/commands.py
+*   coretext/core/sync/timeout_utils.py
 *   tests/unit/core/sync/test_engine.py
+*   tests/unit/core/sync/test_detach_logic.py
+*   tests/unit/core/sync/test_timeout_utils.py
+*   tests/unit/cli/test_hooks.py
+*   tests/unit/cli/test_hooks_fail_open.py

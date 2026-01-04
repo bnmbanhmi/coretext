@@ -20,10 +20,17 @@ class SyncResult(BaseModel):
     errors: List[str] = []
 
 class SyncEngine:
+    SYNC_ASYNC_THRESHOLD_FILES = 5
+
     def __init__(self, parser: MarkdownParser, graph_manager: GraphManager, project_root: Path):
         self.parser = parser
         self.graph_manager = graph_manager
         self.project_root = project_root
+
+    @staticmethod
+    def should_detach(file_count: int) -> bool:
+        """Determines if the sync operation should be detached based on file count."""
+        return file_count > SyncEngine.SYNC_ASYNC_THRESHOLD_FILES
 
     def _parse_single_file(self, file_path: Path, content: Optional[str]) -> Tuple[List[BaseNode], List[BaseEdge], List[str]]:
         """Parses a single file, handling potential exceptions and returning nodes, edges, and errors."""

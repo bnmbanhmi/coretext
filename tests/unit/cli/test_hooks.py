@@ -37,7 +37,10 @@ def test_install_hooks_success(mock_exit, mock_echo, tmp_path: Path):
     assert post_commit.stat().st_mode & stat.S_IEXEC
     
     assert "coretext.cli.main hook pre-commit" in pre_commit.read_text()
-    assert "coretext.cli.main hook post-commit" in post_commit.read_text()
+    post_commit_content = post_commit.read_text()
+    assert "coretext.cli.main hook post-commit" in post_commit_content
+    # Ensure it is NOT backgrounded in shell (no trailing &)
+    assert "&" not in post_commit_content.strip().splitlines()[-1]
 
 @patch("coretext.cli.commands.typer.echo")
 def test_install_hooks_no_git(mock_echo, tmp_path: Path):
