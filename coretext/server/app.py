@@ -30,6 +30,39 @@ async def lifespan(app: FastAPI):
     watchdog = get_memory_watchdog()
     await watchdog.start()
     
+    # Startup Maintenance Task
+    async def run_startup_maintenance():
+        from surrealdb import AsyncSurreal
+        from coretext.server.dependencies import get_schema_mapper, get_vector_embedder
+        from coretext.core.graph.manager import GraphManager
+        from coretext.core.system.maintenance import MaintenanceService
+        import asyncio
+
+        # Connect to DB (using default local address matching dependencies.py)
+        # In a real scenario, this should come from config
+        db = AsyncSurreal("ws://localhost:8000/rpc")
+        try:
+            # We add a small delay to ensure DB might be up if they started together
+            # though usually the daemon should be running.
+            await db.connect()
+            await db.use("coretext", "coretext")
+            
+            schema_mapper = get_schema_mapper()
+            embedder = get_vector_embedder(watchdog)
+            
+            manager = GraphManager(db, schema_mapper, embedder)
+            service = MaintenanceService(manager)
+            
+            await service.run_self_healing()
+        except Exception as e:
+            logger.error(f"Startup maintenance failed: {e}")
+        finally:
+            await db.close()
+
+    import asyncio
+    # Fire and forget (non-blocking)
+    asyncio.create_task(run_startup_maintenance())
+    
     try:
         yield
     finally:

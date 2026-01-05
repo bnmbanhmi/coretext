@@ -413,3 +413,96 @@ class GraphManager:
                     continue
                                      
         return self._convert_ids(dependencies)
+
+    async def prune_dangling_edges(self) -> int:
+        """
+        Removes edges where the 'in' or 'out' node no longer exists.
+        Returns the count of deleted edges.
+        """
+        total_deleted = 0
+        edge_tables = set()
+        
+        # Identify all edge tables from schema
+        if self.schema_mapper._schema_map:
+             for edge_def in self.schema_mapper.schema_map.edge_types.values():
+                 edge_tables.add(edge_def.db_table)
+        else:
+            # Fallback if schema not loaded or empty? 
+            # We should try to load it or default to common ones if possible, 
+            # but usually it should be loaded.
+            # If empty, maybe just try 'edge' generic if it existed, but we know it's specific tables.
+            # Let's assume schema is available.
+            pass
+
+        # If no tables found (unlikely), return 0
+        if not edge_tables:
+            return 0
+
+        # Construct query for each table
+        # Using "out IS NONE" checks. SurrealDB 2.x uses NONE, v1 might vary but NONE is standard.
+        queries = []
+        for table in edge_tables:
+            # We check both NONE and NULL to be safe across versions/states
+            queries.append(f"DELETE {table} WHERE out = NONE OR in = NONE OR out = NULL OR in = NULL;")
+
+        # Execute
+        # We can run them in parallel or batch.
+        # db.query supports multiple statements separated by semicolon.
+        full_query = "\n".join(queries)
+        results = await self.db.query(full_query)
+
+        # Parse results to count deletions
+        # results is a list of results for each query.
+        if isinstance(results, list):
+            for res in results:
+                # specific result might be a list of deleted records
+                # or a dict with 'result' key
+                if isinstance(res, list):
+                    total_deleted += len(res)
+                elif isinstance(res, dict) and 'result' in res:
+                    # check status
+                    if res.get('status') == 'OK':
+                        items = res.get('result')
+                        if isinstance(items, list):
+                            total_deleted += len(items)
+        
+        return total_deleted
+
+    async def prune_orphan_headers(self) -> int:
+        """
+        Removes Header nodes that are no longer linked to any File node via 'contains'.
+        Returns the count of deleted headers.
+        """
+        # Header nodes are in 'node' table with node_type='header'
+        # Linked via 'contains' edge (incoming to header)
+        
+        # We need the table name for headers
+        header_table = "node" # Default assumption from schema
+        if self.schema_mapper._schema_map and 'header' in self.schema_mapper.schema_map.node_types:
+             header_table = self.schema_mapper.get_node_table('header')
+        
+        query = f"DELETE {header_table} WHERE node_type = 'header' AND count(<-contains) = 0;"
+        
+        results = await self.db.query(query)
+        
+        total_deleted = 0
+        if isinstance(results, list) and len(results) > 0:
+            res = results[0]
+            if isinstance(res, list):
+                total_deleted = len(res)
+            elif isinstance(res, dict) and 'result' in res:
+                items = res.get('result')
+                if isinstance(items, list):
+                    total_deleted = len(items)
+            # If direct list return (some clients)
+            elif isinstance(results, list):
+                 # if results itself is the list of records
+                 # Wait, query returns list of results (one per statement). 
+                 # Since we sent 1 statement, results[0] is our result.
+                 pass
+
+        # Handle case where results is just the list of records (v1 client sometimes?)
+        # But typical python client returns list of query results.
+        
+        return total_deleted
+
