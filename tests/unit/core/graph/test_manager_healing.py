@@ -32,8 +32,8 @@ async def test_prune_dangling_edges_logic():
     assert "DELETE" in query_str.upper()
     assert "contains" in query_str.lower()
     # Check for the condition
-    assert "out = NONE" in query_str or "out IS NULL" in query_str
-    assert "in = NONE" in query_str or "in IS NULL" in query_str
+    assert "out.id IS NONE" in query_str
+    assert "in.id IS NONE" in query_str
 
 @pytest.mark.asyncio
 async def test_prune_orphan_headers_logic():

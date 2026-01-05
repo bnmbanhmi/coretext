@@ -439,11 +439,11 @@ class GraphManager:
             return 0
 
         # Construct query for each table
-        # Using "out IS NONE" checks. SurrealDB 2.x uses NONE, v1 might vary but NONE is standard.
+        # We check out.id/in.id to detect "ghost edges" (links to non-existent records)
+        # SurrealDB returns NONE for 'out.id' if 'out' points to a deleted record.
         queries = []
         for table in edge_tables:
-            # We check both NONE and NULL to be safe across versions/states
-            queries.append(f"DELETE {table} WHERE out = NONE OR in = NONE OR out = NULL OR in = NULL;")
+            queries.append(f"DELETE {table} WHERE out.id IS NONE OR in.id IS NONE OR out = NONE OR in = NONE;")
 
         # Execute
         # We can run them in parallel or batch.

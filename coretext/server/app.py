@@ -38,14 +38,17 @@ async def lifespan(app: FastAPI):
         from coretext.core.system.maintenance import MaintenanceService
         import asyncio
 
-        # Connect to DB (using default local address matching dependencies.py)
-        # In a real scenario, this should come from config
-        db = AsyncSurreal("ws://localhost:8000/rpc")
+        # Load config to get DB URL
+        cfg = load_config()
+        # Ensure we use the configured URL (e.g., ws://localhost:8000/rpc)
+        # Note: In a robust app, we might share the pool, but for a background task, 
+        # a fresh connection using the correct config is acceptable and avoids loop binding issues.
+        db = AsyncSurreal(cfg.db.url)
         try:
             # We add a small delay to ensure DB might be up if they started together
             # though usually the daemon should be running.
             await db.connect()
-            await db.use("coretext", "coretext")
+            await db.use(cfg.db.namespace, cfg.db.database)
             
             schema_mapper = get_schema_mapper()
             embedder = get_vector_embedder(watchdog)

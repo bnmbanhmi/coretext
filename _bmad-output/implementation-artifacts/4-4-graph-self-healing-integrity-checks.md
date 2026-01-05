@@ -1,6 +1,6 @@
 # Story 4.4: Graph Self-Healing & Integrity Checks
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -77,6 +77,9 @@ Gemini 2.0 Flash
 - Integrated maintenance task into `coretext/server/app.py` startup lifespan (async background task).
 - Added comprehensive unit tests in `tests/unit/core/graph/test_manager_healing.py` and `tests/unit/core/system/test_maintenance.py`.
 - Added integration test `tests/integration/test_healing_integration.py` (skipped if DB not available).
+- [Fix] Updated `prune_dangling_edges` to use `out.id IS NONE` for proper ghost edge detection.
+- [Fix] Updated `app.py` to use `load_config()` for DB connection details instead of hardcoded strings.
+- [Fix] Updated unit tests to validate correct dereferencing SQL syntax.
 
 ### File List
 - coretext/core/graph/manager.py
