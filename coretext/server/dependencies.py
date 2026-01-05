@@ -4,10 +4,13 @@ from surrealdb import AsyncSurreal
 from coretext.core.parser.schema import SchemaMapper
 from coretext.core.graph.manager import GraphManager
 from coretext.core.vector.embedder import VectorEmbedder
+from coretext.core.system.memory import MemoryWatchdog
+from coretext.config import load_config
 
 # Singletons to avoid reloading heavy resources on every request
 _schema_mapper: SchemaMapper | None = None
 _vector_embedder: VectorEmbedder | None = None
+_memory_watchdog: MemoryWatchdog | None = None
 
 async def get_db_client():
     """
@@ -33,13 +36,28 @@ def get_schema_mapper() -> SchemaMapper:
         _schema_mapper = SchemaMapper(schema_map_path)
     return _schema_mapper
 
-def get_vector_embedder() -> VectorEmbedder:
+def get_memory_watchdog() -> MemoryWatchdog:
+    """
+    Dependency to provide MemoryWatchdog.
+    """
+    global _memory_watchdog
+    if _memory_watchdog is None:
+        config = load_config()
+        _memory_watchdog = MemoryWatchdog(
+            soft_limit_mb=config.system.memory_limit_mb,
+            check_interval=60
+        )
+    return _memory_watchdog
+
+def get_vector_embedder(
+    watchdog: MemoryWatchdog = Depends(get_memory_watchdog)
+) -> VectorEmbedder:
     """
     Dependency to provide VectorEmbedder.
     """
     global _vector_embedder
     if _vector_embedder is None:
-        _vector_embedder = VectorEmbedder()
+        _vector_embedder = VectorEmbedder(memory_watchdog=watchdog)
     return _vector_embedder
 
 async def get_graph_manager(

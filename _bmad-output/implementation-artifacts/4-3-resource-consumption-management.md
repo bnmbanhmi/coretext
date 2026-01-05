@@ -1,6 +1,6 @@
 # Story 4.3: Resource Consumption Management
 
-**Status:** review
+**Status:** done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -83,6 +83,10 @@ Gemini 2.0 Flash
 - Integrated `MemoryWatchdog` and Priority Manager into `app.py` lifespan events.
 - Updated `VectorEmbedder` to set priority on load and added `unload_model` method for manual cleanup.
 - Added comprehensive unit tests for all new components.
+- **Review Fixes**: Refactored `MemoryWatchdog` to support dynamic memory offsets for heavy components (like models).
+- **Review Fixes**: Implemented `idle_timeout` in `VectorEmbedder` to automatically unload models after 5 minutes of inactivity.
+- **Review Fixes**: Wired `MemoryWatchdog` into `VectorEmbedder` via dependency injection in `server/dependencies.py` to coordinate resource usage.
+- **Review Fixes**: Optimized `MemoryWatchdog` to cache `psutil.Process` handle.
 
 ### File List
 
@@ -90,6 +94,7 @@ Gemini 2.0 Flash
 - `coretext/core/system/process.py`
 - `coretext/core/system/memory.py`
 - `coretext/server/app.py`
+- `coretext/server/dependencies.py`
 - `coretext/config.py`
 - `coretext/core/vector/embedder.py`
 - `tests/unit/core/system/test_process.py`

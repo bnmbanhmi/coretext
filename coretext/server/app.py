@@ -6,8 +6,8 @@ from coretext.server.health import router as health_router
 from coretext.server.mcp.routes import router as mcp_router
 from coretext.server.routers.lint import router as lint_router
 from coretext.config import load_config
-from coretext.core.system.memory import MemoryWatchdog
 from coretext.core.system.process import set_background_priority
+from coretext.server.dependencies import get_memory_watchdog
 
 logger = logging.getLogger(__name__)
 
@@ -26,12 +26,8 @@ async def lifespan(app: FastAPI):
         logger.info("Configuring daemon for background priority")
         set_background_priority()
         
-    # Initialize and start MemoryWatchdog
-    # Default check interval 60s
-    watchdog = MemoryWatchdog(
-        soft_limit_mb=config.system.memory_limit_mb,
-        check_interval=60
-    )
+    # Initialize and start MemoryWatchdog via dependency provider (singleton)
+    watchdog = get_memory_watchdog()
     await watchdog.start()
     
     try:
