@@ -1,4 +1,3 @@
-import typer
 from coretext.cli import commands
 
 app = commands.app

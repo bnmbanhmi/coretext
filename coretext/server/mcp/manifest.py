@@ -1,5 +1,4 @@
 from fastapi.routing import APIRoute
-from pydantic import BaseModel
 from typing import List, Any
 
 def generate_manifest(routes: List[Any]) -> dict:

@@ -3,7 +3,6 @@ import requests
 import json
 import sys
 from rich.console import Console
-from rich.table import Table
 
 console = Console()
 BASE_URL = "http://127.0.0.1:8001"

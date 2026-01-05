@@ -1,6 +1,4 @@
-import pytest
 from pathlib import Path
-import sys
 
 def test_project_root_structure():
     """Verify essential project files exist."""

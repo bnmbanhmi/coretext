@@ -1,9 +1,7 @@
-import pytest
 from typer.testing import CliRunner
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from pathlib import Path
-from coretext.cli.commands import app, post_commit_hook
-import logging
+from coretext.cli.commands import post_commit_hook
 
 runner = CliRunner()
 

@@ -2,9 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
 from pathlib import Path
 from coretext.core.sync.timeout_utils import run_with_timeout_or_detach
-import asyncio
 import sys
-import subprocess
 
 @pytest.mark.asyncio
 @patch("coretext.core.sync.timeout_utils.SyncEngine")

@@ -3,8 +3,6 @@ from unittest.mock import MagicMock, patch, AsyncMock
 from typer.testing import CliRunner
 from coretext.cli.commands import app
 from pathlib import Path
-import os
-import signal
 
 runner = CliRunner()
 

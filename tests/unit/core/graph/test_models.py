@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, timezone
+from datetime import datetime
 from coretext.core.graph.models import BaseNode, BaseEdge
 
 def test_basenode_creation():

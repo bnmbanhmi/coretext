@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import AsyncMock
 from coretext.server.app import app
 from coretext.server.dependencies import get_graph_manager
 from coretext.core.graph.manager import GraphManager

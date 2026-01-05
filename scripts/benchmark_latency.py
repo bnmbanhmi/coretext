@@ -1,7 +1,6 @@
 import asyncio
 import time
 import statistics
-import sys
 from surrealdb import AsyncSurreal
 from coretext.server.dependencies import get_schema_mapper, get_vector_embedder
 from coretext.core.graph.manager import GraphManager

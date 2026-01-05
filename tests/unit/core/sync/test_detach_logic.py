@@ -1,4 +1,3 @@
-import pytest
 from coretext.core.sync.engine import SyncEngine
 
 def test_sync_engine_constants():

@@ -1,13 +1,12 @@
 import pytest
 from typer.testing import CliRunner
 from pathlib import Path
-from coretext.cli.commands import app, install_hooks, pre_commit_hook, post_commit_hook, _post_commit_hook_logic
+from coretext.cli.commands import install_hooks, pre_commit_hook, _post_commit_hook_logic
 import stat
 from unittest.mock import patch, MagicMock, AsyncMock, ANY
 import typer
 import asyncio
 from coretext.core.sync.engine import SyncMode
-from coretext.core.sync.timeout_utils import run_with_timeout_or_detach
 
 runner = CliRunner()
 

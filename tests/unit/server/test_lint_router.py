@@ -1,7 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
 from coretext.server.app import app
-from unittest.mock import AsyncMock, patch
 
 client = TestClient(app)
 

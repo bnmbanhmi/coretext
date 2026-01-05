@@ -3,7 +3,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pathlib import Path
 from coretext.core.sync.engine import SyncEngine, SyncMode, SyncResult
 from coretext.core.graph.models import BaseNode, BaseEdge, ParsingErrorNode
-import asyncio
 
 @pytest.fixture
 def mock_parser_instance():

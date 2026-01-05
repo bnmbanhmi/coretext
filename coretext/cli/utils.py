@@ -1,12 +1,10 @@
 import httpx
 import os
-import socket
 from pathlib import Path
 from typing import Any
 
 from rich.tree import Tree
 from coretext.db.client import SurrealDBClient
-from coretext.core.network import is_port_in_use
 
 def get_pid_file_path(project_root: Path) -> Path:
     """Returns the path to the server PID file."""

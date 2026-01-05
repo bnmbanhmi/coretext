@@ -1,6 +1,6 @@
 # tests/unit/db/test_migrations.py
 import pytest
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, patch
 from coretext.db.migrations import SchemaManager
 
 @pytest.mark.asyncio

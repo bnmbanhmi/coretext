@@ -2,7 +2,6 @@
 import inspect
 from fastapi.routing import APIRoute
 from coretext.server.mcp.routes import (
-    ToolResponse, SearchTopologyResponse, DependencyItem, GetDependenciesResponse,
     get_dependencies, search_topology, router
 )
 

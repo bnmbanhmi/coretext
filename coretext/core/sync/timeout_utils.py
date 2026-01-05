@@ -1,7 +1,6 @@
 import signal
 import sys
 import subprocess
-import asyncio
 from pathlib import Path
 from typing import List, Callable, Any, Coroutine
 from coretext.core.sync.engine import SyncEngine

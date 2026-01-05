@@ -6,13 +6,11 @@ import os
 import aiohttp
 import tarfile
 import zipfile
-import shutil
 import subprocess
 from pathlib import Path
 from io import BytesIO
 
 import ssl
-import socket
 from coretext.core.network import is_port_in_use
 
 class SurrealDBClient:

@@ -5,7 +5,6 @@ import subprocess
 import sys
 import os
 import signal
-import socket
 import time
 import httpx
 import logging

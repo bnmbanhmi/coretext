@@ -1,5 +1,4 @@
 
-import pytest
 from fastapi import FastAPI, APIRouter
 from pydantic import BaseModel, Field
 from coretext.server.mcp.manifest import generate_manifest

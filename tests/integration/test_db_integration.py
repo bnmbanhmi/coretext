@@ -1,9 +1,6 @@
 import pytest
-import asyncio
 from pathlib import Path
-from surrealdb import Surreal
 from coretext.db.client import SurrealDBClient
-from coretext.db.migrations import SchemaManager
 
 def surreal_binary_exists():
     client = SurrealDBClient(Path.cwd())

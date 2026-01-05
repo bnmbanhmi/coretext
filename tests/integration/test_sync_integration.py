@@ -1,9 +1,8 @@
 import pytest
-import asyncio
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
 from pathlib import Path
 from coretext.cli.commands import _post_commit_hook_logic
-from coretext.core.graph.models import BaseNode, SyncReport
+from coretext.core.graph.models import SyncReport
 
 @pytest.mark.asyncio
 async def test_sync_integration_simulated(tmp_path: Path):

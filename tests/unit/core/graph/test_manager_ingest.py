@@ -1,6 +1,6 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock, call
-from coretext.core.graph.manager import GraphManager, SyncReport
+from unittest.mock import AsyncMock, MagicMock
+from coretext.core.graph.manager import GraphManager
 from coretext.core.graph.models import BaseNode, BaseEdge, ParsingErrorNode
 from coretext.core.parser.schema import SchemaMapper
 from coretext.core.vector.embedder import VectorEmbedder

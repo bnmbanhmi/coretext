@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel, Field
 from typing import List, Any
 from coretext.core.parser.schema import SchemaMapper
@@ -132,7 +132,7 @@ async def search_topology(
     try:
         results = await graph_manager.search_topology(request.query, limit=request.limit)
         return SearchTopologyResponse(results=results)
-    except Exception as e:
+    except Exception:
         # Log error here if logging is set up
         raise HTTPException(status_code=500, detail="Internal server error during topology search.")
 

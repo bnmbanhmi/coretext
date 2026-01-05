@@ -1,7 +1,6 @@
 import pytest
-from pathlib import Path
-from unittest.mock import MagicMock, AsyncMock
-from coretext.core.sync.engine import SyncEngine, SyncMode, SyncResult
+from unittest.mock import AsyncMock
+from coretext.core.sync.engine import SyncEngine, SyncMode
 from coretext.core.parser.markdown import MarkdownParser
 
 @pytest.fixture

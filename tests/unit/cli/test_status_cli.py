@@ -2,7 +2,6 @@ import pytest
 from typer.testing import CliRunner
 from coretext.cli.main import app
 from unittest.mock import patch
-from pathlib import Path
 
 runner = CliRunner()
 

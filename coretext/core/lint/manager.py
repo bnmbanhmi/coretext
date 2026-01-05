@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List
 from coretext.core.parser.markdown import MarkdownParser
-from coretext.core.graph.models import ParsingErrorNode, BaseNode
+from coretext.core.graph.models import ParsingErrorNode
 from coretext.core.lint.models import LintReport, LintIssue
 
 class LintManager:

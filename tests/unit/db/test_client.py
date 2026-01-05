@@ -1,7 +1,5 @@
 # tests/unit/db/test_client.py
 import pytest
-import asyncio
-from pathlib import Path
 from unittest.mock import AsyncMock, patch, MagicMock
 
 from coretext.db.client import SurrealDBClient

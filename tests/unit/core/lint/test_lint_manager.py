@@ -1,7 +1,6 @@
 import pytest
-from pathlib import Path
 from coretext.core.lint.manager import LintManager
-from coretext.core.lint.models import LintReport, LintIssue
+from coretext.core.lint.models import LintReport
 
 @pytest.mark.asyncio
 async def test_lint_manager_check_markdown_syntax(tmp_path):

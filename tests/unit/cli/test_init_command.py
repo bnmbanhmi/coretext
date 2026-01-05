@@ -1,8 +1,7 @@
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch, AsyncMock
 from typer.testing import CliRunner
 from coretext.cli.commands import app
-from pathlib import Path
 
 runner = CliRunner()
 

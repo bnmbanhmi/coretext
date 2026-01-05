@@ -1,7 +1,5 @@
 import httpx
 import pytest
-import os
-import signal
 import subprocess
 import time
 import socket

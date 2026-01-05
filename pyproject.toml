@@ -20,6 +20,7 @@ sentence-transformers = "^3.2.0"
 einops = "^0.8.0"
 markdown-it-py = "^4.0.0"
 click = "<8.2"
+psutil = "^7.2.1"
 
 [tool.poetry.scripts]
 coretext = "coretext.cli.main:app"

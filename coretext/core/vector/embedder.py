@@ -1,8 +1,11 @@
 import asyncio
-import os
 from pathlib import Path
-from typing import Any
 import numpy as np
+import logging
+
+from coretext.core.system.process import set_background_priority
+
+logger = logging.getLogger(__name__)
 
 class VectorEmbedder:
     """
@@ -29,8 +32,34 @@ class VectorEmbedder:
     def _load_model(self):
         """Lazily loads the SentenceTransformer model."""
         if self.model is None:
+            # Set background priority for the process as model loading/usage is resource intensive
+            set_background_priority()
+            
+            logger.info(f"Loading embedding model: {self.model_name}")
             from sentence_transformers import SentenceTransformer
             self.model = SentenceTransformer(self.model_name, trust_remote_code=True, cache_folder=self.cache_dir)
+
+    def unload_model(self):
+        """Unloads the model to free memory."""
+        if self.model is not None:
+            logger.info("Unloading embedding model to free memory")
+            self.model = None
+            
+            # Force GC
+            import gc
+            gc.collect()
+            
+            # Try to free Torch memory if applicable
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+                     torch.mps.empty_cache()
+            except ImportError:
+                pass
+            except Exception as e:
+                logger.debug(f"Error clearing torch cache: {e}")
 
     async def encode(self, text: str, task_type: str = "search_document", dimension: int = 768) -> list[float]:
         """

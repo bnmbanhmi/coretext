@@ -1,6 +1,6 @@
 # Story 4.3: Resource Consumption Management
 
-**Status:** ready-for-dev
+**Status:** review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -21,27 +21,27 @@ so that it doesn't negatively impact the performance of other applications while
 
 ## Tasks / Subtasks
 
-- [ ] **Implement Cross-Platform Priority Manager**
-  - [ ] Create `coretext/core/system/process.py` to abstract `psutil` priority setting.
-  - [ ] Implement `set_background_priority()` handling Unix `nice` and Windows `priority_class`.
-  - [ ] Add unit tests mocking `psutil` for both platforms.
-- [ ] **Implement Memory Watchdog & Profiler**
-  - [ ] Create `coretext/core/system/memory.py` with `MemoryWatchdog` class.
-  - [ ] Implement async loop to check `psutil.Process().memory_info().rss` every 60s (configurable).
-  - [ ] Trigger Python `gc.collect()` if usage > soft_limit (50MB).
-  - [ ] Log warnings if usage remains high after GC.
-- [ ] **Optimize Embedding Generation for Low Resource**
-  - [ ] Update `coretext/core/vector/embedder.py` to explicitly call `set_background_priority()` during batch processing.
-  - [ ] Ensure `sentence-transformers` model is loaded only when needed or kept efficiently (verify model size vs 50MB limit - *Critical: 50MB might be too aggressive if model is loaded. refined requirement: 50MB applies to DAEMON overhead, model memory excluded or loaded on-demand*).
-  - [ ] **REFINEMENT**: If the model (approx 100-300MB) is loaded, 50MB is impossible.
-  - [ ] **Task Update**: Implement "On-Demand Model Loading" or "Separate Process" strategy if 50MB is strict hard cap for *idle* daemon.
-  - [ ] *Decision*: 50MB is for *idle* state. Model should be unloaded or mapped out when idle if possible, OR acceptance criteria adjusted to "50MB + Model Size". Let's stick to **50MB overhead** + Model.
-- [ ] **Integrate with Daemon Lifecycle**
-  - [ ] Initialize `MemoryWatchdog` in `coretext/server/app.py` startup event.
-  - [ ] Ensure proper cleanup on shutdown.
-- [ ] **Configuration Updates**
-  - [ ] Add `system.memory_limit_mb` to `coretext/config.py`.
-  - [ ] Add `system.background_priority` toggle.
+- [x] **Implement Cross-Platform Priority Manager**
+  - [x] Create `coretext/core/system/process.py` to abstract `psutil` priority setting.
+  - [x] Implement `set_background_priority()` handling Unix `nice` and Windows `priority_class`.
+  - [x] Add unit tests mocking `psutil` for both platforms.
+- [x] **Implement Memory Watchdog & Profiler**
+  - [x] Create `coretext/core/system/memory.py` with `MemoryWatchdog` class.
+  - [x] Implement async loop to check `psutil.Process().memory_info().rss` every 60s (configurable).
+  - [x] Trigger Python `gc.collect()` if usage > soft_limit (50MB).
+  - [x] Log warnings if usage remains high after GC.
+- [x] **Optimize Embedding Generation for Low Resource**
+  - [x] Update `coretext/core/vector/embedder.py` to explicitly call `set_background_priority()` during batch processing.
+  - [x] Ensure `sentence-transformers` model is loaded only when needed or kept efficiently (verify model size vs 50MB limit - *Critical: 50MB might be too aggressive if model is loaded. refined requirement: 50MB applies to DAEMON overhead, model memory excluded or loaded on-demand*).
+  - [x] **REFINEMENT**: If the model (approx 100-300MB) is loaded, 50MB is impossible.
+  - [x] **Task Update**: Implement "On-Demand Model Loading" or "Separate Process" strategy if 50MB is strict hard cap for *idle* daemon.
+  - [x] *Decision*: 50MB is for *idle* state. Model should be unloaded or mapped out when idle if possible, OR acceptance criteria adjusted to "50MB + Model Size". Let's stick to **50MB overhead** + Model.
+- [x] **Integrate with Daemon Lifecycle**
+  - [x] Initialize `MemoryWatchdog` in `coretext/server/app.py` startup event.
+  - [x] Ensure proper cleanup on shutdown.
+- [x] **Configuration Updates**
+  - [x] Add `system.memory_limit_mb` to `coretext/config.py`.
+  - [x] Add `system.background_priority` toggle.
 
 ## Dev Notes
 
@@ -78,11 +78,22 @@ Gemini 2.0 Flash
 
 - Verified `psutil` capabilities for nice/priority.
 - Identified potential risk with 50MB limit vs Model size (addressed via idle definition).
+- Implemented `MemoryWatchdog` with active `gc.collect()` strategy.
+- Implemented `set_background_priority` for POSIX/Windows.
+- Integrated `MemoryWatchdog` and Priority Manager into `app.py` lifespan events.
+- Updated `VectorEmbedder` to set priority on load and added `unload_model` method for manual cleanup.
+- Added comprehensive unit tests for all new components.
 
 ### File List
 
 - `coretext/core/system/__init__.py`
 - `coretext/core/system/process.py`
 - `coretext/core/system/memory.py`
-- `coretext/server/app.py` (modification)
-- `coretext/config.py` (modification)
+- `coretext/server/app.py`
+- `coretext/config.py`
+- `coretext/core/vector/embedder.py`
+- `tests/unit/core/system/test_process.py`
+- `tests/unit/core/system/test_memory.py`
+- `tests/unit/server/test_app.py`
+- `tests/unit/core/vector/test_embedder.py`
+- `pyproject.toml`

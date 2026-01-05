@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from coretext.core.graph.manager import GraphManager
 from coretext.core.graph.models import BaseNode, BaseEdge
 from coretext.core.parser.schema import SchemaMapper

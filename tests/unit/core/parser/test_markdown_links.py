@@ -1,7 +1,6 @@
 import pytest
-from pathlib import Path
 from coretext.core.parser.markdown import MarkdownParser
-from coretext.core.graph.models import FileNode, ParsingErrorNode, BaseEdge
+from coretext.core.graph.models import ParsingErrorNode
 
 @pytest.fixture
 def parser(tmp_path):

@@ -1,4 +1,3 @@
-import asyncio
 from typing import Type, List, Any
 from surrealdb import Surreal
 from coretext.core.graph.models import BaseNode, BaseEdge, ParsingErrorNode, SyncReport

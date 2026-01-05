@@ -3,7 +3,6 @@ import subprocess
 import time
 import socket
 import os
-import signal
 from typing import Generator
 
 @pytest.fixture(scope="session")

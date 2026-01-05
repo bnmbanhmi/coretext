@@ -1,7 +1,6 @@
 import pytest
 from pathlib import Path
-import yaml
-from coretext.core.parser.schema import SchemaMapper, SchemaMap, NodeTypeSchema, EdgeTypeSchema, PropertySchema
+from coretext.core.parser.schema import SchemaMapper, SchemaMap, NodeTypeSchema, EdgeTypeSchema
 
 @pytest.fixture
 def temp_schema_map_file(tmp_path: Path):

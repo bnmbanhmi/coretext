@@ -1,6 +1,5 @@
 import httpx
 import pytest
-from typing import List
 
 # Story 2.2: Semantic Tool for Topology Search
 # Acceptance Criteria:

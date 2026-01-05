@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 from coretext.core.parser.markdown import MarkdownParser
-from coretext.core.graph.models import FileNode, HeaderNode, ParsingErrorNode, BaseEdge
+from coretext.core.graph.models import FileNode, HeaderNode, ParsingErrorNode
 
 # Assume project root is the current working directory for tests
 # PROJECT_ROOT = Path(__file__).parent.parent.parent.parent.parent # Adjust based on actual project structure

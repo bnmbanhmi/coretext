@@ -2,7 +2,7 @@ import re
 import pytest
 from pathlib import Path
 from coretext.core.parser.markdown import MarkdownParser
-from coretext.core.graph.models import ParsingErrorNode, BaseEdge
+from coretext.core.graph.models import ParsingErrorNode
 
 @pytest.fixture
 def parser(tmp_path: Path):
@@ -44,7 +44,7 @@ def test_duplicate_links_have_unique_ids(parser: MarkdownParser, create_md_file)
     target_file_path = create_md_file("valid_simple.md", "# Valid Simple Content")
     
     file_path = create_md_file("temp_test_dup_link.md", 
-        f"# Title\n[Link 1](./valid_simple.md)\nSome text.\n[Link 2](./valid_simple.md)"
+        "# Title\n[Link 1](./valid_simple.md)\nSome text.\n[Link 2](./valid_simple.md)"
     )
     
     nodes, edges = parser.parse(file_path)

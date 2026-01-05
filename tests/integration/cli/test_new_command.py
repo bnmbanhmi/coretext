@@ -1,7 +1,5 @@
-import pytest
 from typer.testing import CliRunner
 from coretext.cli.commands import app
-from pathlib import Path
 
 runner = CliRunner()
 

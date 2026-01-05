@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import MagicMock, patch
 from pathlib import Path
 from coretext.core.sync.git_utils import get_staged_files, get_last_commit_files, get_staged_content, get_head_content, get_current_commit_hash

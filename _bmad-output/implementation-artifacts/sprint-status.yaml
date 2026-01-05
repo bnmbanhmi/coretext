@@ -68,7 +68,7 @@ development_status:
   epic-4: in-progress
   4-1-git-hook-async-mode-fail-open-policy: done
   4-2-mcp-query-latency-optimization: done
-  4-3-resource-consumption-management: ready-for-dev
+  4-3-resource-consumption-management: review
   4-4-graph-self-healing-integrity-checks: backlog
   4-5-epic-4-stress-testing-and-verification: backlog
   epic-4-retrospective: optional

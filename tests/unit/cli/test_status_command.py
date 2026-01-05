@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from coretext.cli.utils import check_daemon_health
-from pathlib import Path
 
 MOCK_SERVER_PORT = 8001
 MOCK_DB_PORT = 8000
