@@ -443,7 +443,9 @@ class GraphManager:
         # SurrealDB returns NONE for 'out.id' if 'out' points to a deleted record.
         queries = []
         for table in edge_tables:
-            queries.append(f"DELETE {table} WHERE out.id IS NONE OR in.id IS NONE OR out = NONE OR in = NONE;")
+            # Use updated_at to force record lookup. id field might be optimized to return value from pointer without lookup.
+            # If target record is missing, updated_at will be NONE.
+            queries.append(f"DELETE {table} WHERE out.updated_at IS NONE OR in.updated_at IS NONE;")
 
         # Execute
         # We can run them in parallel or batch.

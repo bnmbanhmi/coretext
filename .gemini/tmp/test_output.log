@@ -1,0 +1,10 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.6, pytest-9.0.2, pluggy-1.6.0 -- /Users/mac/Library/Caches/pypoetry/virtualenvs/coretext-5I59WD1h-py3.11/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/mac/Git/coretext
+configfile: pyproject.toml
+plugins: anyio-4.12.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/performance/test_healing_scale.py::test_healing_at_scale FAILED    [100%]

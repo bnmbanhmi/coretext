@@ -1,102 +1,118 @@
+import typer
 import asyncio
+import httpx
 import time
 import statistics
-from surrealdb import AsyncSurreal
-from coretext.server.dependencies import get_schema_mapper, get_vector_embedder
-from coretext.core.graph.manager import GraphManager
+from pathlib import Path
+from coretext.config import load_config
+from rich.console import Console
+from rich.table import Table
 
-async def benchmark():
-    print("Initializing benchmark...")
+app = typer.Typer()
+console = Console()
+
+@app.command()
+def run(
+    project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p"),
+    iterations: int = typer.Option(50, help="Number of requests to run for statistics"),
+    query: str = typer.Option("test", help="Query string for search benchmark")
+):
+    """
+    Benchmarks MCP latency (RTT) for topological search and dependency retrieval.
+    Reports P50, P95, and P99 latencies.
+    """
+    config = load_config(project_root)
+    base_url = f"http://localhost:{config.mcp_port}"
     
-    # Connect to DB
-    from coretext.config import load_config
-    from pathlib import Path
-    
-    config = load_config(Path.cwd())
-    
-    db = AsyncSurreal(config.surreal_url)
+    # Check health
     try:
-        await db.connect()
-        await db.use(config.surreal_ns, config.surreal_db)
-    except Exception as e:
-        print(f"Failed to connect to SurrealDB: {e}")
-        print("Please ensure the coretext daemon is running.")
-        return
+        resp = httpx.get(f"{base_url}/health")
+        if resp.status_code != 200:
+            console.print("[red]Daemon not healthy. Please run 'coretext start'.[/red]")
+            raise typer.Exit(1)
+    except Exception:
+         console.print("[red]Daemon not running. Please run 'coretext start'.[/red]")
+         raise typer.Exit(1)
 
-    # Initialize components
-    try:
-        schema_mapper = get_schema_mapper()
-        # Pre-load embedder
-        print("Loading embedder (this may take a moment)...")
-        embedder = get_vector_embedder()
-        # Force load model to warm it up
-        await embedder.encode("warmup")
-    except Exception as e:
-        print(f"Failed to initialize components: {e}")
-        await db.close()
-        return
-    
-    graph_manager = GraphManager(db, schema_mapper, embedder)
-
-    print("\n--- Benchmarking search_topology ---")
-    query = "authentication logic"
-    latencies = []
-    # Warmup
-    await graph_manager.search_topology(query, limit=5)
-    
-    for _ in range(20):
-        start = time.perf_counter()
-        await graph_manager.search_topology(query, limit=5)
-        latencies.append((time.perf_counter() - start) * 1000)
-    
-    print_stats("search_topology", latencies)
-
-    print("\n--- Benchmarking get_dependencies ---")
-    # Find a node to query. Try to find a file node.
-    # search_topology returns nodes with embeddings.
-    results = await graph_manager.search_topology("import", limit=5)
-    
-    node_id = None
-    if results:
-         node_id = results[0]['id']
-    
-    if not node_id:
-        print("No suitable nodes found to test get_dependencies (search returned empty).")
-        # Try to fallback to a likely existing ID if search fails?
-        # But search shouldn't fail if DB has data.
-    else:
-        print(f"Testing with node: {node_id}")
-        
-        # Warmup
-        await graph_manager.get_dependencies(node_id, depth=1)
-
+    async def benchmark_search():
         latencies = []
-        for _ in range(20):
-            start = time.perf_counter()
-            await graph_manager.get_dependencies(node_id, depth=1)
-            latencies.append((time.perf_counter() - start) * 1000)
-        
-        print_stats("get_dependencies", latencies)
+        async with httpx.AsyncClient() as client:
+            # Warmup
+            await client.post(f"{base_url}/mcp/tools/search_topology", json={"query": query})
+            
+            with console.status(f"Benchmarking search_topology ({iterations} iter)..."):
+                for _ in range(iterations):
+                    start = time.perf_counter()
+                    await client.post(f"{base_url}/mcp/tools/search_topology", json={"query": query})
+                    latencies.append((time.perf_counter() - start) * 1000)
+        return latencies
 
-    await db.close()
+    async def benchmark_dependencies():
+        # First get a valid node
+        async with httpx.AsyncClient() as client:
+            # Try to find a node related to the query, or fallback to file nodes
+            resp = await client.post(f"{base_url}/mcp/tools/search_topology", json={"query": "doc"})
+            data = resp.json()
+            nodes = data.get("nodes", []) if isinstance(data, dict) else []
+            
+            if not nodes:
+                # Try a broader search
+                resp = await client.post(f"{base_url}/mcp/tools/search_topology", json={"query": "file"})
+                data = resp.json()
+                nodes = data.get("nodes", []) if isinstance(data, dict) else []
+                
+            if not nodes:
+                console.print("[yellow]No nodes found to test dependencies (index might be empty).[/yellow]")
+                return []
+                
+            node_id = nodes[0]['id']
+            console.print(f"Using node [cyan]{node_id}[/cyan] for dependency benchmark.")
+            
+            latencies = []
+             # Warmup
+            await client.post(f"{base_url}/mcp/tools/get_dependencies", json={"node_identifier": node_id})
+            
+            with console.status(f"Benchmarking get_dependencies ({iterations} iter)..."):
+                for _ in range(iterations):
+                    start = time.perf_counter()
+                    await client.post(f"{base_url}/mcp/tools/get_dependencies", json={"node_identifier": node_id})
+                    latencies.append((time.perf_counter() - start) * 1000)
+            return latencies
+
+    console.print(f"[bold]Starting Benchmark (RTT to {base_url})[/bold]")
+    
+    # Run Search
+    search_lats = asyncio.run(benchmark_search())
+    print_stats("search_topology", search_lats)
+    
+    # Run Dependencies
+    dep_lats = asyncio.run(benchmark_dependencies())
+    print_stats("get_dependencies", dep_lats)
 
 def print_stats(name, latencies):
     if not latencies:
-        print(f"{name}: No data")
         return
-    # Python 3.8+ statistics.quantiles
-    try:
-        # inclusive method is default in 3.10+? 
-        # Actually quantiles returns n-1 cut points.
-        qs = statistics.quantiles(latencies, n=20)
-        p95 = qs[-1] # 19th cut point is 95%
-    except AttributeError:
-        # Fallback for older python if needed (project says 3.10+ so we are good)
+    
+    p50 = statistics.median(latencies)
+    if len(latencies) >= 100:
+        quantiles = statistics.quantiles(latencies, n=100)
+        p95 = quantiles[94]
+        p99 = quantiles[98]
+    else:
+        # Fallback for small sample size
         sorted_lat = sorted(latencies)
-        p95 = sorted_lat[int(0.95 * len(latencies))]
-
-    avg = statistics.mean(latencies)
-    print(f"{name}: Avg={avg:.2f}ms, P95={p95:.2f}ms")
+        p95 = sorted_lat[int(0.95 * len(latencies)) - 1]
+        p99 = sorted_lat[int(0.99 * len(latencies)) - 1]
+    
+    table = Table(title=f"{name} Latency (ms)")
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", style="green")
+    
+    table.add_row("P50", f"{p50:.2f}")
+    table.add_row("P95", f"{p95:.2f}")
+    table.add_row("P99", f"{p99:.2f}")
+    
+    console.print(table)
 
 if __name__ == "__main__":
-    asyncio.run(benchmark())
+    app()

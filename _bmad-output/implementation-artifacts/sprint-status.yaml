@@ -70,5 +70,5 @@ development_status:
   4-2-mcp-query-latency-optimization: done
   4-3-resource-consumption-management: done
   4-4-graph-self-healing-integrity-checks: done
-  4-5-epic-4-stress-testing-and-verification: ready-for-dev
+  4-5-epic-4-stress-testing-and-verification: review
   epic-4-retrospective: optional
