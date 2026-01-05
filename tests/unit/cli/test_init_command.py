@@ -8,7 +8,7 @@ runner = CliRunner()
 @pytest.fixture
 def mock_home_dir(tmp_path):
     # Mock Path.home() to return a temporary directory
-    with patch("pathlib.Path.home", return_value=tmp_path) as mock_home:
+    with patch("pathlib.Path.home", return_value=tmp_path):
         yield tmp_path
 
 @patch("coretext.cli.commands.SentenceTransformer")

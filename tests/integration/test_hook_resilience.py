@@ -1,9 +1,7 @@
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from pathlib import Path
 from typer.testing import CliRunner
 from coretext.cli.main import app
-import subprocess
 import sys
 
 runner = CliRunner()
@@ -28,7 +26,7 @@ def test_hook_detaches_on_many_files(tmp_path: Path):
     with patch("coretext.cli.commands.get_last_commit_files", return_value=[f"file_{i}.md" for i in range(10)]), \
          patch("coretext.core.sync.timeout_utils.subprocess.Popen") as mock_popen, \
          patch("coretext.cli.commands.check_daemon_health"), \
-         patch("os._exit") as mock_exit:
+         patch("os._exit"):
          
         result = runner.invoke(app, ["hook", "post-commit", "--project-root", str(tmp_path)])
         
@@ -59,7 +57,7 @@ def test_hook_fail_open_on_crash(tmp_path: Path):
     
     with patch("coretext.cli.commands.get_last_commit_files", return_value=["file.md"]), \
          patch("coretext.cli.commands._post_commit_hook_logic", side_effect=Exception("Critical Failure")), \
-         patch("os._exit") as mock_exit:
+         patch("os._exit"):
          
         result = runner.invoke(app, ["hook", "post-commit", "--project-root", str(tmp_path)])
         
@@ -91,7 +89,7 @@ def test_hook_timeouts_on_slow_sync(tmp_path: Path):
     with patch("coretext.cli.commands.get_last_commit_files", return_value=["file.md"]), \
          patch("coretext.cli.commands._post_commit_hook_logic", side_effect=slow_sync), \
          patch("coretext.core.sync.timeout_utils.TIMEOUT_SECONDS", 1), \
-         patch("os._exit") as mock_exit:
+         patch("os._exit"):
          
         result = runner.invoke(app, ["hook", "post-commit", "--project-root", str(tmp_path)])
         

@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 from coretext.core.system.maintenance import MaintenanceService
 from coretext.core.graph.manager import GraphManager
 

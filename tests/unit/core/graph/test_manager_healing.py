@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from coretext.core.graph.manager import GraphManager
-from coretext.core.parser.schema import SchemaMapper
 
 @pytest.mark.asyncio
 async def test_prune_dangling_edges_logic():

@@ -65,10 +65,10 @@ development_status:
   3-6-epic-3-demo-and-verification-fixes: done
   epic-3-retrospective: done
 
-  epic-4: in-progress
+  epic-4: done
   4-1-git-hook-async-mode-fail-open-policy: done
   4-2-mcp-query-latency-optimization: done
   4-3-resource-consumption-management: done
   4-4-graph-self-healing-integrity-checks: done
-  4-5-epic-4-stress-testing-and-verification: review
+  4-5-epic-4-stress-testing-and-verification: done
   epic-4-retrospective: optional

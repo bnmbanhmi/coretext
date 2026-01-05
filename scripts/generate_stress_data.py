@@ -2,7 +2,6 @@ import typer
 import random
 import shutil
 from pathlib import Path
-from typing import Optional
 from rich.console import Console
 from rich.progress import track
 

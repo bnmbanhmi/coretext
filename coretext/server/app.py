@@ -36,7 +36,6 @@ async def lifespan(app: FastAPI):
         from coretext.server.dependencies import get_schema_mapper, get_vector_embedder
         from coretext.core.graph.manager import GraphManager
         from coretext.core.system.maintenance import MaintenanceService
-        import asyncio
 
         # Load config to get DB URL
         cfg = load_config()

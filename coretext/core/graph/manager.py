@@ -62,6 +62,7 @@ class GraphManager:
         table = self.schema_mapper.get_node_table(node.node_type)
         # Use table from schema map (e.g., 'node')
         created_record = await self.db.create(f"{table}:`{node.id}`", data)
+        created_record = self._convert_ids(created_record)
         return BaseNode.model_validate(created_record)
 
     async def get_node(self, node_id: str, node_model: Type[BaseNode] = BaseNode) -> BaseNode | None:
@@ -80,6 +81,7 @@ class GraphManager:
         
         table = self.schema_mapper.get_node_table(node.node_type)
         updated_record = await self.db.update(f"{table}:`{node.id}`", data)
+        updated_record = self._convert_ids(updated_record)
         return BaseNode.model_validate(updated_record)
 
     async def delete_node(self, node_id: str) -> None:
@@ -100,6 +102,7 @@ class GraphManager:
         
         results = await self.db.query(query, {"data": data})
         created_record = results[0] if results else {}
+        created_record = self._convert_ids(created_record)
         
         # Map back
         created_record['source'] = created_record.get('in', '')
@@ -134,6 +137,7 @@ class GraphManager:
         
         results = await self.db.query(query, {"data": data})
         updated_record = results[0] if results else {}
+        updated_record = self._convert_ids(updated_record)
         
         updated_record['source'] = updated_record.get('in', '')
         updated_record['target'] = updated_record.get('out', '')
@@ -439,34 +443,48 @@ class GraphManager:
             return 0
 
         # Construct query for each table
-        # We check out.id/in.id to detect "ghost edges" (links to non-existent records)
-        # SurrealDB returns NONE for 'out.id' if 'out' points to a deleted record.
+        # We check out.updated_at/in.updated_at to detect "ghost edges" (links to non-existent records)
+        # SurrealDB returns NONE for 'out.updated_at' if 'out' points to a deleted record.
         queries = []
+        print(f"DEBUG: Edge tables to prune: {edge_tables}")
         for table in edge_tables:
-            # Use updated_at to force record lookup. id field might be optimized to return value from pointer without lookup.
-            # If target record is missing, updated_at will be NONE.
-            queries.append(f"DELETE {table} WHERE out.updated_at IS NONE OR in.updated_at IS NONE;")
+            # Use backticks for 'in' as it is a reserved word in SurrealQL
+            # We use a subquery to check if the target record actually exists
+            queries.append(f"DELETE {table} WHERE (SELECT VALUE id FROM out) = [] OR (SELECT VALUE id FROM `in`) = [];")
 
         # Execute
-        # We can run them in parallel or batch.
-        # db.query supports multiple statements separated by semicolon.
-        full_query = "\n".join(queries)
-        results = await self.db.query(full_query)
+        for table in edge_tables:
+            # We first SELECT the IDs of dangling edges
+            select_query = f"SELECT VALUE id FROM {table} WHERE (SELECT VALUE id FROM out) = [] OR (SELECT VALUE id FROM `in`) = [];"
+            
+            # results should be a list containing one item (the list of IDs)
+            results = await self.db.query(select_query)
 
-        # Parse results to count deletions
-        # results is a list of results for each query.
-        if isinstance(results, list):
-            for res in results:
-                # specific result might be a list of deleted records
-                # or a dict with 'result' key
-                if isinstance(res, list):
-                    total_deleted += len(res)
-                elif isinstance(res, dict) and 'result' in res:
-                    # check status
-                    if res.get('status') == 'OK':
-                        items = res.get('result')
-                        if isinstance(items, list):
-                            total_deleted += len(items)
+            if isinstance(results, list) and len(results) > 0:
+                # Handle various formats:
+                # 1. [ {status:OK, result:[...]} ]
+                # 2. [ [...], [...] ] (list of statement results)
+                # 3. [ rid1, rid2, ... ] (flattened single statement result)
+                
+                from surrealdb.data.types.record_id import RecordID
+                
+                ids_to_delete = []
+                first_item = results[0]
+                
+                if isinstance(first_item, dict) and 'result' in first_item:
+                    ids_to_delete = first_item.get('result', [])
+                elif isinstance(first_item, list):
+                    ids_to_delete = first_item
+                elif isinstance(first_item, (RecordID, str)):
+                    # Flat list of records/IDs
+                    ids_to_delete = results
+                
+                if isinstance(ids_to_delete, list):
+                    for rid in ids_to_delete:
+                        # Convert RecordID to string if needed
+                        rid_str = str(rid) if isinstance(rid, RecordID) else rid
+                        await self.db.delete(rid_str)
+                        total_deleted += 1
         
         return total_deleted
 

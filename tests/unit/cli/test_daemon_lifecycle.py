@@ -65,7 +65,7 @@ def test_stop_terminates_fastapi_process(mock_db_client, tmp_path):
     server_pid_file.write_text("54321")
     
     with patch("os.kill") as mock_kill, \
-         patch("coretext.cli.commands.asyncio.run") as mock_asyncio_run:
+         patch("coretext.cli.commands.asyncio.run"):
         
         result = runner.invoke(app, ["stop", "--project-root", str(tmp_path)])
         

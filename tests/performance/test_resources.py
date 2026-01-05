@@ -3,9 +3,6 @@ import psutil
 import subprocess
 import sys
 import time
-import os
-import signal
-from pathlib import Path
 
 @pytest.mark.performance
 def test_daemon_idle_memory(tmp_path):

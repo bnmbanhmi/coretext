@@ -16,13 +16,13 @@ async def test_sync_integration_simulated(tmp_path: Path):
     (project_root / ".git").mkdir()
     
     # Mock Git Utils
-    with patch("coretext.cli.commands.get_last_commit_files", return_value=["doc1.md"]) as mock_last_commit, \
-         patch("coretext.cli.commands.get_current_commit_hash", return_value="hash123") as mock_hash, \
-         patch("coretext.cli.commands.get_head_content", return_value="content") as mock_content, \
+    with patch("coretext.cli.commands.get_last_commit_files", return_value=["doc1.md"]), \
+         patch("coretext.cli.commands.get_current_commit_hash", return_value="hash123"), \
+         patch("coretext.cli.commands.get_head_content", return_value="content"), \
          patch("coretext.cli.commands.SurrealDBClient") as MockDBClient, \
          patch("coretext.cli.commands.AsyncSurreal") as MockAsyncSurreal, \
-         patch("coretext.cli.commands.SchemaMapper") as MockSchemaMapper, \
-         patch("coretext.cli.commands.MarkdownParser") as MockParser, \
+         patch("coretext.cli.commands.SchemaMapper"), \
+         patch("coretext.cli.commands.MarkdownParser"), \
          patch("coretext.cli.commands.SyncEngine") as MockEngine:
 
         # Setup Mock DB Client (management client)

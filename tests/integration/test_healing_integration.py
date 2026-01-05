@@ -1,10 +1,8 @@
 import pytest
-import asyncio
 from surrealdb import AsyncSurreal
 from coretext.core.graph.manager import GraphManager
 from coretext.core.graph.models import BaseNode, BaseEdge
-from coretext.core.parser.schema import SchemaMapper
-from coretext.server.dependencies import get_schema_mapper, get_vector_embedder # leveraging dependency logic if possible
+from coretext.server.dependencies import get_schema_mapper # leveraging dependency logic if possible
 
 # Helper to get graph manager with real DB
 async def get_real_graph_manager(db):

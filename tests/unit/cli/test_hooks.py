@@ -205,10 +205,8 @@ async def test_post_commit_hook_detached_fail(
     mock_surreal_cls_instance.__aenter__.return_value = mock_surreal_instance
 
     # Mock GraphManager
-    mock_graph_manager_instance = mock_graph_manager_cls.return_value
 
     # Mock MarkdownParser
-    mock_parser_instance = mock_parser_cls.return_value
 
     # Mock SyncEngine to fail
     mock_sync_engine_instance = mock_sync_engine_cls.return_value
