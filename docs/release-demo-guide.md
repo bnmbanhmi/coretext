@@ -98,12 +98,64 @@ git commit -m "Add valid demo story"
 ```
 **Verify:** **Commit SUCCEEDS.** Post-commit hook triggers sync.
 
-### 4.2. Database Verification
+### 4.2. Database Verification (The Truth)
+
+You can verify the data using the CLI or the **Surrealist** app (recommended for visual inspection).
+
+**Option A: CLI Check**
 ```bash
-# Using surreal sql CLI (or open Surrealist at ws://localhost:8000/rpc)
 echo "SELECT id, node_type, path FROM node WHERE path = 'docs/demo-story.md';" | surreal sql --endpoint http://localhost:8000 --ns coretext --db coretext --user root --pass root
 ```
 **Expectation:** At least two records (file node and the H1 header node).
+
+**Option B: Surrealist App**
+1. Open Surrealist (or web version) and connect to: `ws://localhost:8000/rpc`
+   - **Namespace:** `coretext`
+   - **Database:** `coretext`
+   - **User/Pass:** `root` / `root`
+
+2. **Query 1: Check File Node**
+   ```sql
+   SELECT * FROM node WHERE path = 'docs/demo-story.md';
+   ```
+   **Expectation:** One record with `node_type: 'file'`.
+
+3. **Query 2: Check Header Node**
+   ```sql
+   SELECT * FROM node WHERE node_type = 'header' AND path = 'docs/demo-story.md';
+   ```
+   **Expectation:** Records for the headers (e.g., H1 "Demo Story").
+
+4. **Query 3: Check Relationship**
+   ```sql
+   SELECT * FROM contains WHERE in = (SELECT id FROM node WHERE path = 'docs/demo-story.md');
+   ```
+   **Expectation:** Edges connecting the file node to its header nodes.
+
+**Option C: Advanced Hybrid Retrieval (The Real Power)**
+This step verifies the **Hybrid Search** architecture (Vector + Lexical + Graph). We will find nodes *semantically similar* to the file we just created, but *structurally filtered* to only show Headers.
+
+1. **Run this Hybrid Query in Surrealist:**
+   ```sql
+   -- 1. Grab the "Concept" (Vector) of our new story
+   LET $concept = (SELECT embedding FROM node WHERE path = 'docs/demo-story.md')[0].embedding;
+
+   -- 2. Find related Headers (Vector Similarity + Type Filter)
+   SELECT 
+       path, 
+       node_type, 
+       vector::similarity::cosine(embedding, $concept) AS relevance 
+   FROM node 
+   WHERE 
+       -- Graph/Lexical Constraint: Only look at Headers
+       node_type = 'header' 
+       -- Data Integrity: Ensure they have vectors
+       AND embedding != NONE 
+   -- Semantic Ranking
+   ORDER BY relevance DESC 
+   LIMIT 5;
+   ```
+   **Expectation:** You should see header nodes (likely the file's own headers or other semantically related headers in the graph) ranked by relevance. This proves the **Vector Store** and **Graph Store** are unified.
 
 ---
 

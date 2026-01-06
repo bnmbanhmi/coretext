@@ -189,14 +189,20 @@ class GraphManager:
         
         response = await self.db.query(sql, {"embedding": embedding, "limit": limit})
         
-        # Handle SurrealDB response format
+        # Handle SurrealDB response format robustly
+        results = []
         if isinstance(response, list) and len(response) > 0:
             result_obj = response[0]
             if isinstance(result_obj, dict) and result_obj.get('status') == 'OK':
-                return self._convert_ids(result_obj.get('result', []))
-            return self._convert_ids(response)
-            
-        return []
+                results = result_obj.get('result', [])
+            elif isinstance(result_obj, dict) and 'score' in result_obj:
+                 # Flattened list of dicts (some driver versions)
+                 results = response
+            else:
+                 # Fallback/Direct list
+                 results = response
+
+        return self._convert_ids(results)
 
     async def ingest(self, nodes: List[BaseNode], edges: List[BaseEdge], batch_size: int = 100) -> SyncReport:
         """

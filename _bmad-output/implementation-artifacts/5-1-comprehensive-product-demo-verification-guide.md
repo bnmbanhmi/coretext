@@ -14,11 +14,13 @@ As a Product Owner, I want a comprehensive demo guide covering all features from
 * [x] Covers: Project Init, Database Sync, Agent Context Retrieval (MCP), CLI Tools, and Reliability features.
 * [x] Includes step-by-step instructions and expected outcomes.
 * [x] Aggregates existing demo steps from previous Epics.
+* [x] Includes Advanced Hybrid Retrieval (Vector + Graph) validation steps for SurrealDB.
 
 ## Tasks
 - [x] Aggregate Epic 1 (Foundation) steps.
 - [x] Aggregate Epic 2 (MCP/Semantic) steps.
 - [x] Aggregate Epic 3 (Developer Tools) steps.
 - [x] Aggregate Epic 4 (Resilience/Performance) steps.
+- [x] Add Advanced Hybrid Retrieval (Vector + Graph) verification steps for SurrealDB.
 - [x] Polish and organize into a cohesive flow.
 - [x] Verify links and commands.

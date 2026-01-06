@@ -113,10 +113,11 @@ async def search_topology(
     graph_manager: GraphManager = Depends(get_graph_manager)
 ):
     """
-    Search the knowledge graph for topological connections using semantic similarity.
+    Search the knowledge graph for topological connections using hybrid semantic similarity.
     
-    This tool allows AI agents to understand project structure and dependencies by finding
-    nodes (Files, Headers) relevant to a natural language query.
+    This tool allows AI agents to perform "Hybrid Retrieval" by finding nodes (Files, Headers)
+    that are semantically relevant to a natural language query, effectively combining
+    Vector Search (Meaning) with Graph Context.
     
     Args:
         request: The search request containing query and limit.
@@ -127,7 +128,7 @@ async def search_topology(
 
     Example I/O:
         Input: {"query": "authentication logic", "limit": 2}
-        Output: {"results": [{"id": "file:auth.py", "score": 0.92}, {"id": "file:main.py", "score": 0.85}]}
+        Output: {"results": [{"id": "file:auth.py", "score": 0.92, "node_type": "file"}, {"id": "file:main.py", "score": 0.85, "node_type": "file"}]}
     """
     try:
         results = await graph_manager.search_topology(request.query, limit=request.limit)
