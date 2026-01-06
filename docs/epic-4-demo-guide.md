@@ -16,7 +16,7 @@
 **Why**: Empty repos don't show performance issues.
 **Action**:
 ```bash
-python scripts/generate_stress_data.py --output _stress_demo --files 50 --density 0.3
+python3 scripts/generate_stress_data.py _stress_demo --file-count 50 --link-density 5
 ```
 **Verify**: Folder `_stress_demo` exists with ~50 files.
 
@@ -26,7 +26,7 @@ python scripts/generate_stress_data.py --output _stress_demo --files 50 --densit
 **Why**: Ensure MCP tools respond <500ms even with load.
 **Action**:
 ```bash
-python scripts/benchmark_latency.py --dir _stress_demo
+python scripts/benchmark_latency.py
 ```
 **Verify**: Output shows p95 latency < 500ms.
 
