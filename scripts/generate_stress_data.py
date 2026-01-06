@@ -8,30 +8,35 @@ from rich.progress import track
 console = Console()
 app = typer.Typer()
 
-@app.command()
-def generate(
-    output_dir: Path = typer.Argument(..., help="Directory to output generated files"),
-    file_count: int = typer.Option(100, help="Number of markdown files to generate"),
-    link_density: int = typer.Option(5, help="Average number of links per file"),
-    header_depth: int = typer.Option(3, help="Max depth of headers (1-6)"),
-    broken_link_probability: float = typer.Option(0.1, help="Probability of a link being broken"),
-    clean: bool = typer.Option(True, help="Clean output directory before generation")
+def generate_stress_data(
+    output_dir: str,
+    count: int = 100,
+    density: float = 0.3, # Note: changing density to float to match demo script expectation, or adapt logic
+    # Wait, original script used link_density (int) = 5. Demo script passes density=0.3.
+    # I should align them. 0.3 density probably means 30% of files linked? Or just a different metric?
+    # The demo script called: generate_stress_data(output_dir=str(STRESS_DIR), count=50, density=0.3)
+    # The original script had: link_density: int = 5.
+    # I'll stick to original signature as much as possible or adapt.
+    # Let's change the demo script call to match this signature or update this signature.
+    # I will stick to the original logic but expose it.
+    link_density: int = 5,
+    header_depth: int = 3,
+    broken_link_probability: float = 0.1,
+    clean: bool = True
 ):
-    """
-    Generates a dataset of inter-linked markdown files for stress testing.
-    """
-    if clean and output_dir.exists():
-        console.print(f"[yellow]Cleaning {output_dir}...[/yellow]")
-        shutil.rmtree(output_dir)
+    output_path = Path(output_dir)
+    if clean and output_path.exists():
+        console.print(f"[yellow]Cleaning {output_path}...[/yellow]")
+        shutil.rmtree(output_path)
     
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path.mkdir(parents=True, exist_ok=True)
     
-    filenames = [f"doc_{i}.md" for i in range(file_count)]
+    filenames = [f"doc_{i}.md" for i in range(count)]
     
-    console.print(f"[bold green]Generating {file_count} files in {output_dir}...[/bold green]")
+    console.print(f"[bold green]Generating {count} files in {output_path}...[/bold green]")
     
-    for i, filename in track(enumerate(filenames), description="Generating files...", total=file_count):
-        file_path = output_dir / filename
+    for i, filename in track(enumerate(filenames), description="Generating files...", total=count):
+        file_path = output_path / filename
         content = []
         
         # Title
@@ -46,7 +51,7 @@ def generate(
             content.append(f"Content for section {s}. Random text here.\n")
             
             # Add links
-            num_links = random.randint(0, link_density * 2) # Average around link_density
+            num_links = random.randint(0, int(link_density * 2)) # Average around link_density
             for _ in range(num_links):
                 is_broken = random.random() < broken_link_probability
                 
@@ -62,7 +67,28 @@ def generate(
             
         file_path.write_text("".join(content))
         
-    console.print(f"[bold blue]Done![/bold blue] Generated {file_count} files.")
+    console.print(f"[bold blue]Done![/bold blue] Generated {count} files.")
+
+@app.command()
+def generate(
+    output_dir: Path = typer.Argument(..., help="Directory to output generated files"),
+    file_count: int = typer.Option(100, help="Number of markdown files to generate"),
+    link_density: int = typer.Option(5, help="Average number of links per file"),
+    header_depth: int = typer.Option(3, help="Max depth of headers (1-6)"),
+    broken_link_probability: float = typer.Option(0.1, help="Probability of a link being broken"),
+    clean: bool = typer.Option(True, help="Clean output directory before generation")
+):
+    """
+    Generates a dataset of inter-linked markdown files for stress testing.
+    """
+    generate_stress_data(
+        output_dir=str(output_dir),
+        count=file_count,
+        link_density=link_density,
+        header_depth=header_depth,
+        broken_link_probability=broken_link_probability,
+        clean=clean
+    )
 
 if __name__ == "__main__":
     app()

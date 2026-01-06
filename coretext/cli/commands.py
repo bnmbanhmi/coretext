@@ -149,6 +149,128 @@ def lint(
         raise typer.Exit(code=1)
 
 @app.command()
+def sync(
+    target_dir: Path = typer.Option(Path.cwd(), "--dir", "-d", help="Directory to sync."),
+    project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p", help="Root directory of the project.")
+):
+    """
+    Manually synchronizes markdown files in the specified directory to the graph.
+    """
+    console = Console()
+    
+    config_path = project_root / ".coretext" / "config.yaml"
+    if not config_path.exists():
+        console.print(Panel("[red]Coretext not initialized.[/red] Run 'coretext init' first.", title="Error"))
+        raise typer.Exit(code=1)
+        
+    config = load_config(project_root)
+    db_client = SurrealDBClient(project_root=project_root)
+    
+    # Check health
+    health_info = check_daemon_health(server_port=config.mcp_port, db_port=config.daemon_port, project_root=project_root)
+    if health_info["database"]["status"] != "Running":
+         console.print(Panel("[red]Database is not running.[/red] Run 'coretext start' first.", title="Error"))
+         raise typer.Exit(code=1)
+
+    # Find files
+    target_path = target_dir.resolve()
+    files = list(target_path.glob("*.md"))
+    if not files:
+        console.print(f"[yellow]No markdown files found in {target_path}[/yellow]")
+        return
+        
+    file_paths = [str(f) for f in files]
+    console.print(f"[bold green]Syncing {len(file_paths)} files from {target_path}...[/bold green]")
+    
+    async def _run_sync():
+        async with AsyncSurreal(f"ws://localhost:{config.daemon_port}/rpc") as db:
+            await db.use("coretext", "coretext")
+            
+            schema_map_path = project_root / ".coretext" / "schema_map.yaml"
+            schema_mapper = SchemaMapper(schema_map_path)
+            
+            graph_manager = GraphManager(db, schema_mapper)
+            parser = MarkdownParser(project_root=project_root)
+            engine = SyncEngine(parser=parser, graph_manager=graph_manager, project_root=project_root)
+            
+            # Use disk content
+            def content_provider(file_path_str: str) -> str:
+                return Path(file_path_str).read_text(encoding="utf-8")
+
+            result = await engine.process_files(file_paths, mode=SyncMode.WRITE, content_provider=content_provider)
+            
+            if not result.success:
+                console.print("[red]Sync Failed:[/red]")
+                for err in result.errors:
+                    console.print(f"  - {err}")
+                sys.exit(1)
+            else:
+                console.print(f"[green]Successfully synced {result.processed_count} files.[/green]")
+                
+                # Prune deleted files logic
+                console.print("[yellow]Checking for deleted files...[/yellow]")
+                try:
+                    rel_dir = target_path.relative_to(project_root)
+                    prefix = str(rel_dir)
+                    if prefix == ".":
+                        prefix = ""
+                except ValueError:
+                    console.print("[red]Target directory is outside project root. Skipping prune.[/red]")
+                    return
+
+                # Fetch all file nodes to check for deletions
+                query = "SELECT id, path, node_type FROM node"
+                try:
+                    results = await db.query(query)
+                    
+                    nodes_to_delete = []
+                    db_nodes = []
+                    
+                    # Handle varying response formats from SurrealDB client
+                    if isinstance(results, list) and len(results) > 0:
+                        first_item = results[0]
+                        if isinstance(first_item, dict):
+                            if 'result' in first_item:
+                                db_nodes = first_item['result'] # Wrapped result
+                            elif 'id' in first_item:
+                                db_nodes = results # Flat list of records
+                        elif isinstance(first_item, list):
+                            db_nodes = first_item # List of lists
+                    
+                    for node in db_nodes:
+                        # Only check file nodes (safety check)
+                        if node.get('node_type') != 'file':
+                            continue
+
+                        node_path = node.get('path')
+                        if node_path and (not prefix or node_path.startswith(prefix)):
+                            full_path = project_root / node_path
+                            if not full_path.exists():
+                                nodes_to_delete.append(node['id'])
+                    
+                    if nodes_to_delete:
+                        console.print(f"[yellow]Found {len(nodes_to_delete)} deleted files in DB. Removing...[/yellow]")
+                        for nid in nodes_to_delete:
+                            await graph_manager.delete_node(nid)
+                        console.print(f"[green]Removed {len(nodes_to_delete)} orphaned nodes.[/green]")
+                    else:
+                        console.print("[dim]No orphaned nodes found.[/dim]")
+
+                except Exception as e:
+                    console.print(f"[red]Prune check failed: {e}[/red]")
+
+                # Run self-healing (Edge Pruning)
+                deleted = await graph_manager.prune_dangling_edges()
+                if deleted > 0:
+                     console.print(f"[yellow]Self-Healing: Pruned {deleted} dangling edges.[/yellow]")
+
+    try:
+        asyncio.run(_run_sync())
+    except Exception as e:
+        console.print(f"[red]Error during sync: {e}[/red]")
+        sys.exit(1)
+
+@app.command()
 def init(
     project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p", help="Root directory of the project."),
     surreal_version: str = typer.Option("2.0.4", "--surreal-version", "-s", help="Version of SurrealDB to download.")
