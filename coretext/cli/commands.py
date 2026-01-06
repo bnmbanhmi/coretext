@@ -188,7 +188,7 @@ def sync(
              target_path = potential_path.resolve()
              console.print(f"[dim]Using configured docs directory: {target_path}[/dim]")
 
-    files = list(target_path.glob("*.md"))
+    files = list(target_path.rglob("*.md"))
     if not files:
         console.print(f"[yellow]No markdown files found in {target_path}[/yellow]")
         return

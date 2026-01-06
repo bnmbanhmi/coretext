@@ -29,3 +29,8 @@ SELECT count() FROM contains;
 SELECT count() FROM node GROUP ALL;
 SELECT count() FROM contains GROUP ALL;
 SELECT path, array::len(embedding) as embed_len FROM node WHERE path = 'demo/hybrid.md';
+SELECT id, node_type, path FROM node WHERE path = 'demo/demo-story.md';
+SELECT out.path as target, out.node_type as type FROM references WHERE in.path = 'demo/demo-story.md';
+SELECT path FROM node WHERE node_type = 'file';
+SELECT id, node_type, path FROM node WHERE path = 'demo/demo-story.md';
+SELECT out.path as target_file FROM references WHERE in.path = 'demo/demo-story.md';

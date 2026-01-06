@@ -516,55 +516,24 @@ As a Product Owner, I want a comprehensive demo guide covering all features from
 
 **Prerequisites:** Epics 1-4.
 
-### Story 5.2: Gap Analysis & Missing Feature Identification
+### Story 5.2: Gap Analysis & Closure (Directory Selection & Fixes)
 
-As a Product Owner, I want to execute the demo guide and identify any missing features or bugs, so that I have a clear backlog of "Must-Have" items for the final release.
+As a Developer using CoreText, I want to identify and close gaps in the product's features, so that the system is fully ready for release.
 
 **Acceptance Criteria:**
 *   Given the `release-demo-guide.md` exists
-*   When I execute the guide against the current codebase
-*   Then a "Gap Analysis Report" is produced (`docs/gap-analysis.md`).
-*   And it lists: Missing features, Bugs, and UX friction points.
-*   And new stories are drafted for any critical gaps.
+*   When I execute the guide and identify gaps
+*   Then the system is updated with missing features (e.g., `docs_dir` scoping).
+*   And bugs (e.g., vector embedding issues, port conflicts) are resolved.
+*   And the Knowledge Graph integrity is verified via the demo guide.
 
 **Technical Notes:**
-*   Execute the demo guide manually or via script.
-*   Document findings in a structured report.
+*   Implement `docs_dir` configuration.
+*   Resolve SurrealDB connection and port stability issues.
+*   Fix Vector Embedding generation and safety checks.
+*   Execute and verify the demo guide.
 
 **Prerequisites:** Story 5.1.
-
-### Story 5.3: Gap Closure Implementation
-
-As a Developer, I want to implement the missing features and fixes identified in the Gap Analysis, so that the product meets all release requirements.
-
-**Acceptance Criteria:**
-*   Given the Gap Analysis Report
-*   When I implement the identified fixes
-*   Then all critical items are resolved.
-*   And code is updated, tested, and verified.
-
-**Technical Notes:**
-*   Scope will vary based on findings.
-*   May involve creating sub-tasks or new stories if gaps are large.
-
-**Prerequisites:** Story 5.2.
-
-### Story 5.4: Final Release Demo Guide & Polish
-
-As a Product Owner, I want a finalized demo guide and a polished system, so that I can confidently demonstrate the product to stakeholders.
-
-**Acceptance Criteria:**
-*   Given all gaps are closed
-*   When I update `docs/release-demo-guide.md`
-*   Then it reflects the final system state.
-*   And the CLI output and error messages are polished and consistent.
-*   And a final "Green Build" verification is recorded.
-
-**Technical Notes:**
-*   Review all CLI output strings for consistency (`Rich` formatting).
-*   Ensure documentation matches the code.
-
-**Prerequisites:** Story 5.3.
 
 ---
 

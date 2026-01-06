@@ -174,6 +174,10 @@ class GraphManager:
         """
         embedding = await self.embedder.encode(query, task_type="search_query")
         
+        if not embedding:
+            # Should not happen with current embedder, but safety check for "Argument 2 ... NONE" error
+            return []
+        
         # Use simple vector similarity search
         # Explicitly select fields to avoid returning 'embedding' (large vector)
         sql = """

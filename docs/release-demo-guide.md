@@ -129,13 +129,25 @@ git commit -m "This commit should fail"
 **Goal:** Verify valid changes are synced to SurrealDB.
 
 ### 4.1. Fix and Sync
-Remove the broken link and commit:
-```bash
-# Revert the broken line
-head -n -1 demo/demo-story.md > demo/demo-story.tmp && mv demo/demo-story.tmp demo/demo-story.md
-git add demo/demo-story.md
-git commit -m "Add valid demo story"
-```
+Fix the broken link by pointing it to a valid file. To ensure the target exists in our scoped graph, we'll create a new file in the demo folder.
+
+1.  **Create a target file:**
+    ```bash
+    echo "# Reference Target\nThis file is referenced by the story." > demo/reference-target.md
+    ```
+
+2.  **Fix the link in the story:**
+    ```bash
+    # Fix the link to point to reference-target.md
+    sed -i '' 's|\[Broken Link\](\./does-not-exist\.md)|[Valid Link](./reference-target.md)|' demo/demo-story.md
+    
+    # Verify content
+    cat demo/demo-story.md
+    
+    # Commit both files
+    git add demo/demo-story.md demo/reference-target.md
+    git commit -m "Add valid demo story with link to target"
+    ```
 **Verify:** **Commit SUCCEEDS.** Post-commit hook triggers sync.
 
 ### 4.2. Database Verification (The Truth)
@@ -148,7 +160,7 @@ echo "SELECT id, node_type, path FROM node WHERE path = 'demo/demo-story.md';" |
 ```
 **Expectation:** At least two records (file node and the H1 header node).
 
-**Option B: Surrealist App**
+**Option B: Surrealist App (Data View)**
 1. Open Surrealist (or web version) and connect to: `ws://localhost:8010/rpc`
    - **Namespace:** `coretext`
    - **Database:** `coretext`
@@ -160,19 +172,37 @@ echo "SELECT id, node_type, path FROM node WHERE path = 'demo/demo-story.md';" |
    ```
    **Expectation:** One record with `node_type: 'file'`.
 
-3. **Query 2: Check Header Node**
+3. **Query 2: Check Header Node & Hierarchy (parent_of)**
    ```sql
-   SELECT * FROM node WHERE node_type = 'header' AND path = 'demo/demo-story.md';
+   SELECT 
+       id, 
+       title, 
+       <-parent_of<-node.title AS parent_doc 
+   FROM node 
+   WHERE node_type = 'header' AND path = 'demo/demo-story.md';
    ```
-   **Expectation:** Records for the headers (e.g., H1 "Demo Story").
+   **Expectation:** Header nodes showing they are children (`parent_of` incoming) of the File node.
 
-4. **Query 3: Check Relationship**
+4. **Query 3: Check References (Valid Link)**
    ```sql
-   SELECT * FROM contains WHERE in = (SELECT id FROM node WHERE path = 'demo/demo-story.md');
+   SELECT 
+       out.path as target_file, 
+       out.node_type as target_type 
+   FROM references 
+   WHERE in.path = 'demo/demo-story.md';
    ```
-   **Expectation:** Edges connecting the file node to its header nodes.
+   **Expectation:** One record where `target_file` is `demo/reference-target.md`.
 
-**Option C: Advanced Hybrid Retrieval (The Real Power)**
+**Option C: Surrealist Graph Visualization**
+1. Switch to the **Designer** or **Graph** view in Surrealist.
+2. Search for the node `demo/demo-story.md`.
+3. Double-click to expand relationships.
+   - **Verify:** You see lines connecting to:
+     - **Header Nodes** (via `contains` or `parent_of` edges).
+     - **reference-target.md** (via `references` edge).
+   - This visual confirmation proves the graph topology is intact.
+
+**Option D: Advanced Hybrid Retrieval (The Real Power)**
 This step verifies the **Hybrid Search** architecture (Vector + Lexical + Graph). We will find nodes *semantically similar* to the file we just created, but *structurally filtered* to only show Headers.
 
 1. **Run this Hybrid Query in Surrealist:**

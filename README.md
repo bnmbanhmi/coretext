@@ -1,47 +1,131 @@
-### Diagrams
+# CoreText
 
-#### C4 Container Diagram
-![C4 Container Diagram](diagram/images/c4_container.png)
+> **The Missing Context Layer for AI Agents**
 
-#### Data Model Diagram
-![Data Model Diagram](diagram/images/data_model.png)
+**CoreText** is a local-first, AI-native knowledge graph that automatically synchronizes with your Git repository. It solves the "Lost in the Middle" problem for AI coding agents by providing a structured, topologically-aware "Second Brain" that bridges the gap between your files and the AI's understanding.
 
-#### Sequence Diagram
-![Sequence Diagram](diagram/images/sequence.png)
+---
 
-#### Swimland Activity Diagram
-![Swimlane Activity Diagram](diagram/images/swimlane_activity.png)
+## Why CoreText?
 
-#### Existing Documents Diagram
-![Docs With Origin Diagram](diagram/images/docs_with_origin.png)
+AI agents struggle with large codebases. RAG (Retrieval Augmented Generation) helps, but it often misses the *structure* of your project—the dependencies between files, the hierarchy of documents, and the architectural constraints defined in your specs.
 
-## Configuration
+**CoreText changes this by:**
+1.  **Treating Markdown as Source Code**: It parses your documentation (specs, architecture, stories) into a structured graph, not just text chunks.
+2.  **Invisible Synchronization**: A `git hook` ensures your knowledge graph is always perfectly synced with your codebase. No manual updates required.
+3.  **Hybrid Search**: Combines **Vector Search** (Meaning) with **Graph Traversal** (Topology) to give agents precise context.
+4.  **Local & Private**: Everything runs locally on your machine using [SurrealDB](https://surrealdb.com). No data leaves your perimeter.
 
-CoreText is configured via `.coretext/config.yaml` in your project root.
+---
 
-```yaml
-# CoreText Configuration
-daemon_port: 8010
-mcp_port: 8001
-log_level: DEBUG
-docs_dir: .  # Directory containing your markdown documents (default: project root)
-system:
-  memory_limit_mb: 50
-  background_priority: true
+## Key Features
+
+*   **⚡ Git-Native Sync**: Automatically updates the graph on every `git commit`.
+*   **🧠 Hybrid Retrieval**: Semantic search + Graph dependency traversal.
+*   **🤖 Agent-Ready (MCP)**: Exposes a Model Context Protocol (MCP) server for Claude, Gemini, and other agents.
+*   **🛡️ Integrity Checks**: Lints your graph for broken links and dangling references before you commit.
+*   **📍 Topology Awareness**: Understands `depends_on`, `parent_of`, and `references` relationships.
+
+---
+
+## Installation
+
+CoreText is a Python application managed via `poetry`.
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/coretext.git
+cd coretext
+
+# Install dependencies
+poetry install
 ```
 
-*   **docs_dir**: Specifies the folder where CoreText should look for Markdown files. Useful for excluding irrelevant folders like `node_modules` or `build`.
+---
 
-## Connecting with Surrealist
+## Quick Start
 
-To explore your data using [Surrealist](https://surrealist.app/):
+### 1. Initialize the Project
+Sets up the local SurrealDB instance, downloads the embedding model, and configures the project.
 
-1.  Start the CoreText daemon: `coretext start`
-2.  Open Surrealist.
-3.  Create a new connection with these settings:
-    *   **Endpoint:** `http://localhost:8010` (or `ws://localhost:8010/rpc`)
-    *   **Namespace:** `coretext`
-    *   **Database:** `coretext`
-    *   **Authentication:** `None` (or `Anonymous`)
+```bash
+poetry run coretext init
+```
 
+### 2. Start the Daemon
+Runs the SurrealDB database and the MCP Server in the background.
 
+```bash
+poetry run coretext start
+```
+
+### 3. Check Status
+Verifies that the daemon is running and healthy.
+
+```bash
+poetry run coretext status
+```
+
+### 4. Create Content
+Use built-in templates to create structured documentation.
+
+```bash
+poetry run coretext new story docs/my-new-feature.md
+```
+
+### 5. Inspect the Graph
+Visualize the dependencies of any file or node.
+
+```bash
+poetry run coretext inspect docs/my-new-feature.md
+```
+
+---
+
+## Connecting an AI Agent (MCP)
+
+CoreText exposes a **Model Context Protocol (MCP)** server at `http://localhost:8001/mcp`. You can connect any MCP-compliant agent (like Claude Desktop or Gemini CLI) to give it access to your knowledge graph.
+
+### Capabilities Exposed:
+*   `search_topology(query: str)`: Finds nodes semantically related to a concept.
+*   `get_dependencies(node_id: str)`: Retrieves the dependency tree for a specific file or concept.
+
+---
+
+## Architecture
+
+CoreText operates as a background daemon composed of:
+
+1.  **Sync Engine**: Watches your Git repository and uses AST parsing to transform Markdown files into graph nodes.
+2.  **SurrealDB**: A multi-model database storing the graph (nodes/edges) and vector embeddings.
+3.  **MCP Server**: A FastAPI server that provides the interface for AI agents.
+
+### Data Model
+*   **Nodes**: Files (`.md`) and Headers (`# H1`, `## H2`).
+*   **Edges**: `contains` (File -> Header), `parent_of` (H1 -> H2), `references` (Link -> Target).
+
+---
+
+## Development & Contributing
+
+### Running Tests
+```bash
+poetry run pytest
+```
+
+### Linting
+```bash
+poetry run coretext lint
+```
+
+### Manual Sync
+If you need to force a sync without committing:
+```bash
+poetry run coretext sync
+```
+
+---
+
+## License
+
+[MIT License](LICENSE)
