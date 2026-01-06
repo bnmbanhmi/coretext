@@ -17,8 +17,9 @@ async def get_db_client():
     Dependency to provide a SurrealDB client connection.
     Connects to the local daemon at default port.
     """
-    db = AsyncSurreal("ws://localhost:8000/rpc")
+    db = AsyncSurreal("ws://localhost:8010/rpc")
     await db.connect()
+    # No signin required in unauthenticated mode
     await db.use("coretext", "coretext")
     try:
         yield db

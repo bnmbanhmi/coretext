@@ -193,6 +193,7 @@ def sync(
     
     async def _run_sync():
         async with AsyncSurreal(f"ws://localhost:{config.daemon_port}/rpc") as db:
+            await db.connect()
             await db.use("coretext", "coretext")
             
             schema_map_path = project_root / ".coretext" / "schema_map.yaml"
@@ -570,6 +571,8 @@ async def _apply_schema_logic(project_root: Path):
     for i in range(max_retries):
         try:
             async with AsyncSurreal(url) as db:
+                await db.connect()
+                # No signin required in unauthenticated mode
                 await db.use("coretext", "coretext") # Namespace, Database
                 
                 migration = SchemaManager(db, project_root)
@@ -817,6 +820,7 @@ def post_commit_hook(
             # If logging fails, just suppress it to ensure fail-open
             pass
         
+        typer.echo(f"[red]Error Details: {e}[/red]", err=True)
         typer.echo("[yellow][Coretext Warning] Sync failed - queuing for retry[/yellow]", err=True)
         raise typer.Exit(code=0)
 
@@ -870,6 +874,7 @@ async def _post_commit_hook_logic(project_root: Path, detached: bool):
 
             # Connect to SurrealDB
             async with AsyncSurreal(f"ws://localhost:{config.daemon_port}/rpc") as db:
+                await db.connect()
                 await db.use("coretext", "coretext")
 
                 schema_map_path = project_root / ".coretext" / "schema_map.yaml"

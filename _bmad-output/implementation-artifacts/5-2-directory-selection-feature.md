@@ -35,28 +35,39 @@ so that the system is fully ready for release.
   - [x] Update `coretext/server/routers/lint.py`.
   - [x] Ensure `lint_endpoint` reads config and scans the correct directory.
 
-### Upcoming: Gap Analysis & Polishing
-- [ ] Task 5: Execute Release Demo Guide (`docs/release-demo-guide.md`)
-- [ ] Task 6: Document findings in `docs/gap-analysis.md`
-- [ ] Task 7: Propose and implement additional "must-have" features
+### Completed: Gap Analysis - Authentication & Stability
+- [x] Task 5: Resolve Port Conflicts (AC: 2)
+  - [x] Migrated default daemon port from 8000 to 8010 to avoid common system conflicts.
+  - [x] Updated `config.py` and `dependencies.py` to reflect the new default.
+- [x] Task 6: Stabilize SurrealDB Connection (AC: 2)
+  - [x] Implemented a strictly Unauthenticated Mode for local development to bypass SurrealDB 2.x credential issues.
+  - [x] Added explicit `await db.connect()` calls to all database interaction points.
+  - [x] Added a 1-second stabilization delay in `start_surreal_db` to ensure WebSocket readiness.
+- [x] Task 7: Improve Error Visibility (AC: 2)
+  - [x] Updated Git hooks to print fatal errors to stderr instead of failing silently.
+  - [x] Changed default log level to `DEBUG` in config for easier troubleshooting.
 
+### Upcoming: Release Polishing
+- [ ] Task 8: Execute Final Release Demo Guide (`docs/release-demo-guide.md`)
+- [ ] Task 9: Document final release findings in `docs/gap-analysis.md`
+- [ ] Task 10: Implement remaining "nice-to-have" UI/CLI polish
 
 ## Dev Notes
 
-- **Architecture**: This touches the Configuration layer (`config.py`), CLI layer (`commands.py`), and Server layer (`routers/lint.py`).
-- **Patterns**: Follow the existing pattern of loading config via `load_config`.
-- **Validation**: Ensure strict validation of paths to prevent security issues (though primarily local).
+- **Port Strategy**: Moved to 8010/8001 to isolate CoreText from other SurrealDB/FastAPI instances.
+- **Auth Strategy**: Purely unauthenticated local-first mode. Removed all `signin` calls and credential flags.
+- **Connection**: `AsyncSurreal` requires an explicit `connect()` call before `use()`.
 
 ### Project Structure Notes
 
-- **Config**: `coretext/config.py`
-- **CLI**: `coretext/cli/commands.py`
-- **Server**: `coretext/server/routers/lint.py`
+- **Config**: `coretext/config.py` (Default port and log level)
+- **CLI**: `coretext/cli/commands.py` (Sync, Hook, and Schema logic)
+- **Server**: `coretext/server/dependencies.py` (DB client provider)
+- **DB**: `coretext/db/client.py` (Binary startup logic)
 
 ### References
 
-- [Source: _bmad-output/planning-artifacts/epics.md#Epic 3: Developer Workflow Integration & Tooling] (Related to tooling improvements)
-- [Source: README.md#Configuration]
+- [Source: docs/epic-4-demo-guide.md] (Discovery source for these gaps)
 
 ## Dev Agent Record
 
@@ -66,6 +77,19 @@ Gemini-Pro
 
 ### Debug Log References
 
+- [Auth Error]: `{'code': -32000, 'message': 'There was a problem with authentication'}`
+- [Port Conflict]: `Warning: Port 8000 is already in use`
+
 ### Completion Notes List
 
+- Migrated to Port 8010.
+- Implemented unauthenticated mode.
+- Fixed `signin` signature mismatch.
+- Fixed `NameError` in `_apply_schema_logic`.
+
 ### File List
+
+- `coretext/config.py`
+- `coretext/cli/commands.py`
+- `coretext/server/dependencies.py`
+- `coretext/db/client.py`

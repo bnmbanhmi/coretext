@@ -125,8 +125,6 @@ class SurrealDBClient:
             str(self.surreal_path),
             "start",
             "--log", "trace",
-            "--user", "root",
-            "--pass", "root",
             f"rocksdb:{self.db_path}",
             "--bind", f"127.0.0.1:{port}",
             "--unauthenticated"
@@ -167,11 +165,9 @@ class SurrealDBClient:
             str(self.surreal_path),
             "start",
             "--log", "trace",
-            "--user", "root",
-            "--pass", "root",
             f"rocksdb:{self.db_path}",
             "--bind", f"127.0.0.1:{port}",
-            "--unauthenticated" # Disable authentication for local development
+            "--unauthenticated"
         ]
 
         self.process = await asyncio.create_subprocess_exec(
@@ -186,6 +182,8 @@ class SurrealDBClient:
         # Wait for port to be open
         for _ in range(20):
             if is_port_in_use(port):
+                # Extra wait to ensure WS handler is ready
+                await asyncio.sleep(1.0)
                 return
             await asyncio.sleep(0.5)
             

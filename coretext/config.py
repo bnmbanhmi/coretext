@@ -7,10 +7,10 @@ class SystemConfig(BaseModel):
     background_priority: bool = Field(default=True, description="Whether to run background operations at lowest priority")
 
 class Config(BaseModel):
-    daemon_port: int = 8000
+    daemon_port: int = 8010
     mcp_port: int = 8001
-    log_level: str = "INFO"
-    surreal_url: str = "ws://localhost:8000/rpc"
+    log_level: str = "DEBUG"
+    surreal_url: str = "ws://localhost:8010/rpc"
     surreal_ns: str = "coretext"
     surreal_db: str = "coretext"
     docs_dir: str = "."
@@ -32,9 +32,9 @@ def load_config(project_root: Path | None = None) -> Config:
     return Config()
 
 DEFAULT_CONFIG_CONTENT = """# CoreText Configuration
-daemon_port: 8000
+daemon_port: 8010
 mcp_port: 8001
-log_level: INFO
+log_level: DEBUG
 docs_dir: .
 system:
   memory_limit_mb: 50
