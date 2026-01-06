@@ -36,7 +36,7 @@ def run(
 
     async def benchmark_search():
         latencies = []
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             # Warmup
             await client.post(f"{base_url}/mcp/tools/search_topology", json={"query": query})
             
@@ -49,17 +49,17 @@ def run(
 
     async def benchmark_dependencies():
         # First get a valid node
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             # Try to find a node related to the query, or fallback to file nodes
             resp = await client.post(f"{base_url}/mcp/tools/search_topology", json={"query": "doc"})
             data = resp.json()
-            nodes = data.get("nodes", []) if isinstance(data, dict) else []
+            nodes = data.get("results", []) if isinstance(data, dict) else []
             
             if not nodes:
                 # Try a broader search
                 resp = await client.post(f"{base_url}/mcp/tools/search_topology", json={"query": "file"})
                 data = resp.json()
-                nodes = data.get("nodes", []) if isinstance(data, dict) else []
+                nodes = data.get("results", []) if isinstance(data, dict) else []
                 
             if not nodes:
                 console.print("[yellow]No nodes found to test dependencies (index might be empty).[/yellow]")
