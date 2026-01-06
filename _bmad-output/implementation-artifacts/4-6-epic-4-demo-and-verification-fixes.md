@@ -20,12 +20,20 @@ so that I can confidently validate the system's robustness before we call this e
 
 ## Tasks / Subtasks
 
-- [ ] Create `docs/epic-4-demo-guide.md`.
-- [ ] Create/Update `scripts/demo_epic_4.py` to automate the demo steps.
-- [ ] Verify Async Hook behavior (manual or scripted).
-- [ ] Verify Fail-Open behavior.
-- [ ] Verify Self-Healing.
-- [ ] Fix any issues found.
+- [x] Create `docs/epic-4-demo-guide.md`.
+- [x] Create/Update `scripts/demo_epic_4.py` to automate the demo steps.
+- [x] Verify Async Hook behavior (manual or scripted).
+- [x] Verify Fail-Open behavior.
+- [x] Verify Self-Healing.
+- [x] Fix any issues found.
+
+## Dev Agent Record
+
+### File List
+- `coretext/cli/commands.py`
+- `docs/epic-4-demo-guide.md`
+- `scripts/demo_epic_4.py`
+- `scripts/generate_stress_data.py`
 
 ## Dev Notes
 

@@ -11,14 +11,6 @@ app = typer.Typer()
 def generate_stress_data(
     output_dir: str,
     count: int = 100,
-    density: float = 0.3, # Note: changing density to float to match demo script expectation, or adapt logic
-    # Wait, original script used link_density (int) = 5. Demo script passes density=0.3.
-    # I should align them. 0.3 density probably means 30% of files linked? Or just a different metric?
-    # The demo script called: generate_stress_data(output_dir=str(STRESS_DIR), count=50, density=0.3)
-    # The original script had: link_density: int = 5.
-    # I'll stick to original signature as much as possible or adapt.
-    # Let's change the demo script call to match this signature or update this signature.
-    # I will stick to the original logic but expose it.
     link_density: int = 5,
     header_depth: int = 3,
     broken_link_probability: float = 0.1,

@@ -11,8 +11,11 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt, Confirm
 
-# Add project root to path
-sys.path.append(str(Path(__file__).parent.parent))
+# Add project root to path if coretext is not installed/found
+try:
+    import coretext
+except ImportError:
+    sys.path.append(str(Path(__file__).parent.parent))
 
 from coretext.core.sync.engine import SyncEngine, SyncMode
 from scripts.generate_stress_data import generate_stress_data
