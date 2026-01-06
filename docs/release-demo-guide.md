@@ -39,11 +39,12 @@ poetry run coretext status
 **Goal:** Verify we can create standard BMAD documents using templates.
 
 ### 2.1. Create a New Document
+We will use a dedicated `demo/` folder to keep our demo artifacts separate from the rest of the project.
 ```bash
-poetry run coretext new story docs/demo-story.md
+poetry run coretext new story demo/demo-story.md
 ```
 **Verify:**
-- `docs/demo-story.md` created with standard Story template structure.
+- `demo/demo-story.md` created with standard Story template structure.
 
 ### 2.2. List Available Templates
 ```bash
@@ -63,21 +64,21 @@ poetry run coretext install-hooks
 ```
 
 ### 3.2. Introduce a Validation Error
-Edit `docs/demo-story.md` to add a broken link:
+Edit `demo/demo-story.md` to add a broken link:
 ```bash
-echo "\n[Broken Link](./does-not-exist.md)" >> docs/demo-story.md
+echo "\n[Broken Link](./does-not-exist.md)" >> demo/demo-story.md
 ```
 
 ### 3.3. Run Linter
 ```bash
 poetry run coretext lint
 ```
-**Verify:** Reports **1 Issue** (Broken Link) in `docs/demo-story.md`.
+**Verify:** Reports **1 Issue** (Broken Link) in `demo/demo-story.md`.
 
 ### 3.4. Pre-commit Protection
 Attempt to commit the broken file:
 ```bash
-git add docs/demo-story.md
+git add demo/demo-story.md
 git commit -m "This commit should fail"
 ```
 **Verify:** **Commit FAILs.** Error message reports the broken link.
@@ -92,8 +93,8 @@ git commit -m "This commit should fail"
 Remove the broken link and commit:
 ```bash
 # Revert the broken line
-head -n -1 docs/demo-story.md > docs/demo-story.tmp && mv docs/demo-story.tmp docs/demo-story.md
-git add docs/demo-story.md
+head -n -1 demo/demo-story.md > demo/demo-story.tmp && mv demo/demo-story.tmp demo/demo-story.md
+git add demo/demo-story.md
 git commit -m "Add valid demo story"
 ```
 **Verify:** **Commit SUCCEEDS.** Post-commit hook triggers sync.
@@ -104,7 +105,7 @@ You can verify the data using the CLI or the **Surrealist** app (recommended for
 
 **Option A: CLI Check**
 ```bash
-echo "SELECT id, node_type, path FROM node WHERE path = 'docs/demo-story.md';" | surreal sql --endpoint http://localhost:8000 --ns coretext --db coretext --user root --pass root
+echo "SELECT id, node_type, path FROM node WHERE path = 'demo/demo-story.md';" | surreal sql --endpoint http://localhost:8000 --ns coretext --db coretext --user root --pass root
 ```
 **Expectation:** At least two records (file node and the H1 header node).
 
@@ -116,19 +117,19 @@ echo "SELECT id, node_type, path FROM node WHERE path = 'docs/demo-story.md';" |
 
 2. **Query 1: Check File Node**
    ```sql
-   SELECT * FROM node WHERE path = 'docs/demo-story.md';
+   SELECT * FROM node WHERE path = 'demo/demo-story.md';
    ```
    **Expectation:** One record with `node_type: 'file'`.
 
 3. **Query 2: Check Header Node**
    ```sql
-   SELECT * FROM node WHERE node_type = 'header' AND path = 'docs/demo-story.md';
+   SELECT * FROM node WHERE node_type = 'header' AND path = 'demo/demo-story.md';
    ```
    **Expectation:** Records for the headers (e.g., H1 "Demo Story").
 
 4. **Query 3: Check Relationship**
    ```sql
-   SELECT * FROM contains WHERE in = (SELECT id FROM node WHERE path = 'docs/demo-story.md');
+   SELECT * FROM contains WHERE in = (SELECT id FROM node WHERE path = 'demo/demo-story.md');
    ```
    **Expectation:** Edges connecting the file node to its header nodes.
 
@@ -138,7 +139,7 @@ This step verifies the **Hybrid Search** architecture (Vector + Lexical + Graph)
 1. **Run this Hybrid Query in Surrealist:**
    ```sql
    -- 1. Grab the "Concept" (Vector) of our new story
-   LET $concept = (SELECT embedding FROM node WHERE path = 'docs/demo-story.md')[0].embedding;
+   LET $concept = (SELECT embedding FROM node WHERE path = 'demo/demo-story.md')[0].embedding;
 
    -- 2. Find related Headers (Vector Similarity + Type Filter)
    SELECT 
@@ -165,7 +166,7 @@ This step verifies the **Hybrid Search** architecture (Vector + Lexical + Graph)
 
 ### 5.1. Inspect Node
 ```bash
-poetry run coretext inspect docs/demo-story.md
+poetry run coretext inspect demo/demo-story.md
 ```
 **Verify:** Displays a **Tree View** showing the file as root and its sections as branches.
 
@@ -187,13 +188,13 @@ curl -X POST http://127.0.0.1:8001/mcp/tools/search_topology \
      -H "Content-Type: application/json" \
      -d '{"query": "User Story", "limit": 3}'
 ```
-**Verify:** Returns relevant nodes. `docs/demo-story.md` should be present.
+**Verify:** Returns relevant nodes. `demo/demo-story.md` should be present.
 
 ### 6.3. Dependency Retrieval
 ```bash
 curl -X POST http://127.0.0.1:8001/mcp/tools/get_dependencies \
      -H "Content-Type: application/json" \
-     -d '{"node_identifier": "file:docs/demo-story.md", "depth": 1}'
+     -d '{"node_identifier": "file:demo/demo-story.md", "depth": 1}'
 ```
 **Verify:** Returns JSON structure of the file dependencies.
 
@@ -217,9 +218,9 @@ python3 scripts/demo_epic_4.py --scenario fail-open
 **Verify:** Script simulates a crash but exits with Code 0, ensuring Git workflow isn't blocked.
 
 ### 7.3. Self-Healing Graph
-1. Delete `docs/demo-story.md` manually.
+1. Delete `demo/demo-story.md` manually.
 2. Run `git commit` (e.g., on a different file) or `coretext sync`.
-3. Check DB: `SELECT count() FROM node WHERE path = 'docs/demo-story.md' `.
+3. Check DB: `SELECT count() FROM node WHERE path = 'demo/demo-story.md' `.
 **Verify:** Node is automatically removed from graph.
 
 ---
@@ -228,7 +229,8 @@ python3 scripts/demo_epic_4.py --scenario fail-open
 
 Remove demo files and stop daemon:
 ```bash
-git rm docs/demo-story.md
+git rm demo/demo-story.md
+rmdir demo
 git commit -m "Cleanup demo files"
 poetry run coretext stop
 ```
