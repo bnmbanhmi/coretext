@@ -5,6 +5,7 @@ from pathlib import Path
 
 from coretext.core.lint.manager import LintManager
 from coretext.core.lint.models import LintReport
+from coretext.config import load_config
 
 router = APIRouter()
 
@@ -49,8 +50,17 @@ async def lint_endpoint(
             elif p.is_file():
                 files_to_lint.append(p)
     else:
-        # Find all .md files in project, excluding hidden directories
-        all_md = list(root_path.glob("**/*.md"))
+        # Story 5.2: Use docs_dir from config if available
+        config = load_config(root_path)
+        scan_path = root_path
+        
+        if config.docs_dir and config.docs_dir != ".":
+             potential_path = root_path / config.docs_dir
+             if potential_path.exists():
+                 scan_path = potential_path
+
+        # Find all .md files in scan_path, excluding hidden directories
+        all_md = list(scan_path.glob("**/*.md"))
         files_to_lint = [
             f for f in all_md
             if not any(part.startswith('.') for part in f.relative_to(root_path).parts)

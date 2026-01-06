@@ -8,6 +8,7 @@ import signal
 import time
 import httpx
 import logging
+import yaml
 from typing import List, Optional
 from pathlib import Path
 from surrealdb import AsyncSurreal
@@ -174,6 +175,14 @@ def sync(
 
     # Find files
     target_path = target_dir.resolve()
+    
+    # Story 5.2: Use docs_dir from config if target_dir is default (root) and config has a specific dir
+    if target_path == project_root.resolve() and config.docs_dir != ".":
+        potential_path = project_root / config.docs_dir
+        if potential_path.exists():
+             target_path = potential_path.resolve()
+             console.print(f"[dim]Using configured docs directory: {target_path}[/dim]")
+
     files = list(target_path.glob("*.md"))
     if not files:
         console.print(f"[yellow]No markdown files found in {target_path}[/yellow]")
@@ -288,7 +297,30 @@ def init(
     if not config_path.exists():
         typer.echo(f"Creating default configuration at {config_path}...")
         config_path.parent.mkdir(parents=True, exist_ok=True)
-        config_path.write_text(DEFAULT_CONFIG_CONTENT)
+        
+        # Story 5.2: Prompt for documents directory
+        docs_dir = typer.prompt("Where are your documents located? (Relative to project root)", default=".")
+        
+        # Validate docs_dir
+        docs_path = project_root / docs_dir
+        if not docs_path.exists():
+             if typer.confirm(f"Directory '{docs_dir}' does not exist. Create it?"):
+                 docs_path.mkdir(parents=True, exist_ok=True)
+             else:
+                 typer.echo("Warning: Using non-existent directory in configuration.", err=True)
+
+        # Update DEFAULT_CONFIG_CONTENT with user choice
+        try:
+            default_config = yaml.safe_load(DEFAULT_CONFIG_CONTENT)
+            default_config["docs_dir"] = docs_dir
+            with open(config_path, "w") as f:
+                yaml.dump(default_config, f, default_flow_style=False)
+        except Exception as e:
+             typer.echo(f"Error creating config file: {e}", err=True)
+             # Fallback to simple string replacement
+             config_content = DEFAULT_CONFIG_CONTENT.replace("docs_dir: .", f"docs_dir: {docs_dir}")
+             config_path.write_text(config_content)
+
         typer.echo("Default configuration created.")
     else:
         typer.echo("Configuration file already exists. Skipping creation.")

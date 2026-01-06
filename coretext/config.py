@@ -13,6 +13,7 @@ class Config(BaseModel):
     surreal_url: str = "ws://localhost:8000/rpc"
     surreal_ns: str = "coretext"
     surreal_db: str = "coretext"
+    docs_dir: str = "."
     system: SystemConfig = Field(default_factory=SystemConfig)
 
 def load_config(project_root: Path | None = None) -> Config:
@@ -34,6 +35,7 @@ DEFAULT_CONFIG_CONTENT = """# CoreText Configuration
 daemon_port: 8000
 mcp_port: 8001
 log_level: INFO
+docs_dir: .
 system:
   memory_limit_mb: 50
   background_priority: true
