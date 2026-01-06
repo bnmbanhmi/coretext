@@ -173,10 +173,12 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--scenario", choices=["async", "fail-open", "self-healing"], help="Run specific scenario non-interactively")
+    parser.add_argument("--scenario", choices=["setup", "async", "fail-open", "self-healing"], help="Run specific scenario non-interactively")
     args = parser.parse_args()
 
-    if args.scenario == "async":
+    if args.scenario == "setup":
+        setup_data()
+    elif args.scenario == "async":
         simulate_async_hook()
     elif args.scenario == "fail-open":
         simulate_fail_open()
