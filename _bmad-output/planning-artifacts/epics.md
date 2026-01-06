@@ -19,6 +19,7 @@ This document provides the complete epic and story breakdown for coretext, decom
 *   **Epic 2: Agent Context Retrieval & Semantic Querying**: Focuses on enabling AI agents to query and retrieve precise, topologically aware context from the graph via MCP.
 *   **Epic 3: Developer Workflow Integration & Tooling**: Implements CLI tools for developers to manage, inspect, and lint the knowledge graph.
 *   **Epic 4: System Reliability & Performance Optimization**: Ensures the system operates efficiently, reliably, and within defined resource limits.
+*   **Epic 5: Release Readiness & Gap Analysis**: Focuses on comprehensive verification, identifying missing features or gaps, and final polishing to ensuring the product is fully ready for release.
 
 ---
 
@@ -492,6 +493,81 @@ As a `coretext` system, I want to automatically maintain the integrity of the kn
 
 ---
 
+## Epic 5: Release Readiness & Gap Analysis
+
+**User Value Statement**: Users receive a fully polished, verified, and complete product, as the system undergoes a comprehensive end-to-end review and gap closure process before final release.
+
+**Dependencies**: Epics 1-4.
+
+### Story 5.1: Comprehensive Product Demo & Verification Guide
+
+As a Product Owner, I want a comprehensive demo guide covering all features from Epics 1-4, so that I can systematically verify the entire system's functionality and user experience.
+
+**Acceptance Criteria:**
+*   Given the system is built
+*   When I access `docs/release-demo-guide.md`
+*   Then it covers: Project Init, Database Sync, Agent Context Retrieval (MCP), CLI Tools, and Reliability features.
+*   And it includes step-by-step instructions and expected outcomes.
+
+**Technical Notes:**
+*   Create `docs/release-demo-guide.md`.
+*   Aggregate existing demo steps from previous Epics.
+*   Add verification steps for cross-cutting concerns (e.g., latency, error handling).
+
+**Prerequisites:** Epics 1-4.
+
+### Story 5.2: Gap Analysis & Missing Feature Identification
+
+As a Product Owner, I want to execute the demo guide and identify any missing features or bugs, so that I have a clear backlog of "Must-Have" items for the final release.
+
+**Acceptance Criteria:**
+*   Given the `release-demo-guide.md` exists
+*   When I execute the guide against the current codebase
+*   Then a "Gap Analysis Report" is produced (`docs/gap-analysis.md`).
+*   And it lists: Missing features, Bugs, and UX friction points.
+*   And new stories are drafted for any critical gaps.
+
+**Technical Notes:**
+*   Execute the demo guide manually or via script.
+*   Document findings in a structured report.
+
+**Prerequisites:** Story 5.1.
+
+### Story 5.3: Gap Closure Implementation
+
+As a Developer, I want to implement the missing features and fixes identified in the Gap Analysis, so that the product meets all release requirements.
+
+**Acceptance Criteria:**
+*   Given the Gap Analysis Report
+*   When I implement the identified fixes
+*   Then all critical items are resolved.
+*   And code is updated, tested, and verified.
+
+**Technical Notes:**
+*   Scope will vary based on findings.
+*   May involve creating sub-tasks or new stories if gaps are large.
+
+**Prerequisites:** Story 5.2.
+
+### Story 5.4: Final Release Demo Guide & Polish
+
+As a Product Owner, I want a finalized demo guide and a polished system, so that I can confidently demonstrate the product to stakeholders.
+
+**Acceptance Criteria:**
+*   Given all gaps are closed
+*   When I update `docs/release-demo-guide.md`
+*   Then it reflects the final system state.
+*   And the CLI output and error messages are polished and consistent.
+*   And a final "Green Build" verification is recorded.
+
+**Technical Notes:**
+*   Review all CLI output strings for consistency (`Rich` formatting).
+*   Ensure documentation matches the code.
+
+**Prerequisites:** Story 5.3.
+
+---
+
 ## FR Coverage Matrix
 
 | FR ID | Description                                                                   | Covering Stories                                                                                                                                                                                                                                                                                             |
@@ -525,7 +601,7 @@ As a `coretext` system, I want to automatically maintain the integrity of the kn
 
 ## Summary
 
-The `coretext` epic and story breakdown is now complete, encompassing 4 epics and 18 detailed stories. This plan provides a comprehensive roadmap for implementing a local-first, AI-enhanced development platform that solves the "Lost in the Middle" context problem in LLM-assisted software engineering.
+The `coretext` epic and story breakdown is now complete, encompassing 5 epics and 22 detailed stories. This plan provides a comprehensive roadmap for implementing a local-first, AI-enhanced development platform that solves the "Lost in the Middle" context problem in LLM-assisted software engineering.
 
 **Full Context Incorporated:**
 - ✅ PRD functional requirements and scope
@@ -534,7 +610,7 @@ The `coretext` epic and story breakdown is now complete, encompassing 4 epics an
 
 **FR Coverage:** All 24 functional requirements from the PRD are fully mapped to specific stories, ensuring complete coverage.
 
-**Epic Structure:** 4 epics are defined, delivering incremental user value and respecting technical dependencies.
+**Epic Structure:** 5 epics are defined, delivering incremental user value and respecting technical dependencies.
 
 **Ready for Phase 4:** Sprint Planning and Development Implementation
 
@@ -543,7 +619,3 @@ The `coretext` epic and story breakdown is now complete, encompassing 4 epics an
 _For implementation: Use the `create-story` workflow to generate individual story implementation plans from this epic breakdown._
 
 _This document will be updated after UX Design and Architecture workflows to incorporate interaction details and technical decisions._
-
-
-
-# demo test again
