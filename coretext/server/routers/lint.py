@@ -35,8 +35,19 @@ async def lint_endpoint(
     manager = LintManager(root_path)
 
     if request.files:
-        # Resolve paths relative to project root
-        files_to_lint = [root_path / f for f in request.files]
+        # Resolve paths relative to project root and expand directories
+        files_to_lint = []
+        for f in request.files:
+            p = root_path / f
+            if p.is_dir():
+                # Recursively find all .md files in the directory
+                all_md = list(p.glob("**/*.md"))
+                files_to_lint.extend([
+                    m for m in all_md
+                    if not any(part.startswith('.') for part in m.relative_to(root_path).parts)
+                ])
+            elif p.is_file():
+                files_to_lint.append(p)
     else:
         # Find all .md files in project, excluding hidden directories
         all_md = list(root_path.glob("**/*.md"))

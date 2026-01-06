@@ -22,5 +22,6 @@ As a Product Owner, I want a comprehensive demo guide covering all features from
 - [x] Aggregate Epic 3 (Developer Tools) steps.
 - [x] Aggregate Epic 4 (Resilience/Performance) steps.
 - [x] Add Advanced Hybrid Retrieval (Vector + Graph) verification steps for SurrealDB.
+- [x] Refine guide for environment isolation (Persistence cleanup + Folder-level linting).
 - [x] Polish and organize into a cohesive flow.
 - [x] Verify links and commands.

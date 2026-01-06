@@ -8,11 +8,20 @@ This guide provides a systematic walk-through of all CoreText features (Epics 1-
 
 **Goal:** Verify the system can bootstrap itself, install dependencies, and start the background services.
 
-### 1.1. Fresh Installation
-If you have a previous installation, clear it to test fresh:
-```bash
-rm -rf .coretext
-```
+### 1.1. System Cleanup & Fresh Start
+**Critical Step:** To ensure no data from previous demos interferes with this run (e.g., "ghost" nodes appearing in lint checks), strictly follow this cleanup:
+
+1. **Stop the Daemon:**
+   ```bash
+   poetry run coretext stop
+   ```
+
+2. **Remove Persistence Layer & Artifacts:**
+   ```bash
+   # This removes the database, config, binary, AND any previous demo files
+   rm -rf .coretext demo/
+   ```
+   *Tip: To keep the binary (skipping re-download) but reset data, use: `rm -rf .coretext/surreal.db .coretext/config.yaml demo/`*
 
 ### 1.2. Initialize Project
 ```bash
@@ -71,9 +80,10 @@ echo "\n[Broken Link](./does-not-exist.md)" >> demo/demo-story.md
 
 ### 3.3. Run Linter
 ```bash
-poetry run coretext lint
+# Lints the entire demo folder recursively
+poetry run coretext lint demo/
 ```
-**Verify:** Reports **1 Issue** (Broken Link) in `demo/demo-story.md`.
+**Verify:** Reports **1 Issue** (Broken Link) in `demo/demo-story.md`. (Note: This avoids noise from technical debt in other parts of the repository).
 
 ### 3.4. Pre-commit Protection
 Attempt to commit the broken file:
