@@ -18,7 +18,7 @@
     poetry run coretext start
     ```
     *   **Verify:** 
-        *   Output shows "CoreText daemon started" (DB on 8000).
+        *   Output shows "CoreText daemon started" (DB on 8010).
         *   Output shows "FastAPI server started" (Port 8001).
         *   Output shows "Schema applied successfully".
 
@@ -47,7 +47,7 @@
     *   **Verify:** The post-commit hook should run. You can verify the node exists in SurrealDB:
     ```bash
     # Using surreal sql CLI
-    echo "SELECT id, node_type, array::len(embedding) FROM node WHERE path = 'demo_epic_2.md';" | surreal sql --endpoint http://localhost:8000 --ns coretext --db coretext --user root --pass root
+    echo "SELECT id, node_type, array::len(embedding) FROM node WHERE path = 'demo_epic_2.md';" | surreal sql --endpoint http://localhost:8010 --ns coretext --db coretext
     ```
     *   **Expectation:** At least one record with `embedding` length 768.
 
@@ -95,6 +95,6 @@ A helper script is provided to run all the above checks automatically.
 
 ## Troubleshooting
 
-*   **500 Internal Server Error:** Check if SurrealDB is running on port 8000 and the `.coretext/schema_map.yaml` exists.
+*   **500 Internal Server Error:** Check if SurrealDB is running on port 8010 and the `.coretext/schema_map.yaml` exists.
 *   **Empty Search Results:** Ensure the nodes have embeddings. Run `coretext apply-schema` and re-commit a file to trigger sync.
 *   **Connection Refused:** Ensure the FastAPI server started on port 8001. Check `ps aux | grep uvicorn`.

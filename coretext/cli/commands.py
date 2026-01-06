@@ -79,6 +79,11 @@ def status(
     table.add_section()
     table.add_row("Sync Hook Status:", f"[{hook_color}]{hook_status}[/{hook_color}]")
     
+    table.add_section()
+    table.add_row("Surrealist URL:", f"http://localhost:{config.daemon_port}")
+    table.add_row("Surrealist Auth:", "[bold cyan]None / Anonymous[/bold cyan]")
+    table.add_row("Namespace / DB:", f"{config.surreal_ns} / {config.surreal_db}")
+    
     console.print(Panel(table, title="CoreText Status", expand=False))
 
 @app.command()
@@ -273,6 +278,11 @@ def sync(
                 deleted = await graph_manager.prune_dangling_edges()
                 if deleted > 0:
                      console.print(f"[yellow]Self-Healing: Pruned {deleted} dangling edges.[/yellow]")
+
+                # Run self-healing (Orphan Node Pruning)
+                deleted_headers = await graph_manager.prune_orphan_headers()
+                if deleted_headers > 0:
+                     console.print(f"[yellow]Self-Healing: Pruned {deleted_headers} orphaned header nodes.[/yellow]")
 
     try:
         asyncio.run(_run_sync())

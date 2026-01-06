@@ -12,7 +12,7 @@ def test_hook_detaches_on_many_files(tmp_path: Path):
     """
     # Create a dummy config so it doesn't fail on init
     (tmp_path / ".coretext").mkdir()
-    (tmp_path / ".coretext" / "config.yaml").write_text("daemon_port: 8000\nmcp_port: 8001")
+    (tmp_path / ".coretext" / "config.yaml").write_text("daemon_port: 8010\nmcp_port: 8001")
     (tmp_path / ".git").mkdir()
 
     # Mock get_last_commit_files to return many files
@@ -49,7 +49,7 @@ def test_hook_fail_open_on_crash(tmp_path: Path):
     Test that the post-commit hook exits with 0 (success) even if the internal logic crashes.
     """
     (tmp_path / ".coretext").mkdir()
-    (tmp_path / ".coretext" / "config.yaml").write_text("daemon_port: 8000\nmcp_port: 8001")
+    (tmp_path / ".coretext" / "config.yaml").write_text("daemon_port: 8010\nmcp_port: 8001")
     (tmp_path / ".git").mkdir()
 
     # Mock get_last_commit_files to return 1 file
@@ -77,7 +77,7 @@ def test_hook_timeouts_on_slow_sync(tmp_path: Path):
     Test that the hook exits gracefully (fail-open) if the sync operation times out.
     """
     (tmp_path / ".coretext").mkdir()
-    (tmp_path / ".coretext" / "config.yaml").write_text("daemon_port: 8000\nmcp_port: 8001")
+    (tmp_path / ".coretext" / "config.yaml").write_text("daemon_port: 8010\nmcp_port: 8001")
     (tmp_path / ".git").mkdir()
     
     import asyncio

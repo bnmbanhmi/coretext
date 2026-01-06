@@ -85,7 +85,7 @@
 
 3.  **Database Verification (The Truth):**
     *   Open Surrealist or use CLI to query the DB.
-    *   **Connection:** `ws://localhost:8000/rpc` (Namespace: `coretext`, DB: `coretext`, User/Pass: `root`/`root`)
+    *   **Connection:** `ws://localhost:8010/rpc` (Namespace: `coretext`, DB: `coretext`, Auth: `None`)
 
     *   **Query 1: Check File Node**
         ```sql

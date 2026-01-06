@@ -33,7 +33,7 @@
     ```
     *   **Verify:**
         *   **Daemon:** Running (Green)
-        *   **Port:** 8000 (DB) / 8001 (MCP)
+        *   **Port:** 8010 (DB) / 8001 (MCP)
         *   **Sync Hooks:** Active
 
 ---

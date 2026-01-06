@@ -38,8 +38,37 @@ poetry run coretext status
 ```
 **Verify:**
 - **Daemon:** Running (Green)
-- **Port:** 8000 (DB) / 8001 (MCP)
+- **Port:** 8010 (DB) / 8001 (MCP)
 - **Sync Hooks:** Active
+
+│  Surrealist Auth:   None / Anonymous       │
+│  Namespace / DB:    coretext / coretext    │
+╰────────────────────────────────────────────╯
+
+### 1.4. Scoped Configuration (Directory Selection)
+**Goal:** Verify CoreText can be scoped to a specific directory, ignoring irrelevant files.
+
+1. **Create Scoped Directories:**
+   ```bash
+   mkdir -p docs_only/inner
+   echo "# Target Document" > docs_only/inner/target.md
+   echo "# Ignored Document" > ignored_at_root.md
+   ```
+
+2. **Update Configuration:**
+   Edit `.coretext/config.yaml` to set `docs_dir: "docs_only"`.
+
+3. **Verify Scoped Sync:**
+   ```bash
+   poetry run coretext sync
+   ```
+   **Verify:** Output should show "Using configured docs directory: .../docs_only" and sync only the files within that directory.
+
+4. **Database Verification:**
+   ```bash
+   echo "SELECT path FROM node WHERE node_type = 'file';" | ~/.coretext/bin/surreal sql --endpoint http://localhost:8010 --ns coretext --db coretext
+   ```
+   **Verify:** `docs_only/inner/target.md` should be present, but `ignored_at_root.md` should **not**.
 
 ---
 
@@ -115,15 +144,15 @@ You can verify the data using the CLI or the **Surrealist** app (recommended for
 
 **Option A: CLI Check**
 ```bash
-echo "SELECT id, node_type, path FROM node WHERE path = 'demo/demo-story.md';" | surreal sql --endpoint http://localhost:8000 --ns coretext --db coretext --user root --pass root
+echo "SELECT id, node_type, path FROM node WHERE path = 'demo/demo-story.md';" | surreal sql --endpoint http://localhost:8010 --ns coretext --db coretext
 ```
 **Expectation:** At least two records (file node and the H1 header node).
 
 **Option B: Surrealist App**
-1. Open Surrealist (or web version) and connect to: `ws://localhost:8000/rpc`
+1. Open Surrealist (or web version) and connect to: `ws://localhost:8010/rpc`
    - **Namespace:** `coretext`
    - **Database:** `coretext`
-   - **User/Pass:** `root` / `root`
+   - **Auth Mode:** `None` / `Anonymous`
 
 2. **Query 1: Check File Node**
    ```sql

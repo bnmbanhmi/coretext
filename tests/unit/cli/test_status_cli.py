@@ -11,7 +11,7 @@ def mock_project_root(tmp_path):
     coretext_dir = tmp_path / ".coretext"
     coretext_dir.mkdir()
     config_file = coretext_dir / "config.yaml"
-    config_file.write_text("daemon_port: 8000\nmcp_port: 8001\n")
+    config_file.write_text("daemon_port: 8010\nmcp_port: 8001\n")
     return tmp_path
 
 def test_status_command_split_status(mock_project_root):
@@ -26,7 +26,7 @@ def test_status_command_split_status(mock_project_root):
             },
             "database": {
                 "status": "Running", 
-                "port": 8000,
+                "port": 8010,
                 "pid": 222,
                 "version": "Unknown"
             }
@@ -54,7 +54,7 @@ def test_status_command_partial_failure(mock_project_root):
             },
             "database": {
                 "status": "Running", 
-                "port": 8000,
+                "port": 8010,
                 "pid": 222,
                 "version": "Unknown"
             }

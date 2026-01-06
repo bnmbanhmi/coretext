@@ -15,8 +15,8 @@ def test_lint_cli_no_issues(tmp_path):
          patch("coretext.cli.commands.load_config") as mock_config:
          
         mock_health.return_value = {"server": {"status": "Running"}}
-        mock_config.return_value.mcp_port = 8000
-        mock_config.return_value.daemon_port = 8001
+        mock_config.return_value.mcp_port = 8001
+        mock_config.return_value.daemon_port = 8010
         
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {"issues": []}
@@ -36,8 +36,8 @@ def test_lint_cli_with_issues(tmp_path):
          patch("coretext.cli.commands.load_config") as mock_config:
          
         mock_health.return_value = {"server": {"status": "Running"}}
-        mock_config.return_value.mcp_port = 8000
-        mock_config.return_value.daemon_port = 8001
+        mock_config.return_value.mcp_port = 8001
+        mock_config.return_value.daemon_port = 8010
         
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {"issues": [

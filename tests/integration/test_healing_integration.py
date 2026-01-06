@@ -15,14 +15,14 @@ async def get_real_graph_manager(db):
 async def test_healing_dangling_edges():
     """
     Integration test for dangling edge cleanup.
-    Requires running SurrealDB at localhost:8000.
+    Requires running SurrealDB at localhost:8010.
     """
-    db = AsyncSurreal("ws://localhost:8000/rpc")
+    db = AsyncSurreal("ws://localhost:8010/rpc")
     try:
         await db.connect()
         await db.use("coretext", "coretext")
     except Exception:
-        pytest.skip("SurrealDB not running at localhost:8000")
+        pytest.skip("SurrealDB not running at localhost:8010")
         return
 
     try:

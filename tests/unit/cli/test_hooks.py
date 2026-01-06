@@ -154,7 +154,7 @@ async def test_post_commit_hook_detached_success(
     mock_db_client_cls.assert_called_once_with(project_root=tmp_path)
     mock_db_client_instance.is_running.assert_awaited_once()
     mock_db_client_instance.start_surreal_db.assert_awaited_once()
-    mock_surreal_cls.assert_called_once_with("ws://localhost:8000/rpc")
+    mock_surreal_cls.assert_called_once_with("ws://localhost:8010/rpc")
     mock_surreal_instance.use.assert_awaited_once_with("coretext", "coretext")
     
     mock_schema_mapper_cls.assert_called_once()

@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 from coretext.cli.utils import check_daemon_health
 
 MOCK_SERVER_PORT = 8001
-MOCK_DB_PORT = 8000
+MOCK_DB_PORT = 8010
 
 @pytest.fixture
 def mock_project_root(tmp_path):

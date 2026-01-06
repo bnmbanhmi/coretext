@@ -7,7 +7,7 @@ from pathlib import Path
 
 async def main():
     print("Connecting to DB...")
-    db = AsyncSurreal("ws://localhost:8000/rpc")
+    db = AsyncSurreal("ws://localhost:8010/rpc")
     await db.connect()
     # Attempt signin if needed
     # await db.signin({"user": "root", "pass": "root"})

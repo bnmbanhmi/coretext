@@ -46,7 +46,7 @@ def test_init_downloads_model_and_creates_config(mock_surreal_client, mock_sente
     config_path = project_root / ".coretext" / "config.yaml"
     assert config_path.exists()
     content = config_path.read_text()
-    assert "daemon_port: 8000" in content
+    assert "daemon_port: 8010" in content
     assert "mcp_port: 8001" in content
 
     # Verify Output

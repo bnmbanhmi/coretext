@@ -1,5 +1,6 @@
 from typing import Type, List, Any
 from surrealdb import Surreal
+from surrealdb.data.types.record_id import RecordID
 from coretext.core.graph.models import BaseNode, BaseEdge, ParsingErrorNode, SyncReport
 from coretext.core.parser.schema import SchemaMapper
 from coretext.core.vector.embedder import VectorEmbedder
@@ -238,18 +239,31 @@ class GraphManager:
                 node.updated_at = datetime.utcnow()
                 data = node.model_dump(mode='json')
                 param_name = f"node_{i}_{idx}"
+                id_param = f"id_{i}_{idx}"
+                
                 params[param_name] = data
                 
                 table = self.schema_mapper.get_node_table(node.node_type)
+                # Use RecordID object for parameter
+                params[id_param] = RecordID(table, node.id)
                 
-                # Using UPSERT
-                transaction_query += f"UPSERT {table}:`{node.id}` CONTENT ${param_name};\n"
+                # Using UPSERT with parameter
+                transaction_query += f"UPSERT ${id_param} CONTENT ${param_name};\n"
             
             transaction_query += "COMMIT TRANSACTION;"
+            # print(f"DEBUG QUERY: {transaction_query}") 
             results = await self.db.query(transaction_query, params)
             
             if isinstance(results, str):
                  raise Exception(f"SurrealDB Transaction Error (Nodes): {results}")
+            
+            # Robust check for SurrealDB 2.0 error format
+            if isinstance(results, list):
+                for res in results:
+                    if isinstance(res, str) and ("Error" in res or "Found NONE" in res or "expected" in res):
+                        raise Exception(f"SurrealDB Transaction Error (Nodes): {res}")
+                    if isinstance(res, dict) and res.get('status') == 'ERR':
+                        raise Exception(f"SurrealDB Transaction Error (Nodes): {res.get('detail', res)}")
             
             nodes_created += len(batch_nodes)
 
@@ -263,15 +277,9 @@ class GraphManager:
                 edge.updated_at = datetime.utcnow()
                 data = self._prepare_edge_data(edge)
                 
-                # Extract pre-calculated record IDs (which currently have backticks/prefixes)
-                # We will ignore the pre-calculated string and reconstruct using type::thing for safety
-                # But _prepare_edge_data removes source/target from data, so we need to get them from 'edge' object
-                
                 # Cleanup keys we don't need from data payload
                 data.pop("_source_rec", None)
                 data.pop("_target_rec", None)
-                # Remove ID from payload as we will specify it in the RELATE clause
-                # Providing it in CONTENT causes referential integrity issues in RELATE
                 data.pop("id", None)
                 
                 param_name = f"edge_{i}_{idx}"
@@ -286,37 +294,40 @@ class GraphManager:
                     source_table = self.schema_mapper.get_node_table(edge_def.source_type)
                     target_table = self.schema_mapper.get_node_table(edge_def.target_type)
 
-                # Add params for the IDs to avoid injection and formatting issues
+                # Add params for the IDs as RecordID objects
                 src_id_param = f"src_id_{i}_{idx}"
                 tgt_id_param = f"tgt_id_{i}_{idx}"
-                params[src_id_param] = edge.source
-                params[tgt_id_param] = edge.target
+                edge_id_param = f"edge_id_{i}_{idx}"
+                
+                params[src_id_param] = RecordID(source_table, edge.source)
+                params[tgt_id_param] = RecordID(target_table, edge.target)
                 
                 table = self.schema_mapper.get_edge_table(edge.edge_type)
+                params[edge_id_param] = RecordID(table, edge.id)
                 
-                # Construct IDs manually with backticks to ensure safety and bypass type::thing issues
-                src_rec_str = f"{source_table}:`{edge.source}`"
-                tgt_rec_str = f"{target_table}:`{edge.target}`"
-                edge_rec_str = f"{table}:`{edge.id}`"
-                
-                # 1. RELATE to ensure existence and links.
-                # Use manual string interpolation for IDs.
-                # Do NOT use CONTENT here to avoid wiping existing in/out pointers on update.
-                # We MUST set mandatory schema fields (like commit_hash) here to avoid validation error on creation.
+                # 1. RELATE
                 set_clause = f"SET updated_at = time::now(), created_at = time::now(), commit_hash = ${param_name}.commit_hash, metadata = ${param_name}.metadata"
                 if edge.edge_type == "contains":
                     set_clause += f", order = ${param_name}.order"
 
-                transaction_query += f"RELATE {src_rec_str} -> {edge_rec_str} -> {tgt_rec_str} {set_clause};\n"
+                transaction_query += f"RELATE ${src_id_param} -> ${edge_id_param} -> ${tgt_id_param} {set_clause};\n"
                 
-                # 2. UPDATE MERGE to set/update properties from data payload without losing links.
-                transaction_query += f"UPDATE {edge_rec_str} MERGE ${param_name};\n"
+                # 2. UPDATE MERGE
+                transaction_query += f"UPDATE ${edge_id_param} MERGE ${param_name};\n"
 
             transaction_query += "COMMIT TRANSACTION;"
             results = await self.db.query(transaction_query, params)
             
             if isinstance(results, str):
                  raise Exception(f"SurrealDB Transaction Error (Edges): {results}")
+
+            # Robust check for SurrealDB 2.0 error format
+            if isinstance(results, list):
+                for res in results:
+                    if isinstance(res, str) and ("Error" in res or "Found NONE" in res or "expected" in res):
+                        raise Exception(f"SurrealDB Transaction Error (Edges): {res}")
+                    if isinstance(res, dict) and res.get('status') == 'ERR':
+                        raise Exception(f"SurrealDB Transaction Error (Edges): {res.get('detail', res)}")
             
             edges_created += len(batch_edges)
         
@@ -461,7 +472,8 @@ class GraphManager:
         # Execute
         for table in edge_tables:
             # We first SELECT the IDs of dangling edges
-            select_query = f"SELECT VALUE id FROM {table} WHERE (SELECT VALUE id FROM out) = [] OR (SELECT VALUE id FROM `in`) = [];"
+            # In SurrealDB 2.0, accessing .id on a RecordID field returns NONE if the record doesn't exist.
+            select_query = f"SELECT VALUE id FROM {table} WHERE out.id == NONE OR `in`.id == NONE;"
             
             # results should be a list containing one item (the list of IDs)
             results = await self.db.query(select_query)

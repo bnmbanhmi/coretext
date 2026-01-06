@@ -109,7 +109,7 @@ class SurrealDBClient:
 
                 os.chmod(self.surreal_path, 0o755)
 
-    def start_detached(self, port: int = 8000):
+    def start_detached(self, port: int = 8010):
         """Starts SurrealDB as a detached process."""
         if not self.surreal_path.exists():
             raise RuntimeError("SurrealDB binary not found. Run 'coretext init' first.")
@@ -146,7 +146,7 @@ class SurrealDBClient:
             self.pid_file.parent.mkdir(parents=True, exist_ok=True)
             self.pid_file.write_text(str(process.pid))
 
-    async def start_surreal_db(self, port: int = 8000):
+    async def start_surreal_db(self, port: int = 8010):
         if not self.surreal_path.exists():
             raise RuntimeError("SurrealDB binary not found. Run 'coretext init' first.")
         

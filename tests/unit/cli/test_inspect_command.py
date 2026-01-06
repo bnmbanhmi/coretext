@@ -10,7 +10,7 @@ def mock_config(tmp_path):
     config_dir = tmp_path / ".coretext"
     config_dir.mkdir()
     config_file = config_dir / "config.yaml"
-    config_file.write_text("daemon_port: 8000\nmcp_port: 8001\n")
+    config_file.write_text("daemon_port: 8010\nmcp_port: 8001\n")
     return tmp_path
 
 def test_inspect_node_not_found():
@@ -18,7 +18,7 @@ def test_inspect_node_not_found():
     with patch("pathlib.Path.exists") as mock_exists:
         mock_exists.return_value = True
         with patch("coretext.cli.commands.load_config") as mock_load:
-            mock_load.return_value = MagicMock(mcp_port=8001, daemon_port=8000)
+            mock_load.return_value = MagicMock(mcp_port=8001, daemon_port=8010)
             with patch("coretext.cli.commands.check_daemon_health") as mock_health:
                 mock_health.return_value = {"server": {"status": "Running"}}
                 with patch("httpx.post") as mock_post:
@@ -34,7 +34,7 @@ def test_inspect_daemon_stopped():
     with patch("pathlib.Path.exists") as mock_exists:
         mock_exists.return_value = True
         with patch("coretext.cli.commands.load_config") as mock_load:
-            mock_load.return_value = MagicMock(mcp_port=8001, daemon_port=8000)
+            mock_load.return_value = MagicMock(mcp_port=8001, daemon_port=8010)
             with patch("coretext.cli.commands.check_daemon_health") as mock_health:
                 mock_health.return_value = {"server": {"status": "Stopped"}}
                 
@@ -48,7 +48,7 @@ def test_inspect_success_renders_tree():
     with patch("pathlib.Path.exists") as mock_exists:
         mock_exists.return_value = True
         with patch("coretext.cli.commands.load_config") as mock_load:
-            mock_load.return_value = MagicMock(mcp_port=8001, daemon_port=8000)
+            mock_load.return_value = MagicMock(mcp_port=8001, daemon_port=8010)
             with patch("coretext.cli.commands.check_daemon_health") as mock_health:
                 mock_health.return_value = {"server": {"status": "Running"}}
                 with patch("httpx.post") as mock_post:
@@ -86,7 +86,7 @@ def test_inspect_no_dependencies():
     with patch("pathlib.Path.exists") as mock_exists:
         mock_exists.return_value = True
         with patch("coretext.cli.commands.load_config") as mock_load:
-            mock_load.return_value = MagicMock(mcp_port=8001, daemon_port=8000)
+            mock_load.return_value = MagicMock(mcp_port=8001, daemon_port=8010)
             with patch("coretext.cli.commands.check_daemon_health") as mock_health:
                 mock_health.return_value = {"server": {"status": "Running"}}
                 with patch("httpx.post") as mock_post:

@@ -46,17 +46,30 @@ so that the system is fully ready for release.
 - [x] Task 7: Improve Error Visibility (AC: 2)
   - [x] Updated Git hooks to print fatal errors to stderr instead of failing silently.
   - [x] Changed default log level to `DEBUG` in config for easier troubleshooting.
+- [x] Task 8: Fix Graph Relations & Persistence (AC: 2)
+  - [x] Refactored `GraphManager.ingest` to use `RecordID` objects, fixing "contains" edges and header persistence.
+  - [x] Fixed `prune_dangling_edges` for SurrealDB 2.0 syntax.
+  - [x] Added `prune_orphan_headers` for ghost node cleanup.
 
-### Upcoming: Release Polishing
-- [ ] Task 8: Execute Final Release Demo Guide (`docs/release-demo-guide.md`)
-- [ ] Task 9: Document final release findings in `docs/gap-analysis.md`
-- [ ] Task 10: Implement remaining "nice-to-have" UI/CLI polish
+### Upcoming: Release Polishing & Fixes
+- [ ] Task 9: Fix Vector Embeddings (Hybrid Search)
+  - [ ] Investigate why embeddings are missing (causing `Argument 2 was the wrong type... NONE` error).
+  - [ ] Ensure `SyncEngine` triggers embedding generation correctly.
+- [ ] Task 10: Expand Release Demo Guide
+  - [ ] Add explicit sections for `references` (links between files) and `parent_of` (header hierarchy) edges.
+  - [ ] Add specific instructions for **Surrealist Graph Visualization**.
+  - [ ] Verify the Hybrid Query syntax works on SurrealDB 2.0.
+- [ ] Task 11: Execute Final Release Demo Guide (Verification)
+- [ ] Task 12: Implement remaining "nice-to-have" UI/CLI polish
 
 ## Dev Notes
 
 - **Port Strategy**: Moved to 8010/8001 to isolate CoreText from other SurrealDB/FastAPI instances.
 - **Auth Strategy**: Purely unauthenticated local-first mode. Removed all `signin` calls and credential flags.
 - **Connection**: `AsyncSurreal` requires an explicit `connect()` call before `use()`.
+- **SurrealDB 2.0 quirks**:
+    - Record IDs with special chars (e.g. `#`) must be handled via `RecordID` objects in Python client, string interpolation is brittle.
+    - `vector::similarity::cosine` throws error if input is NONE (requires data validation/filtering).
 
 ### Project Structure Notes
 
@@ -86,6 +99,8 @@ Gemini-Pro
 - Implemented unauthenticated mode.
 - Fixed `signin` signature mismatch.
 - Fixed `NameError` in `_apply_schema_logic`.
+- **Fix (2026-01-06):** Standardized all tests, scripts, and documentation to use Port 8010 (previously inconsistent).
+- **Fix (2026-01-06):** Updated `release-demo-guide` and CLI status to explicitly specify "None/Anonymous" authentication for Surrealist.
 
 ### File List
 
