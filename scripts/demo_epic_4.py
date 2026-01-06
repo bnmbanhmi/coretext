@@ -35,8 +35,8 @@ def setup_data():
             return
         clean_stress_dir()
     
-    console.print("[yellow]Generating 50 files with density 5...[/yellow]")
-    generate_stress_data(output_dir=str(STRESS_DIR), count=50, link_density=5)
+    console.print("[yellow]Generating 50 files with density 5 (clean)...[/yellow]")
+    generate_stress_data(output_dir=str(STRESS_DIR), count=50, link_density=5, broken_link_probability=0)
     console.print(f"[green]✓ Generated data in {STRESS_DIR}[/green]")
 
 def run_latency_check():
@@ -111,7 +111,12 @@ def verify_self_healing():
 
     # 1. Sync current state
     console.print("[yellow]Syncing current state...[/yellow]")
-    subprocess.run(["coretext", "sync", "--dir", str(STRESS_DIR)], check=True)
+    try:
+        subprocess.run(["coretext", "sync", "--dir", str(STRESS_DIR)], check=True)
+    except subprocess.CalledProcessError:
+        console.print("[red]❌ Sync failed. The graph contains integrity errors.[/red]")
+        console.print("[yellow]Tip: Run '1. Setup' again to generate clean stress data.[/yellow]")
+        return
     
     # Verify it exists
     res = subprocess.run(["coretext", "inspect", "orphan_node.md"], capture_output=True, text=True)
