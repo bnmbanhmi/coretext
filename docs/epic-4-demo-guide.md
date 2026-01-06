@@ -26,7 +26,7 @@ python3 scripts/generate_stress_data.py _stress_demo --file-count 50 --link-dens
 **Why**: Ensure MCP tools respond <500ms even with load.
 **Action**:
 ```bash
-python scripts/benchmark_latency.py
+python3 scripts/benchmark_latency.py
 ```
 **Verify**: Output shows p95 latency < 500ms.
 
@@ -37,7 +37,7 @@ python scripts/benchmark_latency.py
 **Action**:
 Run the interactive demo script:
 ```bash
-python scripts/demo_epic_4.py --scenario async
+python3 scripts/demo_epic_4.py --scenario async
 ```
 **Verify**: The script simulates a 3s sync delay, but reports "Hook detached" immediately.
 
@@ -48,7 +48,7 @@ python scripts/demo_epic_4.py --scenario async
 **Action**:
 Run the interactive demo script:
 ```bash
-python scripts/demo_epic_4.py --scenario fail-open
+python3 scripts/demo_epic_4.py --scenario fail-open
 ```
 **Verify**: The script simulates a crash (Exception), but exits with Code 0 (Success) and prints a warning.
 
@@ -62,6 +62,16 @@ python scripts/demo_epic_4.py --scenario fail-open
 3.  Run `coretext sync` again (or use the demo script).
 4.  Inspect graph to verify node `file_0.md` is gone.
 **Verify**: Node count decreases by 1 (and associated edges are removed).
+
+### 6. Cleanup
+
+**What**: Remove the generated stress test data.
+**Action**:
+Run the interactive demo script:
+```bash
+python scripts/demo_epic_4.py --scenario cleanup
+```
+**Verify**: Folder `_stress_demo` is removed from the filesystem.
 
 ## Running the Automated Demo
 

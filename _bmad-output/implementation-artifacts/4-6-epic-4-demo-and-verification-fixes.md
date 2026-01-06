@@ -34,9 +34,14 @@ so that I can confidently validate the system's robustness before we call this e
 - `docs/epic-4-demo-guide.md`
 - `scripts/demo_epic_4.py`
 - `scripts/generate_stress_data.py`
+- `scripts/benchmark_latency.py`
 
 ## Dev Notes
 
 - Leverage `scripts/generate_stress_data.py` from Story 4.5 for data.
-- Use `scripts/benchmark_latency.py` for the latency check.
-- For Async/Fail-Open, we might need to mock the `sync` duration or force an error in the demo script context.
+- Fixed `scripts/benchmark_latency.py` to handle correct API response structure (`results` key instead of `nodes`) and increased timeout to 30s for heavy stress loads.
+- Updated `scripts/demo_epic_4.py` with:
+    - Clean data generation (0% broken links) to ensure baseline sync success.
+    - Robust error handling for sync failures.
+    - Automated cleanup scenario.
+- Verified all 5 resilience and performance scenarios on MacOS.

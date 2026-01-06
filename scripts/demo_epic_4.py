@@ -39,6 +39,14 @@ def setup_data():
     generate_stress_data(output_dir=str(STRESS_DIR), count=50, link_density=5, broken_link_probability=0)
     console.print(f"[green]✓ Generated data in {STRESS_DIR}[/green]")
 
+def cleanup_data():
+    console.print(Panel("Cleanup: Removing Test Data", style="bold blue"))
+    if STRESS_DIR.exists():
+        clean_stress_dir()
+        console.print(f"[green]✓ Removed {STRESS_DIR}[/green]")
+    else:
+        console.print("[yellow]Stress directory not found. Nothing to clean.[/yellow]")
+
 def run_latency_check():
     console.print(Panel("Scenario 2: Latency Benchmark", style="bold blue"))
     if not STRESS_DIR.exists():
@@ -151,9 +159,10 @@ def main():
         console.print("3. [bold]Verify Async Hook[/bold] (Simulation)")
         console.print("4. [bold]Verify Fail-Open[/bold] (Simulation)")
         console.print("5. [bold]Verify Self-Healing[/bold]")
+        console.print("6. [bold]Cleanup[/bold] (Remove Test Data)")
         console.print("0. [bold]Exit[/bold]")
         
-        choice = Prompt.ask("Select an option", choices=["1", "2", "3", "4", "5", "0"], default="0")
+        choice = Prompt.ask("Select an option", choices=["1", "2", "3", "4", "5", "6", "0"], default="0")
         
         if choice == "1":
             setup_data()
@@ -165,6 +174,8 @@ def main():
             simulate_fail_open()
         elif choice == "5":
             verify_self_healing()
+        elif choice == "6":
+            cleanup_data()
         elif choice == "0":
             console.print("[bold]Demo Complete.[/bold]")
             break
@@ -173,11 +184,13 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--scenario", choices=["setup", "async", "fail-open", "self-healing"], help="Run specific scenario non-interactively")
+    parser.add_argument("--scenario", choices=["setup", "async", "fail-open", "self-healing", "cleanup"], help="Run specific scenario non-interactively")
     args = parser.parse_args()
 
     if args.scenario == "setup":
         setup_data()
+    elif args.scenario == "cleanup":
+        cleanup_data()
     elif args.scenario == "async":
         simulate_async_hook()
     elif args.scenario == "fail-open":
