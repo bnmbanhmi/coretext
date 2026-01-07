@@ -161,6 +161,19 @@ class GraphManager:
             return {k: self._convert_ids(v) for k, v in data.items()}
         return data
 
+    def _get_all_node_tables(self) -> str:
+        """Returns a comma-separated string of all unique node tables from the schema."""
+        if not self.schema_mapper._schema_map:
+             # Ensure schema is loaded
+             try:
+                 self.schema_mapper.load_schema()
+             except Exception:
+                 # Fallback if load fails (e.g. file missing), though it should be loaded by app startup
+                 return "node"
+        
+        tables = set(nt.db_table for nt in self.schema_mapper.schema_map.node_types.values())
+        return ", ".join(tables) if tables else "node"
+
     async def search_topology(self, query: str, limit: int = 5) -> List[dict]:
         """
         Search for nodes semantically similar to the query.
@@ -178,15 +191,17 @@ class GraphManager:
             # Should not happen with current embedder, but safety check for "Argument 2 ... NONE" error
             return []
         
+        target_tables = self._get_all_node_tables()
+
         # Use simple vector similarity search
         # Explicitly select fields to avoid returning 'embedding' (large vector)
-        sql = """
+        sql = f"""
         SELECT 
             id, path, node_type, content, metadata, 
             created_at, updated_at, commit_hash,
             title, summary, level, content_hash,
             vector::similarity::cosine(embedding, $embedding) AS score 
-        FROM node 
+        FROM {target_tables} 
         WHERE embedding != NONE AND embedding != []
         ORDER BY score DESC
         LIMIT $limit;
@@ -236,12 +251,14 @@ class GraphManager:
         if not embedding:
             return {"nodes": [], "edges": []}
 
+        target_tables = self._get_all_node_tables()
+
         # 2. Find Anchors
-        sql = """
+        sql = f"""
         SELECT 
             *,
             vector::similarity::cosine(embedding, $embedding) AS score 
-        FROM node 
+        FROM {target_tables} 
         WHERE embedding != NONE AND embedding != []
         """
         params = {"embedding": embedding, "limit": top_k}
@@ -356,8 +373,8 @@ class GraphManager:
                 # SurrealDB allows string matching in WHERE id IN ... if format is correct.
                 # Usually better to rely on raw string IDs if we are consistent.
                 
-                # We need to quote them if they have special chars, but `ids` param handles list.
-                node_query = "SELECT * FROM node WHERE id IN $ids;"
+                # We need the quote them if they have special chars, but `ids` param handles list.
+                node_query = f"SELECT * FROM {target_tables} WHERE id IN $ids;"
                 node_res = await self.db.query(node_query, {"ids": list(next_level_ids)})
                 
                 fetched_nodes = []
@@ -382,8 +399,9 @@ class GraphManager:
             try:
                 # Validate with BaseNode (or specific type if possible, but BaseNode is safe)
                 final_nodes.append(BaseNode.model_validate(n))
-            except Exception:
-                # If validation fails, skip or log? For now skip.
+            except Exception as e:
+                # Log error but continue
+                print(f"[ERROR] Failed to validate node {n.get('id', 'unknown')}: {e}")
                 continue
                 
         final_edges = []
@@ -394,7 +412,8 @@ class GraphManager:
                 e_copy['source'] = e_copy.get('in')
                 e_copy['target'] = e_copy.get('out')
                 final_edges.append(BaseEdge.model_validate(e_copy))
-            except Exception:
+            except Exception as e:
+                print(f"[ERROR] Failed to validate edge {e.get('id', 'unknown')}: {e}")
                 continue
 
         return {"nodes": final_nodes, "edges": final_edges}

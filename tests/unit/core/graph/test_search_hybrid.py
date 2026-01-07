@@ -13,6 +13,17 @@ def mock_schema_mapper():
     mapper = MagicMock(spec=SchemaMapper)
     mapper.get_node_table.return_value = "node"
     mapper.get_edge_table.side_effect = lambda x: x
+    
+    # Mock schema_map structure for _get_all_node_tables
+    mock_node_type = MagicMock()
+    mock_node_type.db_table = "node"
+    
+    # Configure schema_map.node_types.values()
+    mapper.schema_map.node_types.values.return_value = [mock_node_type]
+    
+    # Ensure _schema_map exists so the check doesn't fail or trigger load_schema
+    mapper._schema_map = MagicMock()
+    
     return mapper
 
 @pytest.fixture

@@ -100,9 +100,14 @@ async def get_dependencies(
                 pass
         else:
             # No prefix, handle path heuristic
-            if "/" in node_id or "." in node_id:
+            # Default to 'file' table for any path-like string or simple ID
+            try:
                 table = schema_mapper.get_node_table("file")
-                node_id = f"{table}:`{node_id}`"
+            except KeyError:
+                # Fallback if 'file' type not defined
+                table = "node"
+            
+            node_id = f"{table}:`{node_id}`"
 
         results = await graph_manager.get_dependencies(node_id, depth=request.depth)
         
