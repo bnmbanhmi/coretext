@@ -78,6 +78,7 @@ so that I can perform ANY kind of context retrieval (fuzzy, exact, pattern-based
 - `search_hybrid` supports depth traversal by iteratively querying edge tables.
 - `query_knowledge` tool correctly maps API request to manager call.
 - All tests passed.
+- **Round 2 Review Fixes**: Stripped embeddings from MCP response, implemented dynamic edge loading, and optimized traversal for missing nodes.
 
 ## File List
 - coretext/core/graph/manager.py
@@ -91,3 +92,4 @@ so that I can perform ANY kind of context retrieval (fuzzy, exact, pattern-based
   - Updated `GraphManager.search_hybrid` and `search_topology` to query all node tables dynamically.
   - Added error logging to `search_hybrid` traversal loop.
   - Fixed `get_dependencies` route to handle non-prefixed IDs.
+- 2026-01-07: Senior Developer Review (Round 2) - Fixed vector embedding leakage in MCP response, dynamic edge loading, and traversal optimization.

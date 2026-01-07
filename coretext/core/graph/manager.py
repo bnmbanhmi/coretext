@@ -298,17 +298,35 @@ class GraphManager:
         current_level_ids = list(all_nodes.keys())
         visited_ids = set(current_level_ids)
         
-        # Define edge types and directions to traverse
-        # (Table Name, Direction where 'in' is current node, Direction where 'out' is current node)
-        # Direction: 'outgoing' means current node is 'in', we want 'out'.
-        #            'incoming' means current node is 'out', we want 'in'.
+        # Dynamic edge loading from schema
+        # We assume all defined edge types are relevant for traversal unless filtered
+        outgoing_tables = []
+        incoming_tables = [] # We might need a way to know which edges are 'parent' types (incoming context)
         
-        # We'll stick to the specific relationships defined in get_dependencies logic
-        # outgoing: depends_on, governed_by, contains, references
-        # incoming: parent_of
+        # Heuristic: 'parent_of' is incoming, others are outgoing
+        # Or better: traverse all edges?
+        # For 'search_hybrid' context, we want to know what this node depends on (outgoing)
+        # AND what owns this node (incoming parent).
         
-        outgoing_tables = ["depends_on", "governed_by", "contains", "references"]
-        incoming_tables = ["parent_of"]
+        if self.schema_mapper._schema_map:
+             for edge_name, edge_def in self.schema_mapper.schema_map.edge_types.items():
+                 table = edge_def.db_table
+                 # Hardcoded heuristic for direction based on meaningful relationships
+                 # This could be improved with 'traversal_direction' in schema later
+                 if "parent" in table or "owned_by" in table: 
+                     # Wait, parent_of: source(parent) -> target(child). 
+                     # If we are child, we want INCOMING parent_of.
+                     incoming_tables.append(table)
+                 else:
+                     outgoing_tables.append(table)
+        else:
+             # Fallback if schema not loaded
+             outgoing_tables = ["depends_on", "governed_by", "contains", "references"]
+             incoming_tables = ["parent_of"]
+
+        # Ensure unique tables and deterministic order
+        outgoing_tables = sorted(list(set(outgoing_tables)))
+        incoming_tables = sorted(list(set(incoming_tables)))
 
         for _ in range(depth):
             if not current_level_ids:
@@ -325,8 +343,6 @@ class GraphManager:
                 queries.append(f"SELECT * FROM {table} WHERE out IN $ids;")
                 
             batch_sql = "\n".join(queries)
-            # Make sure to handle the case where we might query tables that don't exist yet?
-            # SurrealDB usually creates tables on write, but querying non-existent table is fine (returns empty).
             
             batch_results = await self.db.query(batch_sql, {"ids": current_level_ids})
             
@@ -369,11 +385,10 @@ class GraphManager:
             
             # Fetch new nodes
             if next_level_ids:
-                # Need to convert string IDs back to RecordID for query? 
-                # SurrealDB allows string matching in WHERE id IN ... if format is correct.
-                # Usually better to rely on raw string IDs if we are consistent.
+                # OPTIMIZATION: Update visited_ids BEFORE fetch to prevent redundant queries
+                # for missing (dangling) nodes in future iterations.
+                visited_ids.update(next_level_ids)
                 
-                # We need the quote them if they have special chars, but `ids` param handles list.
                 node_query = f"SELECT * FROM {target_tables} WHERE id IN $ids;"
                 node_res = await self.db.query(node_query, {"ids": list(next_level_ids)})
                 
@@ -387,27 +402,28 @@ class GraphManager:
                 
                 for node in fetched_nodes:
                     all_nodes[node['id']] = node
-                    visited_ids.add(node['id'])
+                    # visited_ids already updated
                 
                 current_level_ids = list(next_level_ids)
             else:
                 break
 
-        # Convert to models
+        # Convert to models and STRIP EMBEDDINGS
         final_nodes = []
         for n in all_nodes.values():
             try:
-                # Validate with BaseNode (or specific type if possible, but BaseNode is safe)
+                # Strip embedding to save bandwidth/tokens
+                if 'embedding' in n:
+                    n['embedding'] = None
+                
                 final_nodes.append(BaseNode.model_validate(n))
             except Exception as e:
-                # Log error but continue
                 print(f"[ERROR] Failed to validate node {n.get('id', 'unknown')}: {e}")
                 continue
                 
         final_edges = []
         for e in all_edges.values():
             try:
-                # Map in/out to source/target for BaseEdge
                 e_copy = e.copy()
                 e_copy['source'] = e_copy.get('in')
                 e_copy['target'] = e_copy.get('out')

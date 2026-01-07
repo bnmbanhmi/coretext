@@ -20,6 +20,20 @@ def mock_schema_mapper():
     
     # Configure schema_map.node_types.values()
     mapper.schema_map.node_types.values.return_value = [mock_node_type]
+
+    # Mock schema_map.edge_types for search_hybrid dynamic loading
+    def create_edge_def(table):
+        m = MagicMock()
+        m.db_table = table
+        return m
+
+    mapper.schema_map.edge_types.items.return_value = [
+        ("depends_on", create_edge_def("depends_on")),
+        ("governed_by", create_edge_def("governed_by")),
+        ("contains", create_edge_def("contains")),
+        ("references", create_edge_def("references")),
+        ("parent_of", create_edge_def("parent_of"))
+    ]
     
     # Ensure _schema_map exists so the check doesn't fail or trigger load_schema
     mapper._schema_map = MagicMock()
@@ -111,22 +125,24 @@ async def test_search_hybrid_returns_subgraph(graph_manager, mock_surreal_client
     mock_embedder.encode.return_value = embedding
     
     # Mock anchors (Call 1)
-    anchors = [{"id": "node:1", "node_type": "file", "score": 0.9}]
+    anchors = [{"id": "node:1", "node_type": "file", "score": 0.9, "embedding": embedding}]
     
     # Mock Traversal (Call 2) - 5 queries in batch
-    # 4 outgoing (empty), 1 incoming (empty)
-    # Let's return one edge for "depends_on" (index 0)
+    # Order: Sorted Outgoing [contains, depends_on, governed_by, references] 
+    #        Then Sorted Incoming [parent_of]
+    
+    # Let's return one edge for "depends_on" (index 1)
     edge_res = {"id": "depends_on:1", "in": "node:1", "out": "node:2", "edge_type": "depends_on"}
     traversal_results = [
-        {"status": "OK", "result": [edge_res]}, # depends_on
+        {"status": "OK", "result": []}, # contains (index 0)
+        {"status": "OK", "result": [edge_res]}, # depends_on (index 1)
         {"status": "OK", "result": []}, # governed_by
-        {"status": "OK", "result": []}, # contains
         {"status": "OK", "result": []}, # references
         {"status": "OK", "result": []}, # parent_of
     ]
     
     # Mock Node Fetch (Call 3) - fetching node:2
-    node_res = [{"id": "node:2", "node_type": "file", "content": "dep content"}]
+    node_res = [{"id": "node:2", "node_type": "file", "content": "dep content", "embedding": embedding}]
     
     mock_surreal_client.query.side_effect = [
         [{"status": "OK", "result": anchors}], # Anchors
@@ -143,3 +159,7 @@ async def test_search_hybrid_returns_subgraph(graph_manager, mock_surreal_client
     node_ids = [n.id for n in result["nodes"]]
     assert "node:1" in node_ids
     assert "node:2" in node_ids
+
+    # Verify embeddings are stripped (Fix verification)
+    for node in result["nodes"]:
+        assert node.embedding is None
