@@ -533,25 +533,45 @@ As a Developer using CoreText, I want to identify and close gaps in the product'
 *   Fix Vector Embedding generation and safety checks.
 *   Execute and verify the demo guide.
 
-### Story 5.3: Gemini CLI Extension Packaging & Verification
+### Story 5.3: Hybrid Execution & Thick Tool Implementation
 
-As a Developer, I want to package CoreText as a native Gemini CLI Extension, so that it can be easily installed and used within the official CLI ecosystem.
-
-**Acceptance Criteria:**
-*   Given the Gemini CLI Extension specification
-*   When I create and validate the `extension.yaml`
-*   Then the extension installs successfully via `gemini extensions install .`.
-*   And the `mcpServers` definition correctly launches the CoreText daemon.
-
-### Story 5.4: End-to-End "Dogfooding" Demo
-
-As a user (Minh), I want to see the Gemini Agent use CoreText to analyze its own structure, so that I can verify the end-to-end "context-pull" workflow.
+As an AI Agent, I want a single "Thick Tool" named `query_knowledge` that combines semantic search with graph traversal, so that I can retrieve deep, topologically connected context from a simple natural language query without needing to chain multiple tools or write complex database queries ("Thin Prompt").
 
 **Acceptance Criteria:**
-*   Given CoreText is installed as an extension
-*   When I ask the Gemini Agent: "Explain the dependency structure of GraphManager"
-*   Then the Agent successfully calls CoreText's MCP tools.
-*   And the Agent provides an accurate answer based on the knowledge graph data.
+*   Given the MCP server is running
+*   When the Agent calls `query_knowledge(natural_query="...", depth=1)`
+*   Then the system vectorizes the `natural_query`.
+*   And identifies "Anchor Nodes" via vector similarity search in SurrealDB.
+*   And automatically traverses the graph from these anchors (e.g., `depends_on`, `child_of`) to gather context.
+*   And returns a consolidated context object containing the relevant subgraph.
+*   And this abstraction allows the Agent's system prompt to remain minimal.
+
+**Technical Notes:**
+*   Implement `query_knowledge` tool in `coretext/server/mcp/routes.py`.
+*   Orchestrate the "Hybrid Execution" logic: Vector Embed -> Select Anchors -> Traverse Graph.
+*   Ensure the response format is optimized for LLM consumption (reducing token usage while maximizing information density).
+*   Verify protocol adherence is already satisfied (ignoring standard protocol re-checks as instructed).
+
+**Prerequisites:** Story 2.2, Story 2.3.
+
+### Story 5.4: Gemini CLI Integration & Extension Packaging
+
+As a User, I want the CoreText MCP tools to be natively available in the Gemini CLI, so that I can interact with the knowledge graph naturally during my chat sessions.
+
+**Acceptance Criteria:**
+*   Given the CoreText project is ready
+*   When I inspect `extension.yaml`
+*   Then it includes a `tools` section defining `query_knowledge` and other MCP tools.
+*   And the configuration correctly points to the running daemon/MCP server.
+*   When I ask the Gemini CLI "How does the graph manager work?", it invokes the `query_knowledge` tool transparently.
+*   And the tool execution returns the context to the conversation.
+
+**Technical Notes:**
+*   Update `extension.yaml` to include the `tools` definition mapping to the MCP endpoints.
+*   Ensure the CLI can discover and invoke the tools via the defined protocol.
+*   Verify end-to-end functionality with a sample query in the CLI.
+
+**Prerequisites:** Story 5.3.
 
 ---
 
