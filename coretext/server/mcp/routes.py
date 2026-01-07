@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel, Field
-from typing import List, Any
+from typing import List, Any, Optional
 from coretext.core.parser.schema import SchemaMapper
 from coretext.core.graph.manager import GraphManager
+from coretext.core.graph.models import BaseNode, BaseEdge
 from coretext.server.dependencies import get_graph_manager, get_schema_mapper
 from coretext.server.mcp.manifest import generate_manifest
 
@@ -21,6 +22,17 @@ class SearchTopologyRequest(BaseModel):
 
 class SearchTopologyResponse(BaseModel):
     results: List[dict[str, Any]] = Field(..., description="List of nodes matching the search query with relevance scores.")
+
+class QueryKnowledgeRequest(BaseModel):
+    natural_query: str = Field(..., description="The semantic query for vector search (required).")
+    depth: int = Field(default=1, ge=0, le=5, description="Traversal depth for context (default=1).")
+    top_k: int = Field(default=5, ge=1, le=20, description="Number of anchor nodes to retrieve (default=5).")
+    regex_filter: Optional[str] = Field(default=None, description="A regex pattern to filter nodes (e.g., '^/src/.*\\.py$'). Matches id, path, or content.")
+    keyword_filter: Optional[str] = Field(default=None, description="Specific keywords that MUST be present (lexical/exact match).")
+
+class QueryKnowledgeResponse(BaseModel):
+    nodes: List[BaseNode] = Field(..., description="List of nodes in the subgraph.")
+    edges: List[BaseEdge] = Field(..., description="List of edges in the subgraph.")
 
 class DependencyItem(BaseModel):
     node_id: str = Field(..., description="The unique identifier of the dependent node.")
@@ -136,6 +148,52 @@ async def search_topology(
     except Exception:
         # Log error here if logging is set up
         raise HTTPException(status_code=500, detail="Internal server error during topology search.")
+
+@router.post("/tools/query_knowledge", response_model=QueryKnowledgeResponse)
+async def query_knowledge(
+    request: QueryKnowledgeRequest,
+    graph_manager: GraphManager = Depends(get_graph_manager)
+):
+    """
+    Perform a universal context retrieval query combining semantic search, filtering, and graph traversal.
+    
+    This "Thick Tool" allows complex knowledge retrieval in a single round-trip.
+    
+    Args:
+        request: The query parameters including semantic query, filters (regex/keywords), and traversal depth.
+        graph_manager: Injected GraphManager instance.
+        
+    Returns:
+        QueryKnowledgeResponse: A consolidated subgraph (nodes and edges).
+        
+    Example I/O:
+        Input: {
+            "natural_query": "authentication logic", 
+            "top_k": 3, 
+            "depth": 1, 
+            "regex_filter": "^/src/auth/.*", 
+            "keyword_filter": "JWT"
+        }
+        Output: {
+            "nodes": [{"id": "file:src/auth/jwt.py", ...}, {"id": "file:src/auth/login.py", ...}],
+            "edges": [{"source": "file:src/auth/login.py", "target": "file:src/auth/jwt.py", "edge_type": "depends_on", ...}]
+        }
+        
+    Docstrings on Regex:
+        The `regex_filter` field allows filtering by ID, path, or content using SurrealQL `~` operator.
+        Useful for scoping search to specific directories (e.g., `^/server/.*`) or file types (e.g., `.*\.py$`).
+    """
+    try:
+        results = await graph_manager.search_hybrid(
+            query=request.natural_query,
+            top_k=request.top_k,
+            depth=request.depth,
+            regex=request.regex_filter,
+            keywords=request.keyword_filter
+        )
+        return QueryKnowledgeResponse(nodes=results['nodes'], edges=results['edges'])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error during knowledge query: {str(e)}")
 
 @router.get("/manifest")
 async def get_manifest(request: Request):

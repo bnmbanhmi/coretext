@@ -1,6 +1,6 @@
 # Story 5.3: Hybrid Execution & Thick Tool Implementation
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -29,22 +29,22 @@ so that I can perform ANY kind of context retrieval (fuzzy, exact, pattern-based
 
 ## Tasks / Subtasks
 
-- [ ] **Enhance `GraphManager` with Universal Search Logic**
-  - [ ] Update `search_hybrid` signature: `search_hybrid(query: str, top_k: int, depth: int, regex: str = None, keywords: str = None)`.
-  - [ ] Construct SurrealQL query with dynamic `WHERE` clauses:
+- [x] **Enhance `GraphManager` with Universal Search Logic**
+  - [x] Update `search_hybrid` signature: `search_hybrid(query: str, top_k: int, depth: int, regex: str = None, keywords: str = None)`.
+  - [x] Construct SurrealQL query with dynamic `WHERE` clauses:
     -   Vector score: `vector::distance(...)`
     -   Regex: `AND file_path ~ $regex` (or `string::matches(content, $regex)`)
     -   Keywords: `AND content CONTAINS $keyword` (or use FTS `@@` operator if indexed).
-  - [ ] Implement the traversal logic (`SELECT ->edge->node FROM $filtered_anchors`).
-- [ ] **Implement `query_knowledge` MCP Tool**
-  - [ ] Update MCP Tool definition to include `regex_filter` and `keyword_filter` as optional strings.
-  - [ ] Add docstrings explaining how to use Regex for file path patterns or specific code structures.
-- [ ] **Optimize Query Strategy**
-  - [ ] Decide on "Filter-First" vs "Vector-First" strategy based on inputs. (Likely Vector-First for "semantic" queries, but ensure filters are applied efficiently).
-- [ ] **Verify End-to-End**
-  - [ ] Test 1: Pure Semantic ("Auth system").
-  - [ ] Test 2: Semantic + Regex ("Auth system" in `^/server/.*`).
-  - [ ] Test 3: Semantic + Keyword ("Auth" containing "JWT").
+  - [x] Implement the traversal logic (`SELECT ->edge->node FROM $filtered_anchors`).
+- [x] **Implement `query_knowledge` MCP Tool**
+  - [x] Update MCP Tool definition to include `regex_filter` and `keyword_filter` as optional strings.
+  - [x] Add docstrings explaining how to use Regex for file path patterns or specific code structures.
+- [x] **Optimize Query Strategy**
+  - [x] Decide on "Filter-First" vs "Vector-First" strategy based on inputs. (Likely Vector-First for "semantic" queries, but ensure filters are applied efficiently).
+- [x] **Verify End-to-End**
+  - [x] Test 1: Pure Semantic ("Auth system").
+  - [x] Test 2: Semantic + Regex ("Auth system" in `^/server/.*`).
+  - [x] Test 3: Semantic + Keyword ("Auth" containing "JWT").
 
 ## Dev Notes
 
@@ -65,3 +65,25 @@ so that I can perform ANY kind of context retrieval (fuzzy, exact, pattern-based
 ### References
 
 - [SurrealQL Operators](https://surrealdb.com/docs/surrealql/operators) (`~` for regex, `CONTAINS` for containment)
+
+## Dev Agent Record
+
+### Implementation Plan
+- Implemented `search_hybrid` in `GraphManager` using "Vector-First" strategy with dynamic WHERE clauses for regex/keywords.
+- Implemented `query_knowledge` endpoint in `routes.py` exposing this functionality.
+- Added new `QueryKnowledgeRequest/Response` models.
+- Wrote unit tests for `GraphManager` and integration tests for the endpoint.
+
+### Completion Notes
+- `search_hybrid` supports depth traversal by iteratively querying edge tables.
+- `query_knowledge` tool correctly maps API request to manager call.
+- All tests passed.
+
+## File List
+- coretext/core/graph/manager.py
+- coretext/server/mcp/routes.py
+- tests/unit/core/graph/test_search_hybrid.py
+- tests/unit/server/mcp/test_routes.py
+
+## Change Log
+- 2026-01-07: Implemented `search_hybrid` and `query_knowledge` tool with full test coverage.

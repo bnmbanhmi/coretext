@@ -56,4 +56,42 @@ def test_get_manifest_endpoint(override_dependency):
     tool_names = [t["name"] for t in data["tools"]]
     assert "search_topology" in tool_names
     assert "get_dependencies" in tool_names
+    assert "query_knowledge" in tool_names
+
+def test_query_knowledge_endpoint(mock_graph_manager, override_dependency):
+    from coretext.core.graph.models import BaseNode, BaseEdge
+    
+    # Setup mock return
+    # search_hybrid returns {'nodes': List[BaseNode], 'edges': List[BaseEdge]}
+    nodes = [BaseNode(id="file:test.py", node_type="file", content="foo")]
+    edges = [BaseEdge(id="dep:1", edge_type="depends_on", source="file:test.py", target="file:other.py")]
+    
+    mock_graph_manager.search_hybrid.return_value = {"nodes": nodes, "edges": edges}
+    
+    payload = {
+        "natural_query": "foo",
+        "top_k": 5,
+        "depth": 1,
+        "regex_filter": ".*py",
+        "keyword_filter": "foo"
+    }
+    
+    response = client.post("/mcp/tools/query_knowledge", json=payload)
+    
+    assert response.status_code == 200
+    data = response.json()
+    
+    assert "nodes" in data
+    assert "edges" in data
+    assert len(data["nodes"]) == 1
+    assert data["nodes"][0]["id"] == "file:test.py"
+    assert len(data["edges"]) == 1
+    
+    mock_graph_manager.search_hybrid.assert_awaited_once_with(
+        query="foo",
+        top_k=5,
+        depth=1,
+        regex=".*py",
+        keywords="foo"
+    )
 

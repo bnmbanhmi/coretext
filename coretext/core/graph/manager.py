@@ -209,6 +209,196 @@ class GraphManager:
 
         return self._convert_ids(results)
 
+    async def search_hybrid(
+        self, 
+        query: str, 
+        top_k: int = 5, 
+        depth: int = 1, 
+        regex: str | None = None, 
+        keywords: str | None = None
+    ) -> dict:
+        """
+        Performs a universal search combining Vector Search, Regex, and Keywords,
+        followed by a graph traversal to gather context.
+
+        Args:
+            query: The natural language query for vector search.
+            top_k: Number of anchor nodes to retrieve.
+            depth: Traversal depth from anchors.
+            regex: Optional regex pattern to filter nodes (matches id, path, or content).
+            keywords: Optional keyword string to require in content.
+
+        Returns:
+            A dictionary containing 'nodes' and 'edges' lists (deduplicated).
+        """
+        # 1. Embed query
+        embedding = await self.embedder.encode(query, task_type="search_query")
+        if not embedding:
+            return {"nodes": [], "edges": []}
+
+        # 2. Find Anchors
+        sql = """
+        SELECT 
+            *,
+            vector::similarity::cosine(embedding, $embedding) AS score 
+        FROM node 
+        WHERE embedding != NONE AND embedding != []
+        """
+        params = {"embedding": embedding, "limit": top_k}
+
+        if regex:
+            # Check id, path, or content. Note: path/content might be missing on some node types, 
+            # so we rely on schema or just try. In Surreal, missing field ~ regex is false.
+            sql += " AND (id ~ $regex OR path ~ $regex OR content ~ $regex)"
+            params["regex"] = regex
+        
+        if keywords:
+            sql += " AND content CONTAINS $keyword"
+            params["keyword"] = keywords
+
+        sql += " ORDER BY score DESC LIMIT $limit;"
+
+        response = await self.db.query(sql, params)
+        
+        anchors = []
+        if isinstance(response, list) and len(response) > 0:
+            result_obj = response[0]
+            if isinstance(result_obj, dict) and result_obj.get('status') == 'OK':
+                anchors = result_obj.get('result', [])
+            elif isinstance(result_obj, dict) and 'score' in result_obj:
+                 anchors = response
+            elif isinstance(result_obj, list):
+                 anchors = result_obj
+            else:
+                 anchors = response
+
+        anchors = self._convert_ids(anchors)
+        
+        # 3. Traversal
+        all_nodes = {n['id']: n for n in anchors}
+        all_edges = {} # id -> edge dict
+
+        current_level_ids = list(all_nodes.keys())
+        visited_ids = set(current_level_ids)
+        
+        # Define edge types and directions to traverse
+        # (Table Name, Direction where 'in' is current node, Direction where 'out' is current node)
+        # Direction: 'outgoing' means current node is 'in', we want 'out'.
+        #            'incoming' means current node is 'out', we want 'in'.
+        
+        # We'll stick to the specific relationships defined in get_dependencies logic
+        # outgoing: depends_on, governed_by, contains, references
+        # incoming: parent_of
+        
+        outgoing_tables = ["depends_on", "governed_by", "contains", "references"]
+        incoming_tables = ["parent_of"]
+
+        for _ in range(depth):
+            if not current_level_ids:
+                break
+            
+            queries = []
+            
+            # Outgoing edges: WHERE in IN $ids
+            for table in outgoing_tables:
+                queries.append(f"SELECT * FROM {table} WHERE in IN $ids;")
+            
+            # Incoming edges: WHERE out IN $ids
+            for table in incoming_tables:
+                queries.append(f"SELECT * FROM {table} WHERE out IN $ids;")
+                
+            batch_sql = "\n".join(queries)
+            # Make sure to handle the case where we might query tables that don't exist yet?
+            # SurrealDB usually creates tables on write, but querying non-existent table is fine (returns empty).
+            
+            batch_results = await self.db.query(batch_sql, {"ids": current_level_ids})
+            
+            next_level_ids = set()
+            
+            # Helper to process results safely
+            def get_result_list(res_item):
+                if isinstance(res_item, dict) and res_item.get('status') == 'OK':
+                    return res_item.get('result', [])
+                elif isinstance(res_item, list):
+                    return res_item
+                return []
+
+            if not isinstance(batch_results, list):
+                batch_results = [batch_results]
+
+            # Process outgoing results
+            for i, table in enumerate(outgoing_tables):
+                if i < len(batch_results):
+                    edges = get_result_list(batch_results[i])
+                    edges = self._convert_ids(edges)
+                    for edge in edges:
+                        all_edges[edge['id']] = edge
+                        target_id = edge.get('out')
+                        if target_id and target_id not in visited_ids:
+                            next_level_ids.add(target_id)
+
+            # Process incoming results
+            offset = len(outgoing_tables)
+            for i, table in enumerate(incoming_tables):
+                idx = offset + i
+                if idx < len(batch_results):
+                    edges = get_result_list(batch_results[idx])
+                    edges = self._convert_ids(edges)
+                    for edge in edges:
+                        all_edges[edge['id']] = edge
+                        source_id = edge.get('in')
+                        if source_id and source_id not in visited_ids:
+                            next_level_ids.add(source_id)
+            
+            # Fetch new nodes
+            if next_level_ids:
+                # Need to convert string IDs back to RecordID for query? 
+                # SurrealDB allows string matching in WHERE id IN ... if format is correct.
+                # Usually better to rely on raw string IDs if we are consistent.
+                
+                # We need to quote them if they have special chars, but `ids` param handles list.
+                node_query = "SELECT * FROM node WHERE id IN $ids;"
+                node_res = await self.db.query(node_query, {"ids": list(next_level_ids)})
+                
+                fetched_nodes = []
+                if isinstance(node_res, list) and len(node_res) > 0:
+                     fetched_nodes = get_result_list(node_res[0])
+                elif isinstance(node_res, dict):
+                     fetched_nodes = get_result_list(node_res)
+                
+                fetched_nodes = self._convert_ids(fetched_nodes)
+                
+                for node in fetched_nodes:
+                    all_nodes[node['id']] = node
+                    visited_ids.add(node['id'])
+                
+                current_level_ids = list(next_level_ids)
+            else:
+                break
+
+        # Convert to models
+        final_nodes = []
+        for n in all_nodes.values():
+            try:
+                # Validate with BaseNode (or specific type if possible, but BaseNode is safe)
+                final_nodes.append(BaseNode.model_validate(n))
+            except Exception:
+                # If validation fails, skip or log? For now skip.
+                continue
+                
+        final_edges = []
+        for e in all_edges.values():
+            try:
+                # Map in/out to source/target for BaseEdge
+                e_copy = e.copy()
+                e_copy['source'] = e_copy.get('in')
+                e_copy['target'] = e_copy.get('out')
+                final_edges.append(BaseEdge.model_validate(e_copy))
+            except Exception:
+                continue
+
+        return {"nodes": final_nodes, "edges": final_edges}
+
     async def ingest(self, nodes: List[BaseNode], edges: List[BaseEdge], batch_size: int = 100) -> SyncReport:
         """
         Ingests a list of nodes and edges using batched transactions.
