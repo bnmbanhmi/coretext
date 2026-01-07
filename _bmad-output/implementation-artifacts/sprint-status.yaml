@@ -74,7 +74,13 @@ development_status:
   4-6-epic-4-demo-and-verification-fixes: done
   epic-4-retrospective: done
 
-  epic-5: done
+  epic-5: in-progress
   5-1-comprehensive-product-demo-verification-guide: done
   5-2-directory-selection-feature: done
+  5-3-gemini-cli-extension-packaging-and-verification: backlog
+  5-4-end-to-end-dogfooding-demo: backlog
   epic-5-retrospective: optional
+
+external_tasks:
+  research-agent-skills-compatibility: pending
+  mcp-protocol-compliance-verification: pending
