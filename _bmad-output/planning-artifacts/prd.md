@@ -61,6 +61,8 @@ The system acts as a "Translator" and "Memory Layer," enabling a "Dual-Context" 
 *   **Reduction in Manual Context Loading:** Users stop manually pasting file contents into the chat.
 *   **Reduction in Hallucinated Dependencies:** Code generation references correct, existing project modules.
 *   **Seamless Sync:** Database state remains consistent with Git state without manual intervention.
+*   **Gemini Extension Native:** The tool is verified to install and function seamlessly as a `gemini` extension.
+*   **MCP Compliance:** The server passes standard MCP protocol validation tests.
 
 ## Product Scope
 

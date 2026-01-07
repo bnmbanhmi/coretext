@@ -533,7 +533,44 @@ As a Developer using CoreText, I want to identify and close gaps in the product'
 *   Fix Vector Embedding generation and safety checks.
 *   Execute and verify the demo guide.
 
-**Prerequisites:** Story 5.1.
+### Story 5.3: Research & Definition: Agent Skills Compatibility
+
+As a Product Owner, I want to analyze the "Agent Skills" specification, so that I can determine how CoreText should integrate or interoperate with it.
+
+**Acceptance Criteria:**
+*   Given the "Agent Skills" documentation
+*   When I perform a deep-dive analysis
+*   Then I produce a decision record (ADR) on "Coretext vs. Agent Skills" compatibility (e.g., export to `SKILL.md`).
+
+### Story 5.4: Gemini CLI Extension Packaging & Verification
+
+As a Developer, I want to package CoreText as a native Gemini CLI Extension, so that it can be easily installed and used within the official CLI ecosystem.
+
+**Acceptance Criteria:**
+*   Given the Gemini CLI Extension specification
+*   When I create and validate the `extension.yaml`
+*   Then the extension installs successfully via `gemini extensions install .`.
+*   And the `mcpServers` definition correctly launches the CoreText daemon.
+
+### Story 5.5: MCP Protocol Compliance Verification
+
+As a Developer, I want to verify the MCP server against official protocol standards, so that I can ensure a correct and reliable implementation for all MCP clients.
+
+**Acceptance Criteria:**
+*   Given the CoreText MCP Server is running
+*   When I run a protocol inspector or test suite (e.g., `modelcontextprotocol/inspector`)
+*   Then the server passes all mandatory protocol tests.
+*   And JSON-RPC message structures and error codes are verified.
+
+### Story 5.6: End-to-End "Dogfooding" Demo
+
+As a user (Minh), I want to see the Gemini Agent use CoreText to analyze its own structure, so that I can verify the end-to-end "context-pull" workflow.
+
+**Acceptance Criteria:**
+*   Given CoreText is installed as an extension
+*   When I ask the Gemini Agent: "Explain the dependency structure of GraphManager"
+*   Then the Agent successfully calls CoreText's MCP tools.
+*   And the Agent provides an accurate answer based on the knowledge graph data.
 
 ---
 
