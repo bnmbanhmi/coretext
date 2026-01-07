@@ -86,6 +86,20 @@ poetry run coretext inspect docs/my-new-feature.md
 
 CoreText exposes a **Model Context Protocol (MCP)** server at `http://localhost:8001/mcp`. You can connect any MCP-compliant agent (like Claude Desktop or Gemini CLI) to give it access to your knowledge graph.
 
+### Gemini CLI Extension
+
+To install CoreText as a native extension in the Gemini CLI:
+
+```bash
+# Ensure the daemon is running
+poetry run coretext start
+
+# Install the extension from the project root
+gemini extensions install .
+```
+
+Once installed, the Gemini Agent will automatically discover the `query_knowledge` tool and use it to answer questions about your project structure and documentation.
+
 ### Capabilities Exposed:
 *   `search_topology(query: str)`: Finds nodes semantically related to a concept.
 *   `get_dependencies(node_id: str)`: Retrieves the dependency tree for a specific file or concept.

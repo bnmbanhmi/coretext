@@ -18,3 +18,6 @@ commands:
     description: Pings the CLI.
   - name: inspect
     description: Inspects the dependency tree of a specific node.
+mcpServers:
+  coretext:
+    url: http://127.0.0.1:8001/mcp
