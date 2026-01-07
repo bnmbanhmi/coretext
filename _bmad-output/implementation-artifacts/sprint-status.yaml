@@ -78,7 +78,7 @@ development_status:
   5-1-comprehensive-product-demo-verification-guide: done
   5-2-directory-selection-feature: done
   5-3-hybrid-execution-thick-tool: done
-  5-4-gemini-cli-extension-packaging-and-verification: backlog
+  5-4-gemini-cli-extension-packaging-and-verification: ready-for-dev
   5-5-end-to-end-dogfooding-demo: backlog
   epic-5-retrospective: optional
 
