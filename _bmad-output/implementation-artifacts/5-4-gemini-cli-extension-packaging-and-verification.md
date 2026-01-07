@@ -1,6 +1,6 @@
 # Story 5.4: Gemini CLI Integration & Extension Packaging
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -82,3 +82,14 @@ Gemini 2.0 Flash
 - **Documentation**: Added a "Gemini CLI Extension" section to `README.md` with installation instructions.
 - **Assumptions**: Assumed the Gemini CLI supports standard MCP configuration via `mcpServers` and can work with the REST-like tool definitions exposed by the CoreText daemon.
 
+## Senior Developer Review (AI)
+_Reviewer: Minh on 2026-01-07_
+
+**Outcome: Approved with Fixes**
+
+**Fixes Applied:**
+1.  **Dependency Violations Fixed**:
+    *   Added missing `PyYAML` dependency to `pyproject.toml`.
+    *   Replaced unlisted `requests` dependency with `httpx` in `scripts/verify_extension_integration.py`.
+2.  **Configuration Safety**:
+    *   Updated `scripts/verify_extension_integration.py` to warn if the `extension.yaml` port mismatches the project configuration (`config.yaml`), preventing silent failures.
