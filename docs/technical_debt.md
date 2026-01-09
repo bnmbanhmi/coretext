@@ -4,10 +4,7 @@
 
 ### Critical
 *   **SurrealDB Data Ingestion Failure ('NONE' Value Error)**: Persistent "Can not execute CREATE statement using value: NONE" error when inserting Pydantic models into SurrealDB via `AsyncSurreal` client.
-    *   **Cause**: Likely a subtle schema mismatch (e.g., implicit null values in `model_dump`), serialization issue with `RecordID` objects, or internal behavior of the specific `surrealdb` python client version interacting with the schema constraints.
-    *   **Impact**: Blocks all data persistence. The Knowledge Graph remains empty despite successful sync execution logs.
-    *   **Status**: Critical Blocker. Recorded on 2025-12-12.
-    *   **Action Required**: Deep dive debugging of `surrealdb` python client interactions, schema definitions, and Pydantic serialization logic. Fix is mandatory before proceeding.
+    *   **Status**: **Resolved** (2026-01-09). Fixed by `GraphManager` safety checks and schema defaults.
 
 ### Testing
 *   **CLI `init` command integration tests**: The integration tests for `coretext init` (in `tests/unit/cli/test_commands.py`) fail with `exit_code=2` when run via `typer.testing.CliRunner`.
@@ -47,3 +44,27 @@
     * **Cause**: Simplicity for MVP and human-readability of IDs.
     * **Impact**: Refactoring folder structure (moving files) changes the Node ID, breaking the history and identity of the node in the graph (creating a new node instead of moving the old one).
     * **Action Required**: Evaluate moving to UUIDs for Node IDs in the future (requires a complex migration strategy).
+
+## Optimization Opportunities
+
+### Vector Engine
+**Status:** Open
+**Impact:** Performance, Memory, Storage efficiency.
+**Identified:** 2026-01-09
+
+The current embedding implementation uses `nomic-embed-text-v1.5` in a functional but unoptimized state.
+
+- [ ] **Activate Matryoshka Slicing:**
+    - *Current:* Storing full 768-float vectors.
+    - *Optimization:* Reduce dimensions to 256 or 128. Nomic v1.5 supports this with ~98% performance retention.
+    - *Benefit:* ~66% reduction in storage and index size; faster search.
+
+- [ ] **Implement Batch Encoding:**
+    - *Current:* `GraphManager.ingest` calls `embedder.encode(text)` individually for every node.
+    - *Optimization:* Implement `encode_batch` in `VectorEmbedder` and use `model.encode(list_of_texts)`.
+    - *Benefit:* Significant speedup during graph ingestion/sync.
+
+- [ ] **Model Quantization:**
+    - *Current:* Loading full precision model (~300MB RAM, >5s cold start).
+    - *Optimization:* Switch to quantized (int8/binary) model loading.
+    - *Benefit:* Reduced memory footprint (critical for 500MB daemon limit) and faster startup.
