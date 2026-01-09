@@ -90,32 +90,42 @@ class SyncEngine:
             for edge in edges_to_ingest:
                 edge.commit_hash = commit_hash
 
-        if error_count > 0:
+        # Filter out ParsingErrorNodes before ingestion to prevent total rejection
+        valid_nodes = [n for n in nodes_to_ingest if not isinstance(n, ParsingErrorNode)]
+
+        
+        ingestion_result = None
+        ingestion_errors = []
+
+        if mode == SyncMode.WRITE and valid_nodes:
+            # Ingest to DB
+            ingestion_result = await self.graph_manager.ingest(valid_nodes, edges_to_ingest)
+            if not ingestion_result.success:
+                 # Extract errors from report if any
+                 if ingestion_result.parsing_errors:
+                     ingestion_errors = [f"Ingestion error: {err.error_message}" for err in ingestion_result.parsing_errors]
+                 else:
+                     ingestion_errors.append(ingestion_result.message)
+        
+        final_errors = all_errors + ingestion_errors
+        
+        if final_errors:
+             # If we ingested something, we might consider it partial success? 
+             # But strictly, if there are errors, success is False.
              return SyncResult(
                 success=False,
-                processed_count=processed_count,
-                error_count=error_count,
-                message=f"Sync failed with {error_count} errors.",
-                errors=all_errors
+                processed_count=processed_count, 
+                error_count=len(final_errors),
+                message=f"Sync completed with {len(final_errors)} errors.",
+                errors=final_errors
             )
 
         if mode == SyncMode.WRITE:
-            # Ingest to DB
-            report = await self.graph_manager.ingest(nodes_to_ingest, edges_to_ingest)
-            if not report.success:
-                 # Extract errors from report if any
-                 ingest_errors = []
-                 if report.parsing_errors:
-                     ingest_errors = [f"Ingestion error: {err.error_message}" for err in report.parsing_errors]
-                 else:
-                     ingest_errors.append(report.message)
-
+            if ingestion_result:
                  return SyncResult(
-                    success=False,
+                    success=True,
                     processed_count=processed_count,
-                    error_count=len(report.parsing_errors) if report.parsing_errors else 1,
-                    message=report.message,
-                    errors=ingest_errors
+                    message=ingestion_result.message
                 )
 
         return SyncResult(

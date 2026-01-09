@@ -46,7 +46,7 @@ poetry install
 ## Quick Start
 
 ### 1. Initialize the Project
-Sets up the local SurrealDB instance, downloads the embedding model, and configures the project.
+Sets up the local SurrealDB instance, downloads the embedding model, and configures the project. It will create a strict knowledge directory `_coretext-knowledge` to isolate your graph data.
 
 ```bash
 poetry run coretext init
@@ -67,17 +67,17 @@ poetry run coretext status
 ```
 
 ### 4. Create Content
-Use built-in templates to create structured documentation.
+Use built-in templates to create structured documentation inside your knowledge graph.
 
 ```bash
-poetry run coretext new story docs/my-new-feature.md
+poetry run coretext new story _coretext-knowledge/my-new-feature.md
 ```
 
 ### 5. Inspect the Graph
 Visualize the dependencies of any file or node.
 
 ```bash
-poetry run coretext inspect docs/my-new-feature.md
+poetry run coretext inspect _coretext-knowledge/my-new-feature.md
 ```
 
 ---

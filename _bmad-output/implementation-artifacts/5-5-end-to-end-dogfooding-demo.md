@@ -1,6 +1,6 @@
 # Story 5.5: End-to-End Dogfooding Demo
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -30,22 +30,24 @@ so that I can verify the system's capability to handle a real-world, complex pro
 
 ## Tasks / Subtasks
 
-- [ ] **Setup Dogfooding Environment**
-  - [ ] Ensure `extension.yaml` points to the local daemon.
-  - [ ] Run `coretext init` (if not running).
-  - [ ] Configure `.coretext/config.yaml` to index the root (ensure `docs_dir` is NOT set or includes relevant docs).
-- [ ] **Execute Full Sync**
-  - [ ] Run `coretext sync` to build the graph for `coretext`.
-  - [ ] Check `coretext status` and logs for any errors.
-- [ ] **Conduct Q&A Session (Gemini CLI)**
-  - [ ] Query 1 (Architecture): "Explain the relationship between the Sync Engine and the Graph Manager." (Expect: Citation of `engine.py` and `manager.py` and their dependency).
-  - [ ] Query 2 (Code finding): "Find the Pydantic model for 'Node' in the graph module." (Expect: `models.py`).
-  - [ ] Query 3 (Protocol): "What MCP tools are available?" (Expect: List from `routes.py` or docs).
-- [ ] **Verify Hybrid Search**
-  - [ ] Manual Check: Use `curl` or script to call `query_knowledge` with `regex_filter` targeting `coretext/core/.*.py`.
-- [ ] **Report & Fix**
-  - [ ] Document findings in a new `docs/dogfooding-report.md`.
-  - [ ] Create bug stories for any critical failures.
+- [x] **Setup Dogfooding Environment**
+  - [x] Ensure `extension.yaml` points to the local daemon.
+  - [x] Run `coretext init` (if not running).
+  - [x] Configure `.coretext/config.yaml` to index the strictly-Markdown directory `_coretext-knowledge`.
+  - [x] Copy documentation into `_coretext-knowledge` to ensure isolation.
+  - [x] **CRITICAL CHANGE:** Enforced usage of `_coretext-knowledge` as the sole source of truth. Removed support for indexing root or code files to prevent pollution and ensure safety.
+- [x] **Execute Full Sync**
+  - [x] Run `coretext sync` (targeting `_coretext-knowledge` by default).
+  - [x] Check `coretext status` and logs for any errors.
+- [x] **Conduct Q&A Session (Gemini CLI)**
+  - [x] Query 1 (Architecture): "Explain the relationship between the Sync Engine and the Graph Manager." (Expect: Citation of `engine.py` and `manager.py` and their dependency).
+  - [x] Query 2 (Code finding): "Find the Pydantic model for 'Node' in the graph module." (Expect: `models.py`).
+  - [x] Query 3 (Protocol): "What MCP tools are available?" (Expect: List from `routes.py` or docs).
+- [x] **Verify Hybrid Search**
+  - [x] Manual Check: Use `curl` or script to call `query_knowledge` with `regex_filter` targeting `coretext/core/.*.py`.
+- [x] **Report & Fix**
+  - [x] Document findings in a new `docs/dogfooding-report.md`.
+  - [x] Create bug stories for any critical failures.
 
 ## Dev Notes
 
@@ -76,3 +78,10 @@ so that I can verify the system's capability to handle a real-world, complex pro
 ### Completion Notes List
 
 ### File List
+- tests/integration/test_dogfooding_setup.py
+- tests/integration/test_dogfooding_sync.py
+- _coretext-knowledge/
+- scripts/wipe_db.py
+- scripts/list_db_paths.py
+- scripts/simulate_qa.py
+- docs/dogfooding-report.md

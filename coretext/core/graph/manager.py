@@ -264,9 +264,9 @@ class GraphManager:
         params = {"embedding": embedding, "limit": top_k}
 
         if regex:
-            # Check id, path, or content. Note: path/content might be missing on some node types, 
-            # so we rely on schema or just try. In Surreal, missing field ~ regex is false.
-            sql += " AND (id ~ $regex OR path ~ $regex OR content ~ $regex)"
+            # Check id, path, or content.
+            # Using CONTAINS for parameter safety and simplicity
+            sql += " AND (id CONTAINS $regex OR path CONTAINS $regex OR content CONTAINS $regex)"
             params["regex"] = regex
         
         if keywords:

@@ -26,6 +26,31 @@ def get_last_commit_files(repo_path: Path) -> List[str]:
     except Exception:
         return []
 
+def get_all_tracked_files(repo_path: Path, extensions: List[str] | None = None) -> List[str]:
+    """
+    Returns a list of all files tracked by git, optionally filtered by extensions.
+    
+    Args:
+        repo_path: Root of the git repository.
+        extensions: List of allowed suffixes (e.g. ['.md', '.py']). If None, returns all.
+    """
+    try:
+        repo = Repo(repo_path)
+        files = repo.git.ls_files().splitlines()
+        
+        if extensions:
+            # Check if file ends with any of the provided extensions
+            filtered = []
+            for f in files:
+                for ext in extensions:
+                    if f.endswith(ext):
+                        filtered.append(f)
+                        break
+            return filtered
+        return files
+    except Exception:
+        return []
+
 def get_staged_content(repo_path: Path, file_path: str) -> str:
     """Reads content of a file from the git index (staged)."""
     repo = Repo(repo_path)

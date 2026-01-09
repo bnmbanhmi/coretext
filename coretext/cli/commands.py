@@ -19,7 +19,7 @@ from coretext.config import DEFAULT_CONFIG_CONTENT, load_config
 
 # Moved imports to module level for better testability and consistency
 from coretext.core.sync.engine import SyncEngine, SyncMode
-from coretext.core.sync.git_utils import get_staged_files, get_staged_content, get_last_commit_files, get_head_content, get_current_commit_hash
+from coretext.core.sync.git_utils import get_staged_files, get_staged_content, get_last_commit_files, get_head_content, get_current_commit_hash, get_all_tracked_files
 from coretext.core.parser.markdown import MarkdownParser
 from coretext.core.graph.manager import GraphManager
 from coretext.core.templates.manager import TemplateManager
@@ -188,9 +188,40 @@ def sync(
              target_path = potential_path.resolve()
              console.print(f"[dim]Using configured docs directory: {target_path}[/dim]")
 
-    files = list(target_path.rglob("*.md"))
+    # Find files (Recursive search for Markdown only)
+    allowed_extensions = [".md", ".markdown"]
+    files = []
+    
+    # Try git first if we are at project root or target is project root
+    if (target_path == project_root) and (project_root / ".git").exists():
+        try:
+             # get_all_tracked_files returns relative paths string
+             tracked_files = get_all_tracked_files(project_root, extensions=allowed_extensions)
+             if tracked_files:
+                 # Convert to absolute paths for consistency with rglob approach
+                 files = [project_root / f for f in tracked_files]
+                 console.print(f"[dim]Used git to discover {len(files)} tracked files.[/dim]")
+        except Exception as e:
+             console.print(f"[yellow]Git discovery failed ({e}), falling back to filesystem scan.[/yellow]")
+    
+    # Fallback to rglob if git failed or yielded nothing (or not in a git repo)
     if not files:
-        console.print(f"[yellow]No markdown files found in {target_path}[/yellow]")
+        console.print(f"[dim]Scanning {target_path} for files...[/dim]")
+        extensions = ["*" + ext for ext in allowed_extensions]
+        for ext in extensions:
+            for f in target_path.rglob(ext):
+                # Basic exclusions
+                rel_parts = f.relative_to(target_path).parts
+                if any(p in ['node_modules', 'venv', '.git', '__pycache__', 'dist', 'build', '.DS_Store'] for p in rel_parts):
+                    continue
+                
+                files.append(f)
+    
+    # Remove duplicates if any
+    files = list(set(files))
+
+    if not files:
+        console.print(f"[yellow]No files found in {target_path}[/yellow]")
         return
         
     file_paths = [str(f) for f in files]
