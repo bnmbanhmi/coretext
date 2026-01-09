@@ -34,7 +34,7 @@ CoreText is a Python application managed via `poetry`.
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/coretext.git
+git clone https://github.com/bnmbanhmi/coretext.git
 cd coretext
 
 # Install dependencies
@@ -46,7 +46,7 @@ poetry install
 ## Quick Start
 
 ### 1. Initialize the Project
-Sets up the local SurrealDB instance, downloads the embedding model, and configures the project. It will create a strict knowledge directory `_coretext-knowledge` to isolate your graph data.
+Sets up the local SurrealDB instance, downloads the embedding model, and configures the project. You will be prompted to choose a directory (e.g., `docs`, `wiki`, or `_coretext-knowledge`) to serve as your knowledge graph.
 
 ```bash
 poetry run coretext init
@@ -67,7 +67,7 @@ poetry run coretext status
 ```
 
 ### 4. Create Content
-Use built-in templates to create structured documentation inside your knowledge graph.
+Use built-in templates to create structured documentation inside your configured knowledge directory (e.g., `_coretext-knowledge`).
 
 ```bash
 poetry run coretext new story _coretext-knowledge/my-new-feature.md

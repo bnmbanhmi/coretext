@@ -6,10 +6,10 @@ This guide provides a systematic walk-through of all CoreText features (Epics 1-
 
 ## 1. System Initialization & Environment
 
-**Goal:** Verify the system can bootstrap itself, install dependencies, and start the background services.
+**Goal:** Verify the system can bootstrap itself and be configured to scope a specific directory (e.g., `demo/`).
 
 ### 1.1. System Cleanup & Fresh Start
-**Critical Step:** To ensure no data from previous demos interferes with this run (e.g., "ghost" nodes appearing in lint checks), strictly follow this cleanup:
+**Critical Step:** To ensure no data from previous demos interferes with this run:
 
 1. **Stop the Daemon:**
    ```bash
@@ -18,19 +18,22 @@ This guide provides a systematic walk-through of all CoreText features (Epics 1-
 
 2. **Remove Persistence Layer & Artifacts:**
    ```bash
-   # This removes the database, config, binary, AND any previous demo files
    rm -rf .coretext demo/
    ```
-   *Tip: To keep the binary (skipping re-download) but reset data, use: `rm -rf .coretext/surreal.db .coretext/config.yaml demo/`*
 
-### 1.2. Initialize Project
+### 1.2. Initialize Project (Configuring Scope)
+We will configure CoreText to **only** track files inside a `demo` folder, ignoring the rest of the repository.
+
 ```bash
 poetry run coretext init
 ```
+**Interactive Prompt:**
+- **"Where are your documents located?"**: Enter `demo`.
+- **"Directory 'demo' does not exist. Create it?"**: Enter `y`.
+- **"Start daemon?"**: Enter `y`.
+
 **Verify:**
-- SurrealDB binary downloaded to `~/.coretext/bin/`.
-- `.coretext/config.yaml` created.
-- `.coretext/surreal.db/` folder and `.coretext/daemon.pid` exist.
+- Check `.coretext/config.yaml`: It should contain `docs_dir: demo`.
 
 ### 1.3. Check Daemon Status
 ```bash
@@ -41,34 +44,36 @@ poetry run coretext status
 - **Port:** 8010 (DB) / 8001 (MCP)
 - **Sync Hooks:** Active
 
-│  Surrealist Auth:   None / Anonymous       │
-│  Namespace / DB:    coretext / coretext    │
-╰────────────────────────────────────────────╯
+### 1.4. Verify Scoping
+**Goal:** specific verify that CoreText ignores files outside the configured `demo` directory.
 
-### 1.4. Scoped Configuration (Directory Selection)
-**Goal:** Verify CoreText can be scoped to a specific directory, ignoring irrelevant files.
-
-1. **Create Scoped Directories:**
+1. **Create Test Files:**
    ```bash
-   mkdir -p docs_only/inner
-   echo "# Target Document" > docs_only/inner/target.md
-   echo "# Ignored Document" > ignored_at_root.md
+   # File INSIDE the scoped folder (Should be Synced)
+   echo "# Inside Scope" > demo/inside.md
+   
+   # File OUTSIDE the scoped folder (Should be Ignored)
+   echo "# Outside Scope" > root_ignored.md
    ```
 
-2. **Update Configuration:**
-   Edit `.coretext/config.yaml` to set `docs_dir: "docs_only"`.
-
-3. **Verify Scoped Sync:**
+2. **Trigger Sync:**
    ```bash
    poetry run coretext sync
    ```
-   **Verify:** Output should show "Using configured docs directory: .../docs_only" and sync only the files within that directory.
+   **Verify:** Output mentions syncing `demo/inside.md` but makes NO mention of `root_ignored.md`.
 
-4. **Database Verification:**
+3. **Database Verification:**
    ```bash
    echo "SELECT path FROM node WHERE node_type = 'file';" | ~/.coretext/bin/surreal sql --endpoint http://localhost:8010 --ns coretext --db coretext
    ```
-   **Verify:** `docs_only/inner/target.md` should be present, but `ignored_at_root.md` should **not**.
+   **Verify:** 
+   - ✅ `demo/inside.md` is present.
+   - ❌ `root_ignored.md` is **NOT** present.
+
+4. **Cleanup Root File:**
+   ```bash
+   rm root_ignored.md
+   ```
 
 ---
 
@@ -77,7 +82,6 @@ poetry run coretext status
 **Goal:** Verify we can create standard BMAD documents using templates.
 
 ### 2.1. Create a New Document
-We will use a dedicated `demo/` folder to keep our demo artifacts separate from the rest of the project.
 ```bash
 poetry run coretext new story demo/demo-story.md
 ```
@@ -109,10 +113,10 @@ echo "\n[Broken Link](./does-not-exist.md)" >> demo/demo-story.md
 
 ### 3.3. Run Linter
 ```bash
-# Lints the entire demo folder recursively
-poetry run coretext lint demo/
+# Lints the configured knowledge folder
+poetry run coretext lint
 ```
-**Verify:** Reports **1 Issue** (Broken Link) in `demo/demo-story.md`. (Note: This avoids noise from technical debt in other parts of the repository).
+**Verify:** Reports **1 Issue** (Broken Link) in `demo/demo-story.md`.
 
 ### 3.4. Pre-commit Protection
 Attempt to commit the broken file:
@@ -129,7 +133,7 @@ git commit -m "This commit should fail"
 **Goal:** Verify valid changes are synced to SurrealDB.
 
 ### 4.1. Fix and Sync
-Fix the broken link by pointing it to a valid file. To ensure the target exists in our scoped graph, we'll create a new file in the demo folder.
+Fix the broken link by pointing it to a valid file.
 
 1.  **Create a target file:**
     ```bash
