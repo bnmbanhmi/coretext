@@ -198,7 +198,10 @@ Since `coretext` acts as the "Brain" for an autonomous coding agent, it operates
 Instead of just a standalone script, Coretext must be designed as a Gemini CLI Extension.
 
 *   **Definition:** A packaged extension that extends the Gemini CLI capabilities via the `gemini` command and registers an MCP Server.
-*   **Why:** To allow users to run commands like `gemini coretext status` or `gemini coretext index` directly from their workflow.
+*   **Structure:** Follows the standard extension structure:
+    - `gemini-extension.json`: The manifest defining extension metadata and the lifecycle of the `mcpServers` (command, args, cwd).
+    - `commands/`: A directory for custom Gemini CLI commands (TOML).
+*   **Why:** To allow users to run commands like `gemini coretext status` or `gemini coretext index` directly from their workflow and ensure portable installation.
 *   **Ref:** Follows the pattern at https://geminicli.com/docs/extensions/.
 
 #### 2. The Workspace Structure (Separation of Concerns)

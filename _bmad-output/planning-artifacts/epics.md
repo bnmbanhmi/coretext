@@ -84,13 +84,13 @@ As a developer, I want to initialize the `coretext` project environment, so that
 *   Then a Poetry project named `coretext` is created.
 *   And `fastapi[standard]`, `typer`, `pydantic`, `surrealdb`, `python-multipart`, `uvicorn`, `gitpython`, `sentence-transformers` are added as dependencies.
 *   And the basic project structure (`cli/`, `server/`, `core/`, `db/`) is laid out as defined in Architecture.md.
-*   And an extension.yaml manifest file is created at the root level for Gemini CLI integration.
+*   And a `gemini-extension.json` manifest file is created at the root level for Gemini CLI integration (replacing the deprecated extension.yaml).
 
 **Technical Notes:**
 *   Run `poetry new coretext` and `poetry add ...` commands.
 *   Create empty `__init__.py` files for package structure.
 *   Setup `pyproject.toml` with basic project metadata.
-*   Create an `extension.yaml` defining the tool entry point.
+*   Create `gemini-extension.json` defining the tool entry point and MCP server configuration.
 
 **Prerequisites:** None.
 
@@ -560,18 +560,46 @@ As a User, I want the CoreText MCP tools to be natively available in the Gemini 
 
 **Acceptance Criteria:**
 *   Given the CoreText project is ready
-*   When I inspect `extension.yaml`
-*   Then it includes a `tools` section defining `query_knowledge` and other MCP tools.
-*   And the configuration correctly points to the running daemon/MCP server.
+*   When I inspect `gemini-extension.json` (formerly extension.yaml)
+*   Then it includes a `mcpServers` section defining the `coretext` server.
+*   And the configuration correctly points to the running daemon/MCP server using proper command arguments.
 *   When I ask the Gemini CLI "How does the graph manager work?", it invokes the `query_knowledge` tool transparently.
 *   And the tool execution returns the context to the conversation.
 
 **Technical Notes:**
-*   Update `extension.yaml` to include the `tools` definition mapping to the MCP endpoints.
+*   Update `gemini-extension.json` to include the `tools` definition mapping to the MCP endpoints.
 *   Ensure the CLI can discover and invoke the tools via the defined protocol.
 *   Verify end-to-end functionality with a sample query in the CLI.
 
 **Prerequisites:** Story 5.3.
+
+### Story 5.6: Gemini CLI Extension Manifest & Command Packaging
+
+As a developer, I want to package CoreText as a standard Gemini CLI extension using a `gemini-extension.json` manifest and TOML commands, so that users can easily install and use the tool via the Gemini CLI.
+
+**Context:**
+Gemini CLI extensions package prompts, MCP servers, and custom commands.
+- **Location**: `~/.gemini/extensions`
+- **Manifest**: `gemini-extension.json` (defines name, version, mcpServers)
+- **Commands**: `commands/*.toml` (custom reusable prompts)
+- **Installation**: `gemini extensions link` (dev) or `install` (prod).
+
+**Acceptance Criteria:**
+*   Given the CoreText project structure
+*   When the extension is packaged
+*   Then a `gemini-extension.json` manifest is created with:
+    *   Correct `mcpServers` configuration (command, args, cwd) for the CoreText daemon.
+    *   Metadata (name, version, description) matching project state.
+*   And a `commands/` directory is created.
+*   And an initial `commands/coretext.toml` is provided (e.g., for `init` or `status` prompts).
+*   And the extension can be successfully linked using `gemini extensions link .`.
+
+**Technical Notes:**
+*   Implement a template or generator for `gemini-extension.json`.
+*   Ensure `${extensionPath}` is used for portability in the manifest.
+*   Verify command execution from the Gemini CLI after linking.
+
+**Prerequisites:** Story 5.4.
 
 ---
 

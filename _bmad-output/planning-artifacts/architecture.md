@@ -286,7 +286,9 @@ async def do_search(q):
 ### Complete Project Directory Structure
 ```
 coretext/
-├── extension.yaml              # Gemini CLI Extension Manifest (NEW)
+├── gemini-extension.json       # Gemini CLI Extension Manifest (Standard format)
+├── commands/                   # Custom Gemini CLI Commands (TOML)
+│   └── coretext.toml           # (Optional) Pre-packaged prompts/commands
 ├── pyproject.toml              # Poetry dependencies (FastAPI, Typer, SurrealDB, Nomic)
 ├── README.md
 ├── .gitignore
