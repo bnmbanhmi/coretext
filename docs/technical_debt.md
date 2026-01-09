@@ -1,5 +1,30 @@
 # Technical Debt Log
 
+## Optimization Summary Matrix
+
+| Component | Optimization Opportunity | Impact | Status |
+| :--- | :--- | :--- | :--- |
+| **Vector Engine** | Matryoshka Slicing (768 -> 128/256) | 66% reduction in storage; faster search. | Open |
+| **Vector Engine** | Batch Encoding in `VectorEmbedder` | Significant speedup for graph ingestion. | Open |
+| **Vector Engine** | Model Quantization (int8/binary) | Lower RAM usage (target < 500MB). | Open |
+| **Vector Engine** | ONNX Runtime / GGML Acceleration | Millisecond cold-start; hardware acceleration. | Open |
+| **Search/Ranking** | **Full-Text Indexing (FTS)** | Instant keyword filtering (replaces O(N) scan). | Open |
+| **Search/Ranking** | **Native Graph Traversal (SurrealQL)** | Eliminates Python BFS round-trip latency. | Open |
+| **Search/Ranking** | **Hybrid Search (RRF)** | Better relevance by combining Vector + Lexical. | Open |
+| **Search/Ranking** | **Semantic Query Caching** | Instant response for repeated/similar queries. | Open |
+| **Core Sync** | **Incremental Indexing (mtime/hash)** | Avoids redundant re-parsing of unchanged files. | Open |
+| **Core Sync** | **Async/Batch Link Validation** | Prevents I/O blocking during the parsing phase. | Open |
+| **Core Sync** | **Resilient Ingestion (Partial Success)** | Prevents one bad file from blocking entire sync. | Open |
+| **Core Sync** | **Multi-Process Parsing (GIL Bypass)** | Linear sync scaling with available CPU cores. | Open |
+| **Database** | **Connection Pooling & Config** | Eliminates handshake cost; removes hardcoded URLs. | Open |
+| **Database** | **Schema Versioning/Migrations** | Enables safe data-preserving schema updates. | Open |
+| **Knowledge** | **Hierarchical Context Indexing** | Bird's-eye view summaries for large folders. | Open |
+| **System** | **Swap/Pagefile Monitoring** | Improved stability on low-resource machines. | Open |
+| **CLI** | **Lazy Imports (Startup Latency)** | Prevents loading PyTorch on simple commands. | Open |
+| **MCP API** | **Payload Optimization (Content)** | Reduces token cost/bandwidth by truncating content. | Open |
+| **Config** | **Env Var Support** | Enables CI/CD and container-friendly configuration. | Open |
+| **Logging** | **Log Rotation & Formatting** | Prevents disk overflow; enables structured parsing. | Open |
+
 ## Pending Issues
 
 ### Critical
@@ -8,63 +33,109 @@
 
 ### Testing
 *   **CLI `init` command integration tests**: The integration tests for `coretext init` (in `tests/unit/cli/test_commands.py`) fail with `exit_code=2` when run via `typer.testing.CliRunner`.
-    *   **Cause**: Incompatibility between `CliRunner`, async commands, and `Path` options with default values in the version of Typer/Click being used.
-    *   **Impact**: Tests cannot verify the success exit code (0) despite the command logic being functionally correct and verified via component mocks.
     *   **Status**: Recorded on 2025-12-07.
-    *   **Action Required**: Investigate `CliRunner` alternatives for async Typer commands or refactor the command structure to be more test-friendly in future refactoring sprints.
+    *   **Action Required**: Investigate `CliRunner` alternatives for async Typer commands.
 
 ### Architectural Trade-offs
-*   **Simplified SurrealDB Management in Post-commit Hook**: The `post_commit_hook` attempts to start SurrealDB if not running. This is a simplified approach, acknowledging that a robust solution would involve a dedicated daemonized DB.
-    *   **Cause**: Prioritization of MVP and quick integration.
-    *   **Impact**: Potential for minor delays in commit process if DB needs to start; less robust error handling than a fully daemonized solution.
-    *   **Status**: Recorded on 2025-12-10 (current date).
-    *   **Action Required**: Consider implementing a dedicated daemon for SurrealDB management in a future architectural sprint.
+*   **Simplified SurrealDB Management in Post-commit Hook**: The `post_commit_hook` attempts to start SurrealDB if not running. 
+    *   **Status**: Recorded on 2025-12-10.
+    *   **Action Required**: Consider implementing a dedicated daemon for SurrealDB management.
 
 ### Implementation Gaps
-* **Parser Blocking Future Links (Obsidian Style)**: The database schema for edges was updated to `SCHEMALESS` to allow linking to non-existent nodes (Story 1.6), but the `MarkdownParser` logic still treats missing targets as `ParsingErrorNode` and halts edge creation.
-    * **Cause**: Validation logic in `coretext/core/parser/markdown.py` explicitly checks `.exists()` and returns early on failure.
-    * **Impact**: Prevents the creation of "future links" (references to not-yet-created files), defeating the purpose of the schemaless edge design.
-    * **Status**: Identified during code review.
-    * **Action Required**: Relax validation in `MarkdownParser` to allow emitting `REFERENCES` edges even if the target file does not exist on disk.
-
-### Data Integrity & Maintenance
-* **Lack of Deletion/Rename Propagation (Ghost Nodes)**: The system currently only handles `UPSERT` (Add/Modify). Deleting or renaming a file in Git does not remove the old node from SurrealDB.
-    * **Cause**: `git_utils.py` filters exclude 'D' (Deleted) status, and there is no "Delete" logic in the sync engine.
-    * **Impact**: The graph will accumulate "ghost nodes" (nodes corresponding to deleted or renamed files) over time, leading to dead links.
-    * **Status**: Accepted Trade-off. The project follows an "Append-only/Safe" philosophy for automated hooks.
-    * **Action Required**: Do not implement automated deletion to prevent accidental data loss. Instead, implement a manual `coretext vacuum` or `prune` CLI command for periodic maintenance.
-
-* **Concurrency in Post-commit Hook (Race Condition)**: Rapid consecutive commits may trigger parallel, detached hook executions.
-    * **Cause**: No lockfile, queue, or PID check mechanism for the background sync process (`post-commit`).
-    * **Impact**: Potential transaction conflicts in SurrealDB or out-of-order updates (older commit overwriting newer commit).
-    * **Status**: Accepted Risk for Single-User MVP.
-    * **Action Required**: Users should wait for sync completion messages. Future iterations should implement a lockfile or a daemonized queue system.
-
-* **File Path as Node ID**: Node IDs are derived from mutable file paths (e.g., `folder/file.md`).
-    * **Cause**: Simplicity for MVP and human-readability of IDs.
-    * **Impact**: Refactoring folder structure (moving files) changes the Node ID, breaking the history and identity of the node in the graph (creating a new node instead of moving the old one).
-    * **Action Required**: Evaluate moving to UUIDs for Node IDs in the future (requires a complex migration strategy).
+* **Parser Blocking Future Links (Obsidian Style)**: The `MarkdownParser` logic still treats missing targets as `ParsingErrorNode`.
+    *   **Action Required**: Relax validation to allow emitting `REFERENCES` edges for non-existent files.
 
 ## Optimization Opportunities
+
+### Advanced Architecture (Next-Level)
+**Status:** Open
+**Impact:** Breakthrough performance and intelligence.
+**Identified:** 2026-01-09
+
+- [ ] **Semantic Query Caching:**
+    *   *Optimization:* Implement an in-memory cache for semantic search results using a small vector store or exact-match lookup.
+    *   *Benefit:* Zero-latency response for repeated agent queries.
+
+- [ ] **Local Acceleration (ONNX Runtime / GGML):**
+    *   *Optimization:* Migrate embedding inference from PyTorch to ONNX or GGML.
+    *   *Benefit:* 50%+ reduction in RAM; near-instant model loading.
+
+- [ ] **Multi-Process Sync Worker:**
+    *   *Optimization:* Move parsing/hashing logic to `ProcessPoolExecutor` to bypass the GIL.
+    *   *Benefit:* True parallel sync utilizing all available CPU cores.
+
+- [ ] **Hierarchical Context Indexing:**
+    *   *Optimization:* Automatically generate and embed "Summary Nodes" for directories and sections.
+    *   *Benefit:* Superior LLM context management for large-scale projects.
+
+### CLI & API Efficiency
+**Status:** Open
+**Impact:** UX Latency, Token Cost, Bandwidth.
+**Identified:** 2026-01-09
+
+- [ ] **CLI Startup Latency (Lazy Imports):**
+    *   *Optimization:* Move heavy imports inside command functions.
+    *   *Benefit:* Instant CLI response.
+
+- [ ] **MCP Payload Optimization:**
+    *   *Optimization:* Add `include_content` flag or return node summaries by default.
+    *   *Benefit:* Reduced token consumption for LLM agents.
+
+### Ops & Reliability
+**Status:** Open
+**Impact:** Deployment flexibility, Observability, Resilience.
+**Identified:** 2026-01-09
+
+- [ ] **Environment Variable Configuration:**
+    *   *Optimization:* Switch to `pydantic-settings`.
+
+- [ ] **Log Rotation & Structured Logging:**
+    *   *Optimization:* Implement `TimedRotatingFileHandler` and JSON formatting.
+
+- [ ] **Resilient Ingestion (Retry & Partial Success):**
+    *   *Optimization:* Add exponential backoff retries for DB transactions and support "Partial Success" mode.
+
+### Core Architecture & Sync Performance
+**Status:** Open
+**Impact:** Sync Speed, I/O Blocking, Scalability.
+**Identified:** 2026-01-09
+
+- [ ] **Incremental Indexing & Change Detection:**
+    *   *Optimization:* Use persistent cache of file `mtime` and content hashes.
+
+- [ ] **Async/Batch Link Validation:**
+    *   *Optimization:* Decouple link extraction from validation.
+
+- [ ] **Database Connection Pooling & Hardcoded URL Fix:**
+    *   *Optimization:* Implement persistent connection pool and use `config.surreal_url`.
+
+- [ ] **Schema Versioning & Migrations:**
+    *   *Optimization:* Implement a simple migration manager.
 
 ### Vector Engine
 **Status:** Open
 **Impact:** Performance, Memory, Storage efficiency.
 **Identified:** 2026-01-09
 
-The current embedding implementation uses `nomic-embed-text-v1.5` in a functional but unoptimized state.
-
 - [ ] **Activate Matryoshka Slicing:**
-    - *Current:* Storing full 768-float vectors.
-    - *Optimization:* Reduce dimensions to 256 or 128. Nomic v1.5 supports this with ~98% performance retention.
-    - *Benefit:* ~66% reduction in storage and index size; faster search.
+    *   *Optimization:* Reduce dimensions to 256 or 128.
 
 - [ ] **Implement Batch Encoding:**
-    - *Current:* `GraphManager.ingest` calls `embedder.encode(text)` individually for every node.
-    - *Optimization:* Implement `encode_batch` in `VectorEmbedder` and use `model.encode(list_of_texts)`.
-    - *Benefit:* Significant speedup during graph ingestion/sync.
+    *   *Optimization:* Use `model.encode(list_of_texts)` in `VectorEmbedder`.
 
 - [ ] **Model Quantization:**
-    - *Current:* Loading full precision model (~300MB RAM, >5s cold start).
-    - *Optimization:* Switch to quantized (int8/binary) model loading.
-    - *Benefit:* Reduced memory footprint (critical for 500MB daemon limit) and faster startup.
+    *   *Optimization:* Switch to quantized (int8/binary) model loading.
+
+### Search & Ranking Strategy
+**Status:** Open
+**Impact:** Search Quality, Query Latency.
+**Identified:** 2026-01-09
+
+- [ ] **Full-Text Search (FTS) Indexing:**
+    *   *Optimization:* Define SurrealDB `ANALYZER` and `INDEX ... SEARCH`.
+
+- [ ] **Native Graph Traversal (SurrealQL):**
+    *   *Optimization:* Move traversal logic into a single SurrealQL query.
+
+- [ ] **Advanced Ranking (RRF / Re-ranking):**
+    *   *Optimization:* Implement Reciprocal Rank Fusion (RRF) or Cross-Encoder re-ranking.
