@@ -44,4 +44,3 @@ so that {{benefit}}.
 
 ### File List
 \n[Valid Link](./reference-target.md)
- 
