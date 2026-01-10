@@ -4,10 +4,10 @@
   "description": "CoreText: Local Knowledge Graph & MCP Server",
   "mcpServers": {
     "coretext": {
-      "command": "python3",
+      "command": "poetry",
       "args": [
-        "-m",
-        "coretext.main",
+        "run",
+        "coretext",
         "adapter"
       ],
       "cwd": "${extensionPath}",

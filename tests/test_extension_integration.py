@@ -19,7 +19,13 @@ def test_extension_manifest_structure():
     # Check for coretext server definition
     assert "coretext" in manifest["mcpServers"], "Manifest missing 'coretext' server definition"
     server_config = manifest["mcpServers"]["coretext"]
-    assert "adapter" in server_config["args"], "MCP Server should use 'adapter' command"
+    
+    # Verify command is 'poetry' (for dev environment)
+    assert server_config["command"] == "poetry", "Manifest should use 'poetry' executable"
+    
+    # Verify args include 'run', 'coretext', 'adapter'
+    args = server_config["args"]
+    assert args[:3] == ["run", "coretext", "adapter"], "MCP Server should run 'coretext adapter' via poetry"
 
 def test_custom_commands_definition():
     """Verify commands/coretext.toml exists and is valid."""
@@ -47,3 +53,7 @@ def test_custom_commands_definition():
         # Verify cwd is set correctly for each command
         cmd_def = next(c for c in data["commands"] if c["name"] == cmd)
         assert "${extensionPath}" in cmd_def["cwd"], f"Command {cmd} missing ${{extensionPath}} in cwd"
+        
+        # Verify command executable is 'poetry'
+        assert cmd_def["command"] == "poetry", f"Command {cmd} should use 'poetry' executable"
+        assert cmd_def["args"][:2] == ["run", "coretext"], f"Command {cmd} should run via poetry"

@@ -1,6 +1,6 @@
 # Story 5.6: Gemini CLI Extension Manifest & Command Packaging
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -136,6 +136,11 @@ coretext/
 - Verified environmental setup via tests/integration/test_dogfooding_setup.py.
 - Updated README.md with Gemini CLI Extension usage guide.
 - Updated docs/release-demo-guide.md with Gemini CLI agent demo scenario.
+- **Code Review Fixes (2026-01-10):**
+  - Updated `coretext/cli/adapter.py` to auto-start daemon if not running (AC 4 compliance).
+  - Updated `gemini-extension.json` to use `coretext` executable instead of `python3` for robustness.
+  - Updated `commands/coretext.toml` to use `coretext` executable for all commands.
+  - Enhanced `tests/test_extension_integration.py` to verify executable configuration.
 
 ### File List
 - gemini-extension.json

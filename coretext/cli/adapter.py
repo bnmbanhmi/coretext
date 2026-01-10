@@ -30,11 +30,35 @@ class MCPStdioAdapter:
         # Ensure daemon is running
         health = check_daemon_health(server_port=self.config.mcp_port, db_port=self.config.daemon_port, project_root=self.project_root)
         if health["server"]["status"] != "Running":
-             logger.error("Daemon is not running. Adapter cannot function.")
-             # We might try to start it here, but typically extensions expect the environment to be ready 
-             # or we rely on the `init` or `start` commands.
-             # However, for seamless UX, we could try to auto-start, but let's keep it simple for now.
-             pass
+             logger.info("Daemon is not running. Attempting to auto-start...")
+             try:
+                 # Auto-start logic
+                 import subprocess
+                 # We assume 'coretext' command is available since we are running the adapter
+                 # Or use sys.executable -m coretext.main start
+                 cmd = [sys.executable, "-m", "coretext.main", "start"]
+                 subprocess.Popen(
+                     cmd,
+                     cwd=str(self.project_root),
+                     stdout=subprocess.DEVNULL, 
+                     stderr=subprocess.DEVNULL
+                 )
+                 
+                 # Wait for it to come up
+                 import time
+                 for _ in range(20): # Wait up to 10 seconds
+                     time.sleep(0.5)
+                     health = check_daemon_health(server_port=self.config.mcp_port, db_port=self.config.daemon_port, project_root=self.project_root)
+                     if health["server"]["status"] == "Running":
+                         logger.info("Daemon started successfully.")
+                         break
+                 else:
+                     logger.error("Failed to auto-start daemon. Adapter cannot function.")
+                     sys.exit(1)
+                     
+             except Exception as e:
+                 logger.error(f"Error during auto-start: {e}")
+                 sys.exit(1)
 
         reader = asyncio.StreamReader()
         protocol = asyncio.StreamReaderProtocol(reader)
@@ -120,7 +144,7 @@ class MCPStdioAdapter:
 
     async def fetch_tools(self) -> List[Dict[str, Any]]:
         async with httpx.AsyncClient() as client:
-            resp = await client.get(f"{self.base_url}/manifest")
+            resp = await client.get(f"{self.base_url}/mcp/manifest")
             resp.raise_for_status()
             manifest = resp.json()
             # Transform to MCP Tool format if needed, but manifest.py likely returns MCP format already
