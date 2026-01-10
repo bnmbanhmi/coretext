@@ -49,7 +49,7 @@
 *   **NO DOCKER:** Do not suggest Docker commands.
 *   **UPSERT ONLY:** Always upsert nodes by `file_path` ID. Never create random UUIDs for file nodes.
 *   **LOCAL ONLY:** Do not try to connect to remote SurrealDB instances.
-*   **Gemini Manifest:** Always verify `extension.yaml` is updated when adding new CLI commands.
+*   **Gemini Manifest:** Always verify `gemini-extension.json` is updated when adding new CLI commands.
 
 
 ## Workflow & Pragmatism (Critical for Token Efficiency)

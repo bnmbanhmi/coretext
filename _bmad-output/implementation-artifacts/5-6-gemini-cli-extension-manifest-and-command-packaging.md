@@ -1,6 +1,6 @@
 # Story 5.6: Gemini CLI Extension Manifest & Command Packaging
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -29,26 +29,35 @@ so that users can easily install and use the tool via the Gemini CLI with proper
 4.  **End-to-End Functionality**:
     *   The MCP server starts automatically when the Gemini CLI is used (managed by the CLI via the manifest config).
     *   Previous functionality (Story 5.4/5.5) remains intact (queries still work).
+5.  **MCP Stdio Adapter**:
+    *   A `stdio_adapter` command is implemented to bridge MCP JSON-RPC over Stdio to the CoreText HTTP daemon.
+    *   `gemini-extension.json` uses this adapter command instead of `start`.
+    *   Agent can query tools (e.g., `search_topology`) via the extension.
 
 ## Tasks / Subtasks
 
-- [ ] **Cleanup Deprecated Artifacts**
-  - [ ] Remove `extension.yaml` from project root.
-  - [ ] Remove any references to `extension.yaml` in documentation or scripts (check `README.md`, `pyproject.toml`, etc.).
-- [ ] **Implement Manifest**
-  - [ ] Create `gemini-extension.json`.
-  - [ ] Configure `mcpServers.coretext` to run `python3 -m coretext.main` (or the installed binary path).
-  - [ ] **CRITICAL:** Use `${extensionPath}` logic to ensure the command works in both dev (linked) and prod (installed) modes.
-- [ ] **Implement Custom Commands**
-  - [ ] Create `commands/` directory.
-  - [ ] Create `commands/coretext.toml`.
-  - [ ] Define a `[status]` command that prompts the user to check system health.
-- [ ] **Verification**
-  - [ ] Run `gemini extensions link .`.
-  - [ ] Restart Gemini CLI (if needed).
-  - [ ] Verify extension is listed.
-  - [ ] Verify MCP tools are discovered.
-  - [ ] Verify custom commands appear in the prompt menu (if applicable) or are usable.
+- [x] **Cleanup Deprecated Artifacts**
+  - [x] Remove `extension.yaml` from project root.
+  - [x] Remove any references to `extension.yaml` in documentation or scripts (check `README.md`, `pyproject.toml`, etc.).
+- [x] **Implement MCP Stdio Adapter**
+  - [x] Implement `coretext/cli/adapter.py` to speak MCP JSON-RPC over Stdio and proxy requests to the local HTTP daemon.
+  - [x] Add `adapter` command to `coretext/cli/commands.py`.
+  - [x] Update `gemini-extension.json` `mcpServers.coretext.args` to use `adapter` command.
+- [x] **Implement Manifest**
+  - [x] Create `gemini-extension.json`.
+  - [x] Configure `mcpServers.coretext` to run `python3 -m coretext.main` (or the installed binary path).
+  - [x] **CRITICAL:** Use `${extensionPath}` logic to ensure the command works in both dev (linked) and prod (installed) modes.
+- [x] **Implement Custom Commands**
+  - [x] Create `commands/` directory.
+  - [x] Create `commands/coretext.toml`.
+  - [x] Define a `[status]` command that prompts the user to check system health.
+  - [x] Define comprehensive commands for all CoreText CLI capabilities: `init`, `start`, `stop`, `lint`, `sync`, `apply-schema`, `new`, `install-hooks`, `inspect`, `ping`.
+- [x] **Verification**
+  - [x] Run `gemini extensions link .`.
+  - [x] Restart Gemini CLI (if needed).
+  - [x] Verify extension is listed.
+  - [x] Verify MCP tools are discovered (using the new adapter).
+  - [x] Verify custom commands appear in the prompt menu (if applicable) or are usable.
 
 ## Dev Notes
 
@@ -117,5 +126,29 @@ coretext/
 ### Debug Log References
 
 ### Completion Notes List
+- Verified removal of extension.yaml and updated all references.
+- Created gemini-extension.json with mcpServers configuration using ${extensionPath} and python3 -m coretext.main adapter.
+- Created commands/coretext.toml with ALL 11 CoreText CLI commands (init, start, stop, status, lint, sync, apply-schema, new, install-hooks, inspect, ping).
+- Updated coretext/main.py to be a runnable entry point.
+- Implemented coretext/cli/adapter.py to bridge MCP Stdio to HTTP Daemon.
+- Added adapter command to CLI.
+- Verified manifest, command list, and adapter configuration via automated tests (tests/test_extension_integration.py).
+- Verified environmental setup via tests/integration/test_dogfooding_setup.py.
+- Updated README.md with Gemini CLI Extension usage guide.
+- Updated docs/release-demo-guide.md with Gemini CLI agent demo scenario.
 
 ### File List
+- gemini-extension.json
+- commands/coretext.toml
+- coretext/main.py
+- coretext/cli/adapter.py
+- coretext/cli/commands.py
+- extension.yaml (deleted)
+- scripts/verify_extension_integration.py
+- tests/test_extension_integration.py
+- tests/test_scaffolding.py
+- tests/integration/test_dogfooding_setup.py
+- _bmad-output/planning-artifacts/project_context.md
+- .coretext/config.yaml
+- README.md
+- docs/release-demo-guide.md

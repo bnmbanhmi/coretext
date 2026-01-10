@@ -1,0 +1,19 @@
+{
+  "name": "coretext",
+  "version": "0.1.0",
+  "description": "CoreText: Local Knowledge Graph & MCP Server",
+  "mcpServers": {
+    "coretext": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "coretext.main",
+        "adapter"
+      ],
+      "cwd": "${extensionPath}",
+      "env": {
+        "PYTHONPATH": "${extensionPath}"
+      }
+    }
+  }
+}

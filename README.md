@@ -94,15 +94,19 @@ To install CoreText as a native extension in the Gemini CLI:
 # Ensure the daemon is running
 poetry run coretext start
 
-# Install the extension from the project root
-gemini extensions install .
+# Link the extension from the project root (Development Mode)
+gemini extensions link .
+
+# Verify installation
+gemini extensions list
 ```
 
-Once installed, the Gemini Agent will automatically discover the `query_knowledge` tool and use it to answer questions about your project structure and documentation.
+Once installed, the Gemini Agent will automatically discover the CoreText tools (`query_knowledge`, `search_topology`) and use them to answer questions about your project structure and documentation.
 
-### Capabilities Exposed:
-*   `search_topology(query: str)`: Finds nodes semantically related to a concept.
-*   `get_dependencies(node_id: str)`: Retrieves the dependency tree for a specific file or concept.
+#### Capabilities Exposed
+*   **Knowledge Query**: Ask natural language questions like "How does the authentication module work?" or "Where is the user schema defined?".
+*   **Structure Analysis**: The agent can inspect file dependencies and project topology.
+*   **Commands**: Run custom commands like `coretext status` directly from the Gemini prompt.
 
 ---
 

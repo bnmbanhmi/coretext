@@ -25,6 +25,7 @@ from coretext.core.graph.manager import GraphManager
 from coretext.core.templates.manager import TemplateManager
 
 from coretext.cli.utils import check_daemon_health, get_hooks_paused_path, build_dependency_tree
+from coretext.cli.adapter import main_adapter
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -35,6 +36,17 @@ from coretext.core.network import is_port_in_use
 PAUSE_FILE_NAME = "hooks_paused"
 
 app = typer.Typer()
+
+@app.command()
+def adapter(
+    project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p", help="Root directory of the project.")
+):
+    """
+    Starts the MCP Stdio Adapter.
+    This bridges JSON-RPC messages from Stdin to the local CoreText HTTP Daemon.
+    Used by Gemini CLI extensions.
+    """
+    main_adapter(project_root)
 
 @app.command()
 def status(

@@ -263,13 +263,27 @@ curl -X POST http://127.0.0.1:8001/mcp/tools/search_topology \
 ```
 **Verify:** Returns relevant nodes. `demo/demo-story.md` should be present.
 
-### 6.3. Dependency Retrieval
-```bash
-curl -X POST http://127.0.0.1:8001/mcp/tools/get_dependencies \
-     -H "Content-Type: application/json" \
-     -d '{"node_identifier": "file:demo/demo-story.md", "depth": 1}'
-```
-**Verify:** Returns JSON structure of the file dependencies.
+### 6.4. Gemini CLI Extension Demo
+
+**Goal:** Verify the Gemini CLI agent can use the extension tools to query knowledge naturally.
+
+1.  **Link the Extension:**
+    ```bash
+    gemini extensions link .
+    ```
+
+2.  **Start Gemini CLI:**
+    ```bash
+    gemini chat
+    ```
+
+3.  **Interact with the Agent:**
+    *   **Prompt 1:** "What is the status of the CoreText system?"
+        *   *Expectation:* The agent runs the `coretext status` command and reports the health.
+    *   **Prompt 2:** "Search for documents related to 'User Story' in the knowledge graph."
+        *   *Expectation:* The agent uses the `search_topology` tool and lists the `demo/demo-story.md` file.
+    *   **Prompt 3:** "Show me the dependencies of the demo story file."
+        *   *Expectation:* The agent uses `get_dependencies` (or `query_knowledge`) and explains that `demo-story.md` links to `reference-target.md`.
 
 ---
 
