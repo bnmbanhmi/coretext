@@ -60,33 +60,42 @@ class MCPStdioAdapter:
                  logger.error(f"Error during auto-start: {e}")
                  sys.exit(1)
 
-        reader = asyncio.StreamReader()
-        protocol = asyncio.StreamReaderProtocol(reader)
-        await asyncio.get_running_loop().connect_read_pipe(lambda: protocol, sys.stdin)
+        # Start a thread to read stdin to avoid asyncio selector issues with pipes/kqueue
+        loop = asyncio.get_running_loop()
+        queue = asyncio.Queue()
+
+        def reader_thread():
+            try:
+                for line in sys.stdin:
+                    asyncio.run_coroutine_threadsafe(queue.put(line), loop)
+            except Exception:
+                pass
+            finally:
+                asyncio.run_coroutine_threadsafe(queue.put(None), loop)
+
+        import threading
+        t = threading.Thread(target=reader_thread, daemon=True)
+        t.start()
         
         while True:
+            line = await queue.get()
+            if line is None: # EOF
+                break
+            
+            message = line.strip()
+            if not message:
+                continue
+                
             try:
-                line = await reader.readline()
-                if not line:
-                    break
-                
-                message = line.decode('utf-8').strip()
-                if not message:
-                    continue
-                    
-                try:
-                    request = json.loads(message)
-                except json.JSONDecodeError:
-                    logger.error(f"Invalid JSON received: {message}")
-                    continue
-                
-                # Handle JSON-RPC 2.0 Request
+                request = json.loads(message)
                 if "method" in request:
                     await self.handle_request(request)
-                    
+            except json.JSONDecodeError:
+                logger.error(f"Invalid JSON received: {message}")
+                continue
             except Exception as e:
-                logger.error(f"Error processing loop: {e}")
-                break
+                logger.error(f"Error handling message: {e}")
+                continue
 
     async def handle_request(self, request: Dict[str, Any]):
         method = request.get("method")
@@ -100,9 +109,10 @@ class MCPStdioAdapter:
         
         try:
             if method == "initialize":
+                client_protocol = params.get("protocolVersion", "2024-11-25")
                 # MCP initialization
                 response["result"] = {
-                    "protocolVersion": "0.1.0",
+                    "protocolVersion": client_protocol,
                     "capabilities": {
                         "tools": {} # We support tools
                     },
@@ -115,6 +125,9 @@ class MCPStdioAdapter:
             elif method == "notifications/initialized":
                  # Notification, no response needed
                  return
+
+            elif method == "ping":
+                response["result"] = {}
 
             elif method == "tools/list":
                 # Fetch tools from Daemon manifest
