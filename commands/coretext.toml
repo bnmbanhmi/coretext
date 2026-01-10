@@ -3,7 +3,7 @@ name = "status"
 title = "CoreText Status"
 description = "Check the health and status of the CoreText daemon and database"
 command = "poetry"
-args = ["run", "coretext", "status"]
+args = ["run", "-q", "coretext", "status"]
 cwd = "${extensionPath}"
 env = { PYTHONPATH = "${extensionPath}" }
 
@@ -12,7 +12,7 @@ name = "init"
 title = "Initialize CoreText"
 description = "Initialize a new CoreText project"
 command = "poetry"
-args = ["run", "coretext", "init"]
+args = ["run", "-q", "coretext", "init"]
 cwd = "${extensionPath}"
 env = { PYTHONPATH = "${extensionPath}" }
 
@@ -21,7 +21,7 @@ name = "start"
 title = "Start CoreText Daemon"
 description = "Starts the CoreText daemon (SurrealDB and FastAPI server) in the background"
 command = "poetry"
-args = ["run", "coretext", "start"]
+args = ["run", "-q", "coretext", "start"]
 cwd = "${extensionPath}"
 env = { PYTHONPATH = "${extensionPath}" }
 
@@ -30,7 +30,7 @@ name = "stop"
 title = "Stop CoreText Daemon"
 description = "Stops the CoreText daemon"
 command = "poetry"
-args = ["run", "coretext", "stop"]
+args = ["run", "-q", "coretext", "stop"]
 cwd = "${extensionPath}"
 env = { PYTHONPATH = "${extensionPath}" }
 
@@ -39,7 +39,7 @@ name = "lint"
 title = "Lint Markdown Files"
 description = "Runs integrity checks on Markdown files via the daemon"
 command = "poetry"
-args = ["run", "coretext", "lint"]
+args = ["run", "-q", "coretext", "lint"]
 cwd = "${extensionPath}"
 env = { PYTHONPATH = "${extensionPath}" }
 
@@ -48,7 +48,7 @@ name = "sync"
 title = "Sync Files"
 description = "Manually synchronizes markdown files in the specified directory to the graph"
 command = "poetry"
-args = ["run", "coretext", "sync"]
+args = ["run", "-q", "coretext", "sync"]
 cwd = "${extensionPath}"
 env = { PYTHONPATH = "${extensionPath}" }
 
@@ -57,7 +57,7 @@ name = "apply-schema"
 title = "Apply Database Schema"
 description = "Applies the schema from .coretext/schema_map.yaml to the local SurrealDB"
 command = "poetry"
-args = ["run", "coretext", "apply-schema"]
+args = ["run", "-q", "coretext", "apply-schema"]
 cwd = "${extensionPath}"
 env = { PYTHONPATH = "${extensionPath}" }
 
@@ -66,7 +66,7 @@ name = "new"
 title = "Create New File from Template"
 description = "Generates a new Markdown file from a BMAD template"
 command = "poetry"
-args = ["run", "coretext", "new"]
+args = ["run", "-q", "coretext", "new"]
 cwd = "${extensionPath}"
 env = { PYTHONPATH = "${extensionPath}" }
 
@@ -75,7 +75,7 @@ name = "install-hooks"
 title = "Install Git Hooks"
 description = "Installs Git hooks for coretext synchronization"
 command = "poetry"
-args = ["run", "coretext", "install-hooks"]
+args = ["run", "-q", "coretext", "install-hooks"]
 cwd = "${extensionPath}"
 env = { PYTHONPATH = "${extensionPath}" }
 
@@ -84,7 +84,7 @@ name = "inspect"
 title = "Inspect Dependency Tree"
 description = "Inspects the dependency tree of a specific node"
 command = "poetry"
-args = ["run", "coretext", "inspect"]
+args = ["run", "-q", "coretext", "inspect"]
 cwd = "${extensionPath}"
 env = { PYTHONPATH = "${extensionPath}" }
 
@@ -93,6 +93,6 @@ name = "ping"
 title = "Ping"
 description = "Simple ping-pong check"
 command = "poetry"
-args = ["run", "coretext", "ping"]
+args = ["run", "-q", "coretext", "ping"]
 cwd = "${extensionPath}"
 env = { PYTHONPATH = "${extensionPath}" }

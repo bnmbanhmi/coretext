@@ -23,9 +23,9 @@ def test_extension_manifest_structure():
     # Verify command is 'poetry' (for dev environment)
     assert server_config["command"] == "poetry", "Manifest should use 'poetry' executable"
     
-    # Verify args include 'run', 'coretext', 'adapter'
+    # Verify args include 'run', '-q', 'coretext', 'adapter'
     args = server_config["args"]
-    assert args[:3] == ["run", "coretext", "adapter"], "MCP Server should run 'coretext adapter' via poetry"
+    assert args[:4] == ["run", "-q", "coretext", "adapter"], "MCP Server should run 'coretext adapter' via poetry with quiet flag"
 
 def test_custom_commands_definition():
     """Verify commands/coretext.toml exists and is valid."""
@@ -56,4 +56,4 @@ def test_custom_commands_definition():
         
         # Verify command executable is 'poetry'
         assert cmd_def["command"] == "poetry", f"Command {cmd} should use 'poetry' executable"
-        assert cmd_def["args"][:2] == ["run", "coretext"], f"Command {cmd} should run via poetry"
+        assert cmd_def["args"][:3] == ["run", "-q", "coretext"], f"Command {cmd} should run via poetry with quiet flag"

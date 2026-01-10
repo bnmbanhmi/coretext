@@ -7,6 +7,7 @@
       "command": "poetry",
       "args": [
         "run",
+        "-q",
         "coretext",
         "adapter"
       ],
