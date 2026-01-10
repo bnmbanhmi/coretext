@@ -265,8 +265,8 @@ class GraphManager:
 
         if regex:
             # Check id, path, or content.
-            # Using CONTAINS for parameter safety and simplicity
-            sql += " AND (id CONTAINS $regex OR path CONTAINS $regex OR content CONTAINS $regex)"
+            # Using Regex operator ~ per API contract
+            sql += " AND (id ~ $regex OR path ~ $regex OR content ~ $regex)"
             params["regex"] = regex
         
         if keywords:

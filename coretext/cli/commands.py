@@ -200,6 +200,22 @@ def sync(
              target_path = potential_path.resolve()
              console.print(f"[dim]Using configured docs directory: {target_path}[/dim]")
 
+    # STORY 5.5 CRITICAL: Enforce strict isolation
+    # The target_path MUST be within or equal to project_root / config.docs_dir
+    docs_root = (project_root / config.docs_dir).resolve()
+    
+    # Check if target_path is relative to docs_root
+    try:
+        target_path.relative_to(docs_root)
+    except ValueError:
+        # If config.docs_dir is "." (root), then everything is allowed (unless we want to ban root itself?)
+        # But if docs_dir is _coretext-knowledge, this catches it.
+        if config.docs_dir != ".":
+             console.print(f"[bold red]Security Error: Sync restricted to configured docs directory: {docs_root}[/bold red]")
+             console.print(f"[red]You attempted to sync: {target_path}[/red]")
+             console.print(f"[dim]This enforcement ensures only knowledge files are indexed. Update 'docs_dir' in .coretext/config.yaml to change this.[/dim]")
+             raise typer.Exit(code=1)
+
     # Find files (Recursive search for Markdown only)
     allowed_extensions = [".md", ".markdown"]
     files = []
@@ -793,9 +809,24 @@ def pre_commit_hook(
         typer.echo(f"Warning: Could not detect staged files: {e}", err=True)
         return
 
-    if not files:
+    # Filter files based on docs_dir
+    config = load_config(project_root)
+    docs_root = (project_root / config.docs_dir).resolve()
+    
+    allowed_files = []
+    for f in files:
+        # files are relative to project_root
+        full_path = (project_root / f).resolve()
+        try:
+            full_path.relative_to(docs_root)
+            allowed_files.append(f)
+        except ValueError:
+            pass # Skip files outside docs_dir
+
+    if not allowed_files:
         return
 
+    files = allowed_files
     typer.echo(f"Checking {len(files)} staged Markdown files...")
     
     parser = MarkdownParser(project_root=project_root)
@@ -900,12 +931,26 @@ async def _post_commit_hook_logic(project_root: Path, detached: bool):
              raise typer.Exit(code=0)
         return
 
-    if not files:
+    # Filter files based on docs_dir
+    docs_root = (project_root / config.docs_dir).resolve()
+    
+    allowed_files = []
+    for f in files:
+        # files are relative to project_root
+        full_path = (project_root / f).resolve()
+        try:
+            full_path.relative_to(docs_root)
+            allowed_files.append(f)
+        except ValueError:
+            pass # Skip files outside docs_dir
+
+    if not allowed_files:
         typer.echo("No Markdown files changed in last commit to synchronize.")
         if detached: # If detached, it should exit.
             raise typer.Exit(code=0)
         return
 
+    files = allowed_files
     typer.echo(f"Synchronizing {len(files)} Markdown files from last commit...")
 
     async def _run_sync_logic(): # Renamed _run_sync to _run_sync_logic to avoid name clash

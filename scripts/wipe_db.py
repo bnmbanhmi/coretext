@@ -11,25 +11,35 @@ async def wipe_db():
         await db.connect()
         await db.use(config.surreal_ns, config.surreal_db)
         
-        print("Deleting all edges...")
-        await db.query("DELETE edge;") # Generic delete for all edges if edge is a parent type, or we delete specific tables
-        # Since we don't have a generic 'edge' table in schema, we delete common ones or just all records
-        # SurrealDB allow DELETE <table_name>
-        # Let's try to list tables first or just blindly delete 'node' and edges.
-        
-        # Helper to get all tables info
-        info = await db.query("INFO FOR DB;")
-        # result structure varies, let's just do the main ones we know
-        
-        tables = ["node", "contains", "parent_of", "references", "depends_on", "governed_by"]
-        for t in tables:
-             try:
-                 await db.query(f"DELETE {t};")
-                 print(f"Deleted {t}")
-             except Exception as e:
-                 print(f"Error deleting {t}: {e}")
+        # Get all table names dynamically using INFO FOR DB
+        try:
+            info = await db.query("INFO FOR DB;")
+            # info structure depends on client version/response format
+            # Typical response: [{'result': {'tables': {'node': 'DEFINE TABLE node ...', ...}}}]
+            
+            tables_to_delete = []
+            if isinstance(info, list) and len(info) > 0:
+                res = info[0]
+                if isinstance(res, dict) and 'result' in res:
+                    tables_info = res['result'].get('tables', {})
+                    tables_to_delete = list(tables_info.keys())
+            
+            if not tables_to_delete:
+                # Fallback list if discovery fails
+                tables_to_delete = ["node", "contains", "parent_of", "references", "depends_on", "governed_by"]
+            
+            print(f"Found tables: {tables_to_delete}")
+            
+            for t in tables_to_delete:
+                try:
+                    await db.query(f"DELETE {t};")
+                    print(f"Deleted {t}")
+                except Exception as e:
+                    print(f"Error deleting {t}: {e}")
 
-        print("Database wiped successfully.")
+            print("Database wiped successfully.")
+        except Exception as e:
+            print(f"Error during wipe: {e}")
 
 if __name__ == "__main__":
     asyncio.run(wipe_db())

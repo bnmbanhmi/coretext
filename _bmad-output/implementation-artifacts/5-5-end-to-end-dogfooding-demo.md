@@ -1,6 +1,6 @@
 # Story 5.5: End-to-End Dogfooding Demo
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -48,6 +48,11 @@ so that I can verify the system's capability to handle a real-world, complex pro
 - [x] **Report & Fix**
   - [x] Document findings in a new `docs/dogfooding-report.md`.
   - [x] Create bug stories for any critical failures.
+- [x] **Review Follow-ups (AI)**
+  - [x] [AI-Review][CRITICAL] Enforced strict directory checks in `sync` command and git hooks.
+  - [x] [AI-Review][HIGH] Restored proper regex support (`~` operator) in `search_hybrid`.
+  - [x] [AI-Review][MEDIUM] Fixed brittle table deletion in `wipe_db.py`.
+  - [x] [AI-Review][MEDIUM] Added `tests/integration/test_enforcement.py` to verify safety.
 
 ## Dev Notes
 
@@ -76,12 +81,18 @@ so that I can verify the system's capability to handle a real-world, complex pro
 ### Debug Log References
 
 ### Completion Notes List
+- **Code Review Passed:** All critical safety issues resolved.
+- **Enforcement Implemented:** `coretext sync` now strictly respects `docs_dir` config.
+- **Regex Restored:** `query_knowledge` now uses native SurrealQL regex support.
 
 ### File List
 - tests/integration/test_dogfooding_setup.py
 - tests/integration/test_dogfooding_sync.py
+- tests/integration/test_enforcement.py
 - _coretext-knowledge/
 - scripts/wipe_db.py
 - scripts/list_db_paths.py
 - scripts/simulate_qa.py
 - docs/dogfooding-report.md
+- coretext/cli/commands.py
+- coretext/core/graph/manager.py
