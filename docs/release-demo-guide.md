@@ -272,18 +272,24 @@ curl -X POST http://127.0.0.1:8001/mcp/tools/search_topology \
     gemini extensions link .
     ```
 
-2.  **Start Gemini CLI:**
+2.  **Verify Connection:**
     ```bash
-    gemini chat
+    gemini mcp list
+    ```
+    **Verify:** `coretext` shows as **Connected**.
+
+3.  **Start Gemini CLI:**
+    ```bash
+    gemini
     ```
 
-3.  **Interact with the Agent:**
+4.  **Interact with the Agent:**
     *   **Prompt 1:** "What is the status of the CoreText system?"
         *   *Expectation:* The agent runs the `coretext status` command and reports the health.
-    *   **Prompt 2:** "Search for documents related to 'User Story' in the knowledge graph."
-        *   *Expectation:* The agent uses the `search_topology` tool and lists the `demo/demo-story.md` file.
-    *   **Prompt 3:** "Show me the dependencies of the demo story file."
-        *   *Expectation:* The agent uses `get_dependencies` (or `query_knowledge`) and explains that `demo-story.md` links to `reference-target.md`.
+    *   **Prompt 2:** "Search the topology for 'Architecture' using coretext tools."
+        *   *Expectation:* The agent uses the `search_topology` tool and lists relevant nodes.
+    *   **Prompt 3:** "Show me the dependencies of the 'inside.md' file."
+        *   *Expectation:* The agent uses `get_dependencies` and identifies any links.
 
 ---
 

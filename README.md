@@ -101,12 +101,19 @@ gemini extensions link .
 gemini extensions list
 ```
 
-Once installed, the Gemini Agent will automatically discover the CoreText tools (`query_knowledge`, `search_topology`) and use them to answer questions about your project structure and documentation.
+Once linked, verify the connection:
+```bash
+gemini mcp list
+```
+You should see `✓ coretext ... - Connected`. The Gemini Agent will now automatically discover and use the CoreText tools:
+*   **`search_topology`**: Semantic search across files and headers.
+*   **`get_dependencies`**: Analyze relationships between components.
+*   **`query_knowledge`**: Universal context retrieval for complex queries.
 
 #### Capabilities Exposed
-*   **Knowledge Query**: Ask natural language questions like "How does the authentication module work?" or "Where is the user schema defined?".
-*   **Structure Analysis**: The agent can inspect file dependencies and project topology.
-*   **Commands**: Run custom commands like `coretext status` directly from the Gemini prompt.
+*   **Knowledge Query**: Ask "What does the Flux Capacitor depend on?" and the agent will use `search_topology` or `get_dependencies` to find the answer from your synced docs.
+*   **Structure Analysis**: The agent can visualize your project's knowledge graph topology.
+*   **Commands**: Run any CoreText command (e.g., `status`, `sync`, `lint`) directly via the Gemini prompt.
 
 ---
 

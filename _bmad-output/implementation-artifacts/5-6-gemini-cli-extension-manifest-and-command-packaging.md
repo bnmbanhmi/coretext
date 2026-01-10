@@ -136,11 +136,12 @@ coretext/
 - Verified environmental setup via tests/integration/test_dogfooding_setup.py.
 - Updated README.md with Gemini CLI Extension usage guide.
 - Updated docs/release-demo-guide.md with Gemini CLI agent demo scenario.
-- **Code Review Fixes (2026-01-10):**
+- **Code Review & Connectivity Fixes (2026-01-10):**
   - Updated `coretext/cli/adapter.py` to auto-start daemon if not running (AC 4 compliance).
-  - Updated `gemini-extension.json` to use `coretext` executable instead of `python3` for robustness.
-  - Updated `commands/coretext.toml` to use `coretext` executable for all commands.
-  - Enhanced `tests/test_extension_integration.py` to verify executable configuration.
+  - Switched to **threaded stdin reader** in `adapter.py` to support macOS pipes/kqueue without crashing.
+  - Implemented **MCP `ping` method** in adapter to satisfy Gemini CLI health checks.
+  - Updated `gemini-extension.json` and `commands/coretext.toml` to use `poetry run -q` to prevent stdout pollution from breaking the JSON-RPC stream.
+  - Verified extension status as **Connected** in Gemini CLI and successfully tested all MCP tools (`search_topology`, `get_dependencies`, `query_knowledge`) via Stdio.
 
 ### File List
 - gemini-extension.json
