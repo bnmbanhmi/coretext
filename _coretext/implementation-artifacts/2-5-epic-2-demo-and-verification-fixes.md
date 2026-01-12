@@ -59,8 +59,8 @@ so that I can confidently validate the AI Agent capabilities (MCP server and sem
 9.  **Semantic Search Robustness:** Updated `search_topology` query to explicitly filter out `NONE` embeddings (`WHERE embedding != NONE`), preventing SurrealDB errors during vector similarity calculation on nodes without embeddings.
 
 ### References
-*   [Epic 1 Demo Guide](docs/epic-1-demo-guide.md)
-*   [Story 1.6](_bmad-output/implementation-artifacts/1-6-epic-1-demo-and-verification-fixes.md)
+*   [Epic 1 Demo Guide](../../docs/epic-1-demo-guide.md)
+*   [Story 1.6](_coretext/implementation-artifacts/1-6-epic-1-demo-and-verification-fixes.md)
 
 ## Dev Agent Record
 
@@ -87,4 +87,4 @@ gemini-2.5-flash
 - coretext/db/migrations.py
 - coretext/server/mcp/routes.py
 - coretext/server/mcp/manifest.py
-- _bmad-output/implementation-artifacts/2-5-epic-2-demo-and-verification-fixes.md
+- _coretext/implementation-artifacts/2-5-epic-2-demo-and-verification-fixes.md

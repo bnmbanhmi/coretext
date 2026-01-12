@@ -55,7 +55,7 @@ so that my "thinking" phase remains fluid and efficient.
 *   From Story 4.1: We learned that background threads can cause issues if not managed well. Here we are using `run_in_executor` which manages a pool, but we must ensure `Embedder` is thread-safe (usually is, `sentence-transformers` is generally fine for inference).
 
 ### References
-*   [Epic 4: System Reliability & Performance Optimization](../planning-artifacts/epics.md#epic-4-system-reliability--performance-optimization)
+*   [Epic 4: System Reliability & Performance Optimization](../planning-artifacts/epics.md#epic-4-system-reliability-performance-optimization)
 *   [FastAPI Async/Await docs](https://fastapi.tiangolo.com/async/#path-operation-functions)
 
 ## Dev Agent Record

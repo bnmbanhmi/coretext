@@ -79,7 +79,7 @@ so that my workflow remains uninterrupted.
 
 ### References
 
-*   [Epic 4: System Reliability & Performance Optimization](../planning-artifacts/epics.md#epic-4-system-reliability--performance-optimization)
+*   [Epic 4: System Reliability & Performance Optimization](../planning-artifacts/epics.md#epic-4-system-reliability-performance-optimization)
 *   [Architecture: Fail-Open Policy](../planning-artifacts/architecture.md)
 
 ## Dev Agent Record

@@ -80,9 +80,9 @@ so that the knowledge graph has a persistent and structured storage.
 
 ### References
 
-*   [Epic 1.2](../epics.md#story-12-surrealdb-management--schema-application)
-*   [Architecture - Data Architecture](../architecture.md#data-architecture)
-*   [Architecture - Project Structure](../architecture.md#complete-project-directory-structure)
+*   [Epic 1.2](../planning-artifacts/epics.md#story-12-surrealdb-management--schema-application)
+*   [Architecture - Data Architecture](../planning-artifacts/architecture.md#data-architecture)
+*   [Architecture - Project Structure](../planning-artifacts/architecture.md#complete-project-directory-structure)
 
 ## Dev Agent Record
 

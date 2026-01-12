@@ -114,7 +114,7 @@ coretext/
 
 ### References
 
--   `_bmad-output/planning-artifacts/sprint-change-proposal-2026-01-09.md`
+-   `_coretext/planning-artifacts/sprint-change-proposal-2026-01-09.md`
 -   `docs/architecture.md` (Updated structure)
 
 ## Dev Agent Record
@@ -158,7 +158,7 @@ coretext/
 - tests/test_extension_integration.py
 - tests/test_scaffolding.py
 - tests/integration/test_dogfooding_setup.py
-- _bmad-output/planning-artifacts/project_context.md
+- _coretext/planning-artifacts/project_context.md
 - .coretext/config.yaml
 - README.md
 - docs/release-demo-guide.md

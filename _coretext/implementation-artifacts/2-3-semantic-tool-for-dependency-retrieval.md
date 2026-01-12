@@ -52,7 +52,7 @@ so that I can understand the impact of changes or prerequisites for implementati
 ### References
 
 - [SurrealDB Graph Traversal](https://surrealdb.com/docs/surrealql/datamodel/relations)
-- [Project Architecture: API Patterns](../planning-artifacts/architecture.md#api-patterns)
+- [Project Architecture: API Patterns](../planning-artifacts/architecture.md#api-communication-patterns)
 
 ## Dev Agent Record
 
