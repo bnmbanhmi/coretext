@@ -49,10 +49,10 @@ def test_generate_manifest_extracts_tools():
     tool = next((t for t in tools if t["name"] == "mock_tool"), None)
     assert tool is not None
     assert tool["description"].strip().startswith("A mock tool for testing.")
-    assert "input_schema" in tool
-    assert "properties" in tool["input_schema"]
-    assert "param" in tool["input_schema"]["properties"]
-    assert tool["input_schema"]["properties"]["param"]["description"] == "A parameter."
+    assert "inputSchema" in tool
+    assert "properties" in tool["inputSchema"]
+    assert "param" in tool["inputSchema"]["properties"]
+    assert tool["inputSchema"]["properties"]["param"]["description"] == "A parameter."
 
 def test_mcp_routes_manifest_generation():
     """
@@ -69,5 +69,5 @@ def test_mcp_routes_manifest_generation():
     assert "get_dependencies" in tool_names
     
     search_tool = next(t for t in manifest["tools"] if t["name"] == "search_topology")
-    assert "The semantic search query." in str(search_tool["input_schema"])
+    assert "The semantic search query." in str(search_tool["inputSchema"])
 
