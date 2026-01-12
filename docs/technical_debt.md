@@ -33,8 +33,7 @@
 
 ### Testing
 *   **CLI `init` command integration tests**: The integration tests for `coretext init` (in `tests/unit/cli/test_commands.py`) fail with `exit_code=2` when run via `typer.testing.CliRunner`.
-    *   **Status**: Recorded on 2025-12-07.
-    *   **Action Required**: Investigate `CliRunner` alternatives for async Typer commands.
+    *   **Status**: **Resolved** (2026-01-12). Fixed by improving mock robustness and verifying interactive prompts.
 
 ### Architectural Trade-offs
 *   **Simplified SurrealDB Management in Post-commit Hook**: The `post_commit_hook` attempts to start SurrealDB if not running. 
