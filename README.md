@@ -28,6 +28,38 @@ AI agents struggle with large codebases. RAG (Retrieval Augmented Generation) he
 
 ---
 
+## Available Tools
+
+CoreText provides two distinct sets of tools: standard CLI commands for system management and "Thick Tools" for AI agents via the MCP server.
+
+### 1. CoreText CLI Tools
+These are "Outer Loop" tools for system lifecycle, file operations, and infrastructure management. Available in your terminal via `coretext <command>`.
+
+*   **`init`**: Initializes the project, configuration, database binary, and embedding model.
+*   **`start` / `stop`**: Manages the background daemon (SurrealDB + MCP Server).
+*   **`status`**: Checks the health of the database and server.
+*   **`sync`**: Manually synchronizes Markdown files to the graph.
+*   **`new`**: Generates structured documentation from built-in BMAD templates (e.g., `coretext new story ...`).
+*   **`lint`**: Runs integrity checks on your knowledge graph (broken links, schema violations).
+*   **`inspect`**: Visualizes the dependency tree of a specific node in the terminal.
+*   **`apply-schema`**: Applies database schema updates.
+*   **`install-hooks`**: Installs Git hooks for automatic synchronization.
+
+### 2. Gemini & MCP Exclusive Tools
+These are "Inner Loop" tools designed for **AI Agents**. They are exposed via the Model Context Protocol (MCP) and are **not** available as standalone CLI commands because they require the persistent state of the MCP server (loaded embedding models, active database connections) to function efficiently.
+
+*   **`query_knowledge` (The "Thick Tool")**:
+    *   **Function:** A universal context retrieval engine. It combines **Vector Search** (Semantic), **Regex/Keyword Filtering**, and **Graph Traversal** in a single round-trip.
+    *   **Why Exclusive?** It requires the embedding model (~300MB) to be resident in memory for sub-second performance. Running this via CLI would incur a massive "cold start" penalty (3-10s) per query.
+*   **`search_topology`**:
+    *   **Function:** Performs hybrid semantic search to find "Anchor Nodes" relevant to a natural language query.
+    *   **Why Exclusive?** Relies on the same resident embedding model as `query_knowledge`.
+*   **`get_dependencies`**:
+    *   **Function:** Retrieves direct and indirect dependencies for a node in structured JSON format.
+    *   **Note:** The CLI `inspect` command wraps this tool for human-readable output, but the raw tool is optimized for Agent consumption.
+
+---
+
 ## Installation
 
 CoreText is a Python application managed via `poetry`.

@@ -35,7 +35,15 @@ poetry run coretext init
 **Verify:**
 - Check `.coretext/config.yaml`: It should contain `docs_dir: demo`.
 
-### 1.3. Check Daemon Status
+### 1.3. Manual Schema Application
+Verify the schema management tool can force-apply the graph schema to SurrealDB.
+
+```bash
+poetry run coretext apply-schema
+```
+**Verify:** Output should indicate `Schema applied successfully`.
+
+### 1.4. Check Daemon Status
 ```bash
 poetry run coretext status
 ```
@@ -90,9 +98,9 @@ poetry run coretext new story demo/demo-story.md
 
 ### 2.2. List Available Templates
 ```bash
-poetry run coretext new
+poetry run coretext new --list
 ```
-**Verify:** Lists `prd`, `architecture`, `epic`, `story`.
+**Verify:** Displays a table listing `architecture`, `epic`, `prd`, `story`.
 
 ---
 
@@ -255,7 +263,11 @@ curl http://127.0.0.1:8001/health
 ```
 **Verify:** Returns `{"status": "OK"}`.
 
-### 6.2. Semantic Search
+### 6.2. Exclusive MCP Tools (Semantic Retriever)
+
+Verify the "Inner Loop" tools that enable Agent intelligence.
+
+**A. search_topology (Semantic Search)**
 ```bash
 curl -X POST http://127.0.0.1:8001/mcp/tools/search_topology \
      -H "Content-Type: application/json" \
@@ -263,7 +275,21 @@ curl -X POST http://127.0.0.1:8001/mcp/tools/search_topology \
 ```
 **Verify:** Returns relevant nodes. `demo/demo-story.md` should be present.
 
-### 6.4. Gemini CLI Extension Demo
+**B. query_knowledge (The "Thick Tool")**
+Verify the combined Semantic + Regex + Graph Traversal engine.
+```bash
+curl -X POST http://127.0.0.1:8001/mcp/tools/query_knowledge \
+     -H "Content-Type: application/json" \
+     -d '{
+       "natural_query": "demo story",
+       "top_k": 1,
+       "depth": 1,
+       "regex_filter": ".*demo.*"
+     }'
+```
+**Verify:** Returns a JSON object with both `nodes` and `edges`. The edges should show the relationship between the file and its headers.
+
+### 6.3. Gemini CLI Extension Demo
 
 **Goal:** Verify the Gemini CLI agent can use the extension tools to query knowledge naturally.
 
@@ -284,12 +310,18 @@ curl -X POST http://127.0.0.1:8001/mcp/tools/search_topology \
     ```
 
 4.  **Interact with the Agent:**
-    *   **Prompt 1:** "What is the status of the CoreText system?"
+    *   **Scenario 1: Lifecycle & Health**
+        *   **Prompt:** "What is the status of the CoreText system?"
         *   *Expectation:* The agent runs the `coretext status` command and reports the health.
-    *   **Prompt 2:** "Search the topology for 'Architecture' using coretext tools."
+    *   **Scenario 2: Semantic Research (search_topology)**
+        *   **Prompt:** "Find any documents related to 'Story' using coretext search."
         *   *Expectation:* The agent uses the `search_topology` tool and lists relevant nodes.
-    *   **Prompt 3:** "Show me the dependencies of the 'inside.md' file."
-        *   *Expectation:* The agent uses `get_dependencies` and identifies any links.
+    *   **Scenario 3: Complex Context Retrieval (query_knowledge)**
+        *   **Prompt:** "Give me a detailed overview of the 'demo-story.md' file including its section structure and any files it references."
+        *   *Expectation:* The agent uses `query_knowledge` with `depth=1` to pull the file node, its header nodes, and connected references in one step.
+    *   **Scenario 4: Dependency Analysis (get_dependencies)**
+        *   **Prompt:** "What does the 'demo-story.md' file depend on?"
+        *   *Expectation:* The agent uses `get_dependencies` and identifies the link to `reference-target.md`.
 
 ---
 
