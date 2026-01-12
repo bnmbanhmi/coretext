@@ -1,0 +1,8 @@
+name = "apply-schema"
+title = "Apply Database Schema"
+description = "Applies the schema from .coretext/schema_map.yaml to the local SurrealDB"
+prompt = "Applies the schema from .coretext/schema_map.yaml to the local SurrealDB"
+command = "poetry"
+args = ["run", "-q", "coretext", "apply-schema"]
+cwd = "${extensionPath}"
+env = { PYTHONPATH = "${extensionPath}" }

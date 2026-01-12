@@ -1,0 +1,8 @@
+name = "init"
+title = "Initialize CoreText"
+description = "Initialize a new CoreText project"
+prompt = "Initialize a new CoreText project"
+command = "poetry"
+args = ["run", "-q", "coretext", "init"]
+cwd = "${extensionPath}"
+env = { PYTHONPATH = "${extensionPath}" }

@@ -1,0 +1,8 @@
+name = "start"
+title = "Start CoreText Daemon"
+description = "Starts the CoreText daemon (SurrealDB and FastAPI server) in the background"
+prompt = "Starts the CoreText daemon (SurrealDB and FastAPI server) in the background"
+command = "poetry"
+args = ["run", "-q", "coretext", "start"]
+cwd = "${extensionPath}"
+env = { PYTHONPATH = "${extensionPath}" }

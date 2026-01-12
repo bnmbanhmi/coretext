@@ -1,0 +1,8 @@
+name = "status"
+title = "CoreText Status"
+description = "Check the health and status of the CoreText daemon and database"
+prompt = "Check the health and status of the CoreText daemon and database"
+command = "poetry"
+args = ["run", "-q", "coretext", "status"]
+cwd = "${extensionPath}"
+env = { PYTHONPATH = "${extensionPath}" }

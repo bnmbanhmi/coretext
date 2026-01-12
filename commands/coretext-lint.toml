@@ -1,0 +1,8 @@
+name = "lint"
+title = "Lint Markdown Files"
+description = "Runs integrity checks on Markdown files via the daemon"
+prompt = "Runs integrity checks on Markdown files via the daemon"
+command = "poetry"
+args = ["run", "-q", "coretext", "lint"]
+cwd = "${extensionPath}"
+env = { PYTHONPATH = "${extensionPath}" }

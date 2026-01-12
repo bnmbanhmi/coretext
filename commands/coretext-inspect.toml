@@ -1,0 +1,8 @@
+name = "inspect"
+title = "Inspect Dependency Tree"
+description = "Inspects the dependency tree of a specific node"
+prompt = "Inspects the dependency tree of a specific node"
+command = "poetry"
+args = ["run", "-q", "coretext", "inspect"]
+cwd = "${extensionPath}"
+env = { PYTHONPATH = "${extensionPath}" }

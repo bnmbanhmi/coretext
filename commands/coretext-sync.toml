@@ -1,0 +1,8 @@
+name = "sync"
+title = "Sync Files"
+description = "Manually synchronizes markdown files in the specified directory to the graph"
+prompt = "Manually synchronizes markdown files in the specified directory to the graph"
+command = "poetry"
+args = ["run", "-q", "coretext", "sync"]
+cwd = "${extensionPath}"
+env = { PYTHONPATH = "${extensionPath}" }

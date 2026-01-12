@@ -1,0 +1,8 @@
+name = "stop"
+title = "Stop CoreText Daemon"
+description = "Stops the CoreText daemon"
+prompt = "Stops the CoreText daemon"
+command = "poetry"
+args = ["run", "-q", "coretext", "stop"]
+cwd = "${extensionPath}"
+env = { PYTHONPATH = "${extensionPath}" }

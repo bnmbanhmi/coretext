@@ -1,0 +1,8 @@
+name = "new"
+title = "Create New File from Template"
+description = "Generates a new Markdown file from a BMAD template"
+prompt = "Generates a new Markdown file from a BMAD template"
+command = "poetry"
+args = ["run", "-q", "coretext", "new"]
+cwd = "${extensionPath}"
+env = { PYTHONPATH = "${extensionPath}" }

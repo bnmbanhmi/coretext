@@ -1,0 +1,8 @@
+name = "ping"
+title = "Ping"
+description = "Simple ping-pong check"
+prompt = "Simple ping-pong check"
+command = "poetry"
+args = ["run", "-q", "coretext", "ping"]
+cwd = "${extensionPath}"
+env = { PYTHONPATH = "${extensionPath}" }

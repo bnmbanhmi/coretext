@@ -1,0 +1,8 @@
+name = "install-hooks"
+title = "Install Git Hooks"
+description = "Installs Git hooks for coretext synchronization"
+prompt = "Installs Git hooks for coretext synchronization"
+command = "poetry"
+args = ["run", "-q", "coretext", "install-hooks"]
+cwd = "${extensionPath}"
+env = { PYTHONPATH = "${extensionPath}" }
