@@ -50,6 +50,7 @@ def test_generate_manifest_extracts_tools():
     assert tool is not None
     assert tool["description"].strip().startswith("A mock tool for testing.")
     assert "inputSchema" in tool
+    assert "input_schema" in tool  # Ensure both keys are present
     assert "properties" in tool["inputSchema"]
     assert "param" in tool["inputSchema"]["properties"]
     assert tool["inputSchema"]["properties"]["param"]["description"] == "A parameter."

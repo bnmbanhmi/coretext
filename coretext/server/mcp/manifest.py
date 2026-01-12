@@ -38,7 +38,8 @@ def generate_manifest(routes: List[Any]) -> dict:
             tools.append({
                 "name": tool_name,
                 "description": description.strip(),
-                "inputSchema": input_schema
+                "inputSchema": input_schema,
+                "input_schema": input_schema  # Backwards compatibility / snake_case expectation
             })
             
     return {"tools": tools}
