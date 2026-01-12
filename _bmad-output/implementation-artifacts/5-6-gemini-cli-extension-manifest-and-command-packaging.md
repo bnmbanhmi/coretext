@@ -142,10 +142,14 @@ coretext/
   - Implemented **MCP `ping` method** in adapter to satisfy Gemini CLI health checks.
   - Updated `gemini-extension.json` and `commands/coretext.toml` to use `poetry run -q` to prevent stdout pollution from breaking the JSON-RPC stream.
   - Verified extension status as **Connected** in Gemini CLI and successfully tested all MCP tools (`search_topology`, `get_dependencies`, `query_knowledge`) via Stdio.
+- **Manifest & Command Validation Fixes (2026-01-12):**
+  - Updated `coretext/server/mcp/manifest.py` to use `inputSchema` (and alias `input_schema`) to comply with MCP spec and fix Gemini CLI discovery errors.
+  - Split monolithic `commands/coretext.toml` into individual files in `commands/` directory (e.g., `commands/coretext-status.toml`) to comply with Gemini CLI loader constraints.
+  - Added required `prompt` field to all command definitions.
 
 ### File List
 - gemini-extension.json
-- commands/coretext.toml
+- commands/*.toml (individual command files)
 - coretext/main.py
 - coretext/cli/adapter.py
 - coretext/cli/commands.py
