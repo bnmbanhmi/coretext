@@ -38,3 +38,12 @@ SELECT path FROM node WHERE node_type = 'file';
 SELECT path FROM node WHERE path = 'demo/demo-story.md';
 SELECT out.path as target FROM references WHERE in.path = 'demo/demo-story.md';
 SELECT count() FROM node WHERE path = 'demo/demo-story.md';
+SELECT path FROM node WHERE node_type = 'file';
+SELECT * FROM node WHERE path = 'demo/demo-story.md'; SELECT out.path as target_file FROM references WHERE in.path = 'demo/demo-story.md';
+SELECT out.path as target_file FROM references WHERE in.path = 'demo/demo-story.md';
+SELECT count() FROM node WHERE path = 'demo/demo-story.md'
+CREATE node:dummy SET path='dummy';
+SELECT count() FROM node;
+SELECT count() FROM node WHERE node_type='file';
+SELECT id, path FROM node LIMIT 5;
+SELECT path, embedding FROM node WHERE node_type='file' LIMIT 1;

@@ -72,6 +72,11 @@ class GraphManager:
         if fetched_records:
             # If it's a list, take the first item
             record = fetched_records[0] if isinstance(fetched_records, list) else fetched_records
+            
+            # Check for invalid record types (e.g. nan, float, None) which indicate not found or error
+            if isinstance(record, float) or record is None:
+                return None
+                
             record = self._convert_ids(record)
             return node_model.model_validate(record)
         return None

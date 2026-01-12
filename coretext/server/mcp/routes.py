@@ -96,8 +96,9 @@ async def get_dependencies(
                 # If prefix is a known node type, use the mapped table
                 node_id = f"{table}:`{rest.strip('`')}`"
             except KeyError:
-                # If prefix is not a known node type, it might be a raw table name (e.g. 'node')
-                pass
+                # If prefix is not a known node type, treat it as a table name and backtick the ID part
+                # This handles cases like 'node:some/path' -> 'node:`some/path`'
+                node_id = f"{prefix}:`{rest.strip('`')}`"
         else:
             # No prefix, handle path heuristic
             # Default to 'file' table for any path-like string or simple ID

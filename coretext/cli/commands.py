@@ -673,6 +673,79 @@ def apply_schema(
         raise typer.Exit(code=1)
 
 @app.command()
+def wipe(
+    project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p", help="Root directory of the project."),
+    force: bool = typer.Option(False, "--force", "-f", help="Force wipe without confirmation.")
+):
+    """
+    Wipes the entire database content.
+    """
+    console = Console()
+    
+    config_path = project_root / ".coretext" / "config.yaml"
+    if not config_path.exists():
+        console.print(Panel("[red]Coretext not initialized.[/red] Run 'coretext init' first.", title="Error"))
+        raise typer.Exit(code=1)
+        
+    config = load_config(project_root)
+    
+    # Check if DB is reachable
+    health_info = check_daemon_health(server_port=config.mcp_port, db_port=config.daemon_port, project_root=project_root)
+    if health_info["database"]["status"] != "Running":
+         console.print(Panel("[red]Database is not running.[/red] Run 'coretext start' first.", title="Error"))
+         raise typer.Exit(code=1)
+
+    if not force:
+        if not typer.confirm("Are you sure you want to WIPE the entire database? This action is irreversible!"):
+            console.print("Operation cancelled.")
+            raise typer.Exit(code=0)
+
+    async def _wipe_logic():
+        console.print(f"Connecting to ws://localhost:{config.daemon_port}/rpc...")
+        async with AsyncSurreal(f"ws://localhost:{config.daemon_port}/rpc") as db:
+            await db.connect()
+            await db.use("coretext", "coretext")
+            
+            # Get all table names dynamically using INFO FOR DB
+            try:
+                info = await db.query("INFO FOR DB;")
+                
+                tables_to_delete = []
+                if isinstance(info, list) and len(info) > 0:
+                    res = info[0]
+                    if isinstance(res, dict) and 'result' in res:
+                        tables_info = res['result'].get('tables', {})
+                        tables_to_delete = list(tables_info.keys())
+                    elif isinstance(res, dict) and 'tables' in res:
+                         tables_to_delete = list(res.get('tables', {}).keys())
+
+                if not tables_to_delete:
+                     # Fallback list
+                    tables_to_delete = ["node", "contains", "parent_of", "references", "depends_on", "governed_by"]
+                
+                console.print(f"Found tables: {tables_to_delete}")
+                
+                with console.status("[bold red]Wiping database...[/bold red]"):
+                    for t in tables_to_delete:
+                        try:
+                            await db.query(f"DELETE {t};")
+                            console.print(f"Deleted {t}")
+                        except Exception as e:
+                            console.print(f"[red]Error deleting {t}: {e}[/red]")
+
+                console.print("[bold green]Database wiped successfully.[/bold green]")
+
+            except Exception as e:
+                 console.print(f"[red]Error during wipe: {e}[/red]")
+                 raise typer.Exit(code=1)
+
+    try:
+        asyncio.run(_wipe_logic())
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        raise typer.Exit(code=1)
+
+@app.command()
 def new(
     template_name: Optional[str] = typer.Argument(None, help="Name of the template to use."),
     output_path: Optional[str] = typer.Argument(None, help="Path where the new file should be created."),
