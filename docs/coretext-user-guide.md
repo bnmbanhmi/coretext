@@ -63,10 +63,10 @@ The CoreText CLI (`poetry run coretext`) provides a suite of tools for managing 
 ### 2.4. Exploration & Analysis
 *   **`inspect`**:
     *   *Purpose:* Visualizes the dependency tree of a specific file or node in the terminal.
-    *   *Usage:* `poetry run coretext inspect "node:_coretext/architecture.md" --depth 2`
+    *   *Usage:* `poetry run coretext inspect "node:_coretext/planning-artifacts/architecture.md" --depth 2`
 *   **`query`**:
     *   *Purpose:* Performs a powerful **Hybrid Search** (Vector + Graph + Regex) directly from the CLI.
-    *   *Usage:* `poetry run coretext query "authentication" --regex ".*specs.*" --depth 1`
+    *   *Usage:* `poetry run coretext query "Hybrid Search" --regex "(?i)surrealdb" --depth 1`
 
 ### 2.5. Integration
 *   **`adapter`**:
@@ -95,7 +95,7 @@ These tools are designed for high-precision context retrieval. They run on the d
 *   **`search_topology` (Semantic Search)**
     *   *Function:* Performs cosine similarity search on vector embeddings to find "Anchor Nodes".
     *   *Parameters:* `query` (text), `limit` (int).
-    *   *Use Case:* "Find documentation related to user authentication." -> Agent finds `auth-service.md` even if the word "user" isn't explicitly used.
+    *   *Use Case:* "Find documentation related to Hybrid Find." -> Agent finds `_coretext/implementation-artifacts/5-3-hybrid-execution-thick-tool.md` even if the word "Find" isn't explicitly used.
 
 *   **`get_dependencies` (Structural Analysis)**
     *   *Function:* Retrieves direct and indirect dependencies for a specific node ID. It can traverse both upstream (`in`) and downstream (`out`) edges.
@@ -111,7 +111,7 @@ These tools are designed for high-precision context retrieval. They run on the d
         *   `natural_query`: The semantic intent (e.g., "rate limiting logic").
         *   `top_k`: Number of initial anchors (default 5).
         *   `depth`: How far to traverse the graph (default 1).
-        *   `regex_filter`: Regex pattern to scope search (e.g., `^/src/auth/.*`).
+        *   `regex_filter`: Regex pattern to scope search (e.g., `^/implementation-artifacts/.*`).
         *   `keyword_filter`: Exact substring match requirement.
     *   *Use Case:* "Summarize acceptance criteria for all 'Initialization' stories in the planning folder." -> Agent fetches a specific sub-graph containing only relevant headers and their content, filtering out noise.
 
@@ -124,9 +124,8 @@ Sometimes you need to *see* the complexity to understand it. Surrealist allows b
 ### 4.1. Visual Exploration
 1.  **Launch Surrealist** (Desktop or Web).
 2.  **Connect:** `ws://localhost:8010/rpc` (NS: `coretext`, DB: `coretext`, Auth: Anonymous).
-3.  **Designer View:**
+3.  **Table View:**
     *   Search for a node ID (e.g., `node:⟨_coretext/planning-artifacts/architecture.md⟩`).
-    *   **Expand:** Double-click to reveal outgoing `references` and incoming `depends_on` edges.
     *   **Inspect:** Click on a node to see its metadata, commit hash, and embedding vector.
 
 ### 4.2. Advanced SQL Analysis

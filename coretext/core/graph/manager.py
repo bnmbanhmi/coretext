@@ -270,8 +270,8 @@ class GraphManager:
 
         if regex:
             # Check id, path, or content.
-            # Using Regex operator ~ per API contract
-            sql += " AND (id ~ $regex OR path ~ $regex OR content ~ $regex)"
+            # Using string::matches function to support parameterized regex
+            sql += " AND (string::matches(type::string(id), $regex) OR string::matches(path, $regex) OR string::matches(content, $regex))"
             params["regex"] = regex
         
         if keywords:

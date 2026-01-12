@@ -152,6 +152,7 @@ coretext/
   - **Implemented `coretext query` Command:** Added a new CLI command that exposes the full "Thick Tool" `query_knowledge` capability (Vector + Lexical + Graph) directly to developers.
   - **Critical Parser Fix (Content Extraction):** Enhanced `MarkdownParser` to capture actual body text (paragraphs, code blocks) under headers. Previously, headers only stored the title text, rendering semantic search on sections ineffective.
   - **Comprehensive Documentation:** Authored `docs/coretext-user-guide.md` as a definitive manual for CLI, Extension, and Visual (Surrealist) workflows.
+  - **Bug Fix (2026-01-13):** Fixed `coretext query` failure with regex parameters by replacing SurrealDB `~` operator with `string::matches()` in `coretext/core/graph/manager.py` to handle parameter casting correctly.
 
 ### File List
 - gemini-extension.json
