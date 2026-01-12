@@ -257,6 +257,18 @@ class MarkdownParser:
                 header_stack.append(new_header_node)
 
             elif token.type == "inline": # Process inline tokens to find nested links and implicit references
+                # --- CONTENT CAPTURE START ---
+                if header_stack:
+                    current_header = header_stack[-1]
+                    # Heuristic: If the PREVIOUS token was heading_open, this inline is the title.
+                    # We want to skip appending the title again to the body content.
+                    is_header_title = (i > 0 and tokens[i-1].type == "heading_open")
+                    
+                    if not is_header_title and token.content:
+                        # Append content to the active header
+                        current_header.content += "\n" + token.content
+                # --- CONTENT CAPTURE END ---
+
                 # Process children of inline token
                 if token.children:
                     for child_token in token.children:
@@ -303,29 +315,14 @@ class MarkdownParser:
                         except ValueError:
                             pass # Ignore errors for implicit links that don't resolve to project files
 
+            # Capture Code Blocks and Fenced Code
+            elif (token.type == "fence" or token.type == "code_block") and header_stack:
+                 if token.content:
+                     header_stack[-1].content += f"\n```\n{token.content}```\n"
+
             # Associate content with the current active header
             elif header_stack:
                  # Check if the token represents content (paragraph, list, code block, etc.)
-                 # We skip 'heading_close' and 'inline' tokens that are part of the heading itself
-                 # But 'inline' tokens for paragraphs are separate.
-                 # Actually, markdown-it token stream:
-                 # h1_open, inline (header text), h1_close, paragraph_open, inline (body), paragraph_close
-                 
-                 # So if we are here, we are NOT in a heading_open block (handled by elif above).
-                 # We need to filter out structural tokens that don't add content or are already handled.
-                 
-                 # Simple approach: If it's a content-bearing token (inline, fence, code_block), add it.
-                 # But 'inline' is used for headers too.
-                 # The 'heading_open' block handles the header node creation.
-                 # The next tokens until 'heading_close' are the header text.
-                 # We need to distinguish "header text" from "body text".
-                 
-                 # Current logic:
-                 # if token.type == "heading_open": ... creates node, pushes to stack.
-                 # The loop continues. Next token is 'inline' (header title).
-                 # Then 'heading_close'.
-                 
-                 # We should only add content if we are NOT inside the heading open/close tag.
                  pass # Placeholder until we implement robust content extraction
 
 

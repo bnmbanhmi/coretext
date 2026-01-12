@@ -214,10 +214,10 @@ echo "SELECT id, node_type, path FROM node WHERE path = 'demo/demo-story.md';" |
      - **reference-target.md** (via `references` edge).
    - This visual confirmation proves the graph topology is intact.
 
-**Option D: Advanced Hybrid Retrieval (The Real Power)**
-This step verifies the **Hybrid Search** architecture (Vector + Lexical + Graph). We will find nodes *semantically similar* to the file we just created, but *structurally filtered* to only show Headers.
+**Option D: Advanced SQL Search (Under the Hood)**
+This step verifies the **Unified Storage** architecture. We will find nodes *semantically similar* to the file we just created using raw SQL. Note that in Surrealist, we use an existing node's embedding as a "seed" because the SQL editor cannot embed text strings directly.
 
-1. **Run this Hybrid Query in Surrealist:**
+1. **Run this Query in Surrealist:**
    ```sql
    -- 1. Grab the "Concept" (Vector) of our new story
    LET $concept = (SELECT embedding FROM node WHERE path = 'demo/demo-story.md')[0].embedding;
@@ -229,27 +229,35 @@ This step verifies the **Hybrid Search** architecture (Vector + Lexical + Graph)
        vector::similarity::cosine(embedding, $concept) AS relevance 
    FROM node 
    WHERE 
-       -- Graph/Lexical Constraint: Only look at Headers
        node_type = 'header' 
-       -- Data Integrity: Ensure they have vectors
        AND embedding != NONE 
-   -- Semantic Ranking
    ORDER BY relevance DESC 
    LIMIT 5;
    ```
-   **Expectation:** You should see header nodes (likely the file's own headers or other semantically related headers in the graph) ranked by relevance. This proves the **Vector Store** and **Graph Store** are unified.
+   **Expectation:** You should see header nodes ranked by relevance. This proves the **Vector Store** and **Graph Store** are unified in SurrealDB.
 
 ---
 
-## 5. Graph Inspection & Visualization
+## 5. Graph Inspection & Hybrid Querying
 
-**Goal:** Verify we can visualize the graph topology from the CLI.
+**Goal:** Verify we can visualize the graph and perform natural language hybrid searches from the CLI.
 
-### 5.1. Inspect Node
+### 5.1. Inspect Node (Graph Structure)
 ```bash
 poetry run coretext inspect demo/demo-story.md
 ```
 **Verify:** Displays a **Tree View** showing the file as root and its sections as branches.
+
+### 5.2. Hybrid Query (The "Thick Tool" in action)
+Verify the combined Semantic + Lexical + Graph retrieval. This command is much more powerful than a simple search as it pulls a unified context.
+
+```bash
+# Natural Language + Regex Filter + Graph Traversal
+poetry run coretext query "acceptance criteria for initialization" --regex ".*1-1.*" --depth 1
+```
+**Verify:** 
+- Displays a table of relevant nodes with semantic scores.
+- Summarizes the number of graph connections (edges) found during traversal.
 
 ---
 

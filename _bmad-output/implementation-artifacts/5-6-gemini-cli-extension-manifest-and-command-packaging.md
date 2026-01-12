@@ -146,6 +146,12 @@ coretext/
   - Updated `coretext/server/mcp/manifest.py` to use `inputSchema` (and alias `input_schema`) to comply with MCP spec and fix Gemini CLI discovery errors.
   - Split monolithic `commands/coretext.toml` into individual files in `commands/` directory (e.g., `commands/coretext-status.toml`) to comply with Gemini CLI loader constraints.
   - Added required `prompt` field to all command definitions.
+- **Post-Implementation Reliability & Search Improvements (2026-01-12):**
+  - **Fixed `inspect` Command Crash:** Updated `coretext/core/graph/manager.py` (`get_node`) to gracefully handle `nan`/invalid results from SurrealDB, preventing Pydantic validation failures.
+  - **Robust ID Normalization:** Improved `get_dependencies` route logic to correctly handle and backtick table-prefixed IDs (e.g., `node:path`).
+  - **Implemented `coretext query` Command:** Added a new CLI command that exposes the full "Thick Tool" `query_knowledge` capability (Vector + Lexical + Graph) directly to developers.
+  - **Critical Parser Fix (Content Extraction):** Enhanced `MarkdownParser` to capture actual body text (paragraphs, code blocks) under headers. Previously, headers only stored the title text, rendering semantic search on sections ineffective.
+  - **Comprehensive Documentation:** Authored `docs/coretext-user-guide.md` as a definitive manual for CLI, Extension, and Visual (Surrealist) workflows.
 
 ### File List
 - gemini-extension.json
@@ -162,3 +168,4 @@ coretext/
 - .coretext/config.yaml
 - README.md
 - docs/release-demo-guide.md
+- docs/coretext-user-guide.md (NEW)

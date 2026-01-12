@@ -1090,6 +1090,95 @@ async def _post_commit_hook_logic(project_root: Path, detached: bool):
         os._exit(0)
 
 @app.command()
+def query(
+    text: str = typer.Argument(..., help="Natural language query for hybrid search."),
+    top_k: int = typer.Option(5, "--top-k", "-k", help="Number of anchor nodes to retrieve via vector search."),
+    depth: int = typer.Option(1, "--depth", "-d", help="Traversal depth from anchor nodes."),
+    regex: Optional[str] = typer.Option(None, "--regex", "-r", help="Regex filter for ID, path, or content."),
+    project_root: Path = typer.Option(Path.cwd(), "--project-root", "-p", help="Root directory of the project.")
+):
+    """
+    Performs a Hybrid Search (Vector + Lexical + Graph) using the CoreText daemon.
+    Returns a unified view of relevant nodes and their relationships.
+    """
+    console = Console()
+    
+    config_path = project_root / ".coretext" / "config.yaml"
+    if not config_path.exists():
+        console.print(Panel("[red]Coretext not initialized.[/red] Run 'coretext init' first.", title="Error"))
+        raise typer.Exit(code=1)
+        
+    config = load_config(project_root)
+    
+    health_info = check_daemon_health(server_port=config.mcp_port, db_port=config.daemon_port, project_root=project_root)
+    if health_info["server"]["status"] != "Running":
+        console.print(Panel("[red]Daemon is not running.[/red] Run 'coretext start' first.", title="Error"))
+        raise typer.Exit(code=1)
+        
+    try:
+        with console.status(f"[bold green]Searching for '[cyan]{text}[/cyan]'..."):
+            payload = {
+                "natural_query": text,
+                "top_k": top_k,
+                "depth": depth,
+                "regex_filter": regex
+            }
+            
+            response = httpx.post(
+                f"http://localhost:{config.mcp_port}/mcp/tools/query_knowledge",
+                json=payload,
+                timeout=15.0
+            )
+            
+        if response.status_code == 200:
+            data = response.json()
+            nodes = data.get("nodes", [])
+            edges = data.get("edges", [])
+            
+            if not nodes:
+                console.print(f"No results found for '[bold blue]{text}[/bold blue]'.")
+                return
+            
+            # Display Results Summary
+            console.print(f"\n[bold green]Hybrid Search Results:[/bold green] Found [cyan]{len(nodes)}[/cyan] nodes and [cyan]{len(edges)}[/cyan] relationships.\n")
+            
+            # Create a table for nodes
+            table = Table(title="Relevant Nodes")
+            table.add_column("Type", style="magenta")
+            table.add_column("ID", style="cyan")
+            table.add_column("Score", style="yellow")
+            table.add_column("Snippet", style="white", overflow="ellipsis")
+            
+            for node in nodes:
+                # Heuristic for snippet
+                content = node.get("content", "")
+                snippet = (content[:75] + "..") if len(content) > 75 else content
+                snippet = snippet.replace("\n", " ")
+                
+                score = node.get("metadata", {}).get("score", "N/A")
+                if isinstance(score, float):
+                    score = f"{score:.4f}"
+                
+                table.add_row(
+                    node.get("node_type", "unknown"),
+                    node.get("id", "N/A"),
+                    str(score),
+                    snippet
+                )
+            
+            console.print(table)
+            
+            if edges:
+                # Display relationship summary
+                console.print(f"\n[bold blue]Graph Context:[/bold blue] {len(edges)} connections found (use 'inspect' for tree view).")
+                
+        else:
+            console.print(f"[red]Error {response.status_code}:[/red] {response.text}")
+            
+    except httpx.RequestError as e:
+        console.print(f"[red]Connection error:[/red] {e}")
+
+@app.command()
 def inspect(
     node_id: str = typer.Argument(..., help="Node ID or File Path to inspect."),
     depth: int = typer.Option(1, "--depth", "-d", help="Traversal depth."),
