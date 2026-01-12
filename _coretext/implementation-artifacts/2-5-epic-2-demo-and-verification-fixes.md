@@ -60,7 +60,7 @@ so that I can confidently validate the AI Agent capabilities (MCP server and sem
 
 ### References
 *   [Epic 1 Demo Guide](../../docs/epic-1-demo-guide.md)
-*   [Story 1.6](_coretext/implementation-artifacts/1-6-epic-1-demo-and-verification-fixes.md)
+*   [Story 1.6](1-6-epic-1-demo-and-verification-fixes.md)
 
 ## Dev Agent Record
 
