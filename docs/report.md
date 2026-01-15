@@ -4,17 +4,19 @@
 
 ### **1.1. Problem Statement**
 
-In modern software engineering, documentation serves as the "source of truth" for autonomous AI agents. However, traditional documentation methods relying on disconnected, unstructured text files (e.g., Markdown) present significant challenges as project complexity scales.
+In modern software engineering, documentation serves as the "source of truth" for autonomous AI agents. However, traditional documentation methods relying on disconnected, unstructured text files (e.g., Markdown) present significant challenges as project complexity scales. This challenge is diagnosed as a failure occurring at three distinct layers:
 
-Current limitations include:
-
-1. **Context Window Overload:** Feeding entire documentation repositories into Large Language Models (LLMs) leads to high token costs and the "Lost in the Middle" phenomenon.  
-2. **Lack of Semantic Structure:** Flat text files fail to explicitly represent the topological relationships (dependencies, references, hierarchies) between requirements, design, and implementation.  
-3. **Data Integrity:** When requirements change, maintaining consistency across unstructured documents and subsequent code generation is prone to error.
+1.  **Model Level (Context Window Overload):** Feeding entire documentation repositories into Large Language Models (LLMs) leads to high token costs and the "Lost in the Middle" phenomenon, where models struggle to retrieve information from the middle of long contexts.
+2.  **Tool Level (Flat-File Blindness):** Current tools (search, grep, ls) treat documents and knowledge as **flat, disconnected files**. They fail to capture the semantic and topological relationships (dependencies, references, hierarchies) between requirements, design, and implementation.
+3.  **Context Level (The Autonomy Gap):** Even with structured methodologies like **BMad**—which organizes files into Epics and Stories—the system remains **insufficient for full autonomy**. The "Mental Model" of the project (the connections between an Epic and its specific code implementation) remains implicit in the files or the human operator's mind. Without an explicit, machine-navigable state machine, autonomous agents cannot self-direct effectively.
 
 ### **1.2. Research Objective**
 
-This research proposes a methodological improvement to the BMad Agentic Agile framework by integrating a **Knowledge Graph** layer. The objective is to transform static, unstructured documentation into a dynamic, structured graph database. This allows AI agents to retrieve precise, granular context based on relationships rather than simple text matching.
+This research proposes a methodological improvement to the BMad Agentic Agile framework by integrating a **Knowledge Graph** layer named **CoreText**. The objective is to resolve the three-level problem by:
+
+1.  **Context:** Transforming static, unstructured documentation into a dynamic, structured graph database (SurrealDB).
+2.  **Tool:** Providing agents with "Thick Tools" (MCP) that allow them to traverse relationships (e.g., "Find all stories linked to this Epic") rather than just matching text.
+3.  **Model:** Delivering precise, topologically relevant subgraphs to the LLM, thereby solving the context window overload.
 
 ### **1.3. Scope of Research**
 
@@ -22,7 +24,7 @@ The research focuses on the **Specification, Design, and Testing** phases of the
 
 ### **1.4. Methodology Overview**
 
-The approach combines **Docs-as-Code** principles with **Graph Theory**. We propose a pipeline where documentation artifacts are parsed into semantic nodes, linked by explicit relationships, and exposed to agents via the **Model Context Protocol (MCP)**.
+The approach combines **Docs-as-Code** principles with **Graph Theory**. A pipeline is proposed where documentation artifacts are parsed into semantic nodes, linked by explicit relationships, and exposed to agents via the **Model Context Protocol (MCP)**.
 
 ---
 
@@ -30,7 +32,7 @@ The approach combines **Docs-as-Code** principles with **Graph Theory**. We prop
 
 ### **2.1. The Anatomy of a Coding Agent**
 
-Contemporary AI engineering faces a fundamental constraint: LLMs operate under strict context window limits. Simply ingesting entire repositories leads to high latency, prohibitive costs, and the "Lost in the Middle" phenomenon. Therefore, we define the efficacy of an AI Agent via the function:
+Contemporary AI engineering faces a fundamental constraint: LLMs operate under strict context window limits. Simply ingesting entire repositories leads to high latency, prohibitive costs, and the "Lost in the Middle" phenomenon. Therefore, the efficacy of an AI Agent is defined via the function:
 
 $Performance \= f(Model, Tools, Context)$.
 
@@ -67,11 +69,11 @@ External Environment Interaction Capability: The ability to run terminal command
 - **Examples:** CodeRabbit, Bugbot.  
 - *Philosophy:* Automated review and security checks.
 
-**Summary of Tools:** While these categories show immense progress in *Execution*, they all treat Project Knowledge as a flat, searchable text interface rather than a structured relationship model.
+**Summary of Tools:** While these categories show immense progress in *Execution*, they all treat Project Knowledge as a flat, searchable text interface rather than a structured relationship model. This is the **Tool Level** failure: tools are optimized for modifying code, not for understanding the topology of knowledge.
 
 #### 2.1.3. Context
 
-**Context** represents the essential environmental data supplied to the Model to ground its reasoning and prevent hallucinations. Within an agentic workflow, we categorize context into three fundamental paradigms of retrieval:
+**Context** represents the essential environmental data supplied to the Model to ground its reasoning and prevent hallucinations. Within an agentic workflow, context is categorized into three fundamental paradigms of retrieval:
 
 1. **Semantic Context:** Relies on probabilistic similarity (Vector Embeddings) to retrieve information that "looks like" the query, excelling at handling unstructured intent.  
 2. **Structural Context:** Utilizes deterministic connectivity (Graph/AST) to navigate the project’s topology, ensuring accuracy in dependency mapping and hierarchy.  
@@ -81,11 +83,11 @@ External Environment Interaction Capability: The ability to run terminal command
 **The Exploration Gap: Implementation vs. Specification**  
 Current industry standards focus heavily on managing **Implementation Context**—the "How" of the codebase (functions, classes, and logic). However, a critical "Exploration Gap" exists regarding **Specification Context**—the "Why" behind the code (requirements, user stories, and architectural intent).
 
-While code is treated as a structured entity, documentation is frequently relegated to flat, disconnected text. This research identifies this disconnect as **"Documentation Blindness"**. Consequently, we propose a **Knowledge Graph layer** to bridge this gap, transforming static artifacts into a structured "Machine-Readable State" that allows agents to navigate business logic with the same precision as source code.
+While code is treated as a structured entity, documentation is frequently relegated to flat, disconnected text. This research identifies this disconnect as **"Documentation Blindness"**. Consequently, a **Knowledge Graph layer** is proposed to bridge this gap, transforming static artifacts into a structured "Machine-Readable State" that allows agents to navigate business logic with the same precision as source code.
 
 ### **2.2. Agentic Agile & The BMad Method**
 
-To solve the problem of automated software development, this research uses **BMad** as the process foundation. Specifically, we use the implementation module **BMM (BMad Method Module)** to automate the development lifecycle.
+To solve the problem of automated software development, this research uses **BMad** as the process foundation. Specifically, the implementation module **BMM (BMad Method Module)** is utilized to automate the development lifecycle.
 
 #### 2.2.1. Why? (The Need for Structured Autonomy)
 
@@ -155,7 +157,7 @@ The operational process of BMM follows an iterative waterfall model within Agile
 
 **The Scalability Barrier: From "Assisted" to "Autonomous"**
 
-While the BMAD workflow combined with CLI-driven agents has proven effective for assisted development, it encounters significant theoretical and operational barriers when scaling toward fully autonomous systems. Two primary bottlenecks has been identified:
+While the BMAD workflow combined with CLI-driven agents has proven effective for assisted development, it encounters significant theoretical and operational barriers when scaling toward fully autonomous systems. This represents the **Context Level** failure:
 
 1. **The Human Dependency:** Current agents operate as "workers" rather than "managers." They rely on the human operator to maintain the project's "Mental Model"—manually selecting the correct workflow to route the agent. The system lacks an intrinsic mechanism to self-navigate the correct agent/workflow without human pointing.  
 2. **The Limitation of Linear Ingestion:** To compensate for the lack of structural understanding, the standard approach often involves feeding entire documentation artifact into the Context Window ("Context Dumping"). This leads to the "Lost in the Middle" phenomenon and high token costs. Furthermore, flat documentation files are **stateless**; an autonomous agent cannot easily query the *status* of an Epic or the *impact* of a change without parsing the entire repository text repeatedly.
@@ -400,96 +402,75 @@ While the methods above are powerful, they share a common blind spot: **"Documen
 
 ## **Chapter IV. Analysis, Design, and Methodology**
 
-### **4.1. The Proposed Workflow: From Text to Knowledge**
+### **4.1. Requirements Analysis**
 
-This project introduces a formalized process consisting of four distinct stages, defining the interaction between Human Operators and the System.
+To bridge the "Documentation Blindness" gap, the system is designed to meet specific functional requirements derived from the "Dual-Context" access model: humans define architecture in files, while AI agents access a semantic graph.
 
-#### Stage 1: Specification (Human-Driven)
+#### **4.1.1. Core Problem & Solution**
+The central problem is "Context Window Overload" and "Lost in the Middle" phenomena when feeding massive documentation to LLMs. The proposed solution is **CoreText**, a local-first Knowledge Graph engine.
+-   **Dual-Context Access:** A unified interface where the Human view (Files) and Agent view (Graph/Vectors) remain perfectly synced.
+-   **Implicit Synchronization:** The system acts as an invisible background process (`sync.py`) that converts human-written artifacts into machine-readable graph nodes without manual intervention.
 
-- **Actor:** Human Product Owner / Developer.  
-- **Input:** Requirements, Stories, and Epics written in Markdown (Standard BMad format).  
-- **Constraint:** Documents must follow specific structural conventions (headers, links) to ensure parseability.
+#### **4.1.2. Functional Requirements**
+Based on the Product Requirement Document (PRD), the system must support:
+1.  **Parsing:** Convert BMAD-flavored Markdown into structured graph nodes (`FR1`).
+2.  **Synchronization:** Detect Git changes (`FR2`) and update the graph incrementally via hooks (`FR3`, `FR13`).
+3.  **Storage:** Persist the graph in a local SurrealDB instance (`FR4`) with versioning based on Git hashes (`FR5`).
+4.  **Retrieval:** Provide an MCP interface (`FR9`) for agents to query topology (`FR10`) and traverse dependencies (`FR12`).
+5.  **Integrity:** Enforce referential integrity (Standard Markdown Links) and report broken links (`FR6`, `FR7`).
 
-#### Stage 2: Abstraction & Ingestion (System-Driven)
+### **4.2. System Architecture**
 
-- **Actor:** The Knowledge Engine (CoreText Algorithm).  
-- **Process:**  
-  1. **Ingestion:** The system reads the raw file artifacts.  
-  2. **Decomposition:** Files are not treated as atomic units. Instead, an **AST Parser** breaks them down into granular **Nodes** (Files, Headers, Code Blocks).  
-  3. **Topological Mapping:** The system identifies implicit links (wiki-links, parent-child headers) and converts them into explicit **Edges** in the database.
+The architecture follows a **"Local-First, AI-Native"** philosophy, minimizing cloud dependencies and maximizing local performance.
 
-#### Stage 3: Knowledge Persistence (The Graph Model)
+#### **4.2.1. High-Level Design**
+The system comprises three main components:
+1.  **Core Daemon (Python Monolith):** The "Brain" of the system, running as a background process. It handles AST parsing, graph logic, and vector embeddings. It exposes an MCP Server via FastAPI.
+2.  **CLI Client (Typer):** The "Controller". A lightweight CLI tool (`coretext`) that manages the daemon lifecycle (`init`, `start`, `status`) and provides user tools (`inspect`, `lint`).
+3.  **Gemini Extension:** A thin client layer that integrates the CoreText MCP server into the Gemini CLI ecosystem, allowing the agent to invoke tools like `query_knowledge`.
 
-We define a formal Data Model where:
+#### **4.2.2. Data Architecture: Schema Projection**
+To handle the flexibility of Markdown versus the rigidity of databases, a **"Schema Projection"** strategy is employed:
+-   **Internal Schema:** Rigid Pydantic models (e.g., `class Epic(BaseNode)`) define the "Ideal State" within the Python code.
+-   **Mapping Layer:** A configuration file (`schema_map.yaml`) maps external Markdown headers (e.g., `# User Story`) to internal DB properties.
+-   **Storage:** **SurrealDB** is used for its multi-model capabilities, storing Content (Docs), Topology (Graph), and Semantics (Vectors) in a single `Record`.
 
-- **Vertices ():**  
-  - `FileNode`: Represents a physical artifact.  
-  - `HeaderNode`: Represents a logical section (e.g., a specific User Story or Acceptance Criteria).  
-- **Edges ():**  
-  - `CONTAINS`: Relationship between File and Header.  
-  - `PARENT_OF`: Hierarchical relationship between H1 \-\> H2 \-\> H3.  
-  - `REFERENCES`: Directional relationship where one node cites another (e.g., Story A depends on UI Component B).
+#### **4.2.3. Technology Stack**
+-   **Runtime:** Python 3.10+ (utilizing modern Type Hints).
+-   **API Framework:** **FastAPI** (for high-performance MCP endpoints).
+-   **CLI Framework:** **Typer** (for intuitive command-line experiences).
+-   **Database:** **SurrealDB** (Embedded/Local binary).
+-   **Vector Engine:** **Nomic Embed Text v1.5** (via `sentence-transformers`), chosen for its Matryoshka Representation Learning (MRL) capabilities, allowing flexible storage optimization.
 
-*\[Insert Diagram: Visual representation of the Data Model \- Node Types and Relationships\]*
+### **4.3. Methodology & Implementation**
 
-#### Stage 4: Contextual Retrieval (Agent-Driven)
+#### **4.3.1. Parsing Engine (AST & Normalization)**
+Instead of fragile regex, the system uses **`markdown-it-py`** to generate a robust Abstract Syntax Tree (AST) from Markdown files.
+-   **Node Generation:**
+    -   **Root Node:** The File itself (`id = file_path`).
+    -   **Header Nodes:** Each header (`#`, `##`) becomes a distinct node, linked via `CONTAINS` and `PARENT_OF` edges.
+-   **Canonical Path Normalization:** A critical logic layer ensures that all file paths (e.g., `../docs/prd.md` vs `docs/prd.md`) resolve to a single **Canonical ID** relative to the project root. This prevents duplicate nodes and ensures graph connectivity.
 
-- **Actor:** AI Agent (via Orchestrator).  
-- **Interface:** Model Context Protocol (MCP).  
-- **Mechanism:** Instead of loading full files, the Agent queries the topology.  
-  - *Example Query:* "Find all Stories referenced by `auth_service`."  
-  - *Result:* The graph traverses backlinks and returns only the relevant logical nodes, minimizing noise.
+#### **4.3.2. Knowledge Graph Construction**
+The graph is constructed deterministically:
+-   **Nodes:** Represents artifacts (`FileNode`, `HeaderNode`).
+-   **Edges:**
+    -   **Structural:** `CONTAINS`, `PARENT_OF` (derived from document hierarchy).
+    -   **Referential:** `REFERENCES` (derived from `[Link](path)`).
+-   **Validation:** The system employs a "Strict Schema, Loud Failures" policy. Malformed Markdown results in a `ParsingErrorNode`, preventing data corruption and alerting the user via the CLI.
 
-### **4.2. Detailed Implementation Algorithms**
+#### **4.3.3. Semantic Retrieval (Hybrid Search)**
+A **"Thick Tool"** named `query_knowledge` is implemented to abstract complex retrieval logic from the LLM.
+1.  **Vectorization:** The user's natural language query is embedded using `nomic-embed-text-v1.5`.
+2.  **Anchor Selection:** A vector similarity search (SurrealQL `vector::similarity::cosine`) identifies relevant "Anchor Nodes" in the graph.
+3.  **Graph Traversal:** The system automatically traverses outgoing edges (`depends_on`, `child_of`) from these anchors to gather context.
+4.  **Result:** A consolidated subgraph is returned, providing the Agent with both the *semantic match* and its *structural dependencies*.
 
-#### 4.2.1. Deterministic Node Identity
-
-To ensure idempotency (avoiding duplicate nodes during updates), we implement a deterministic ID generation algorithm based on normalized file paths and header slugs:
-
-This allows the system to perform `UPSERT` operations efficiently, maintaining data integrity without full database wipes.
-
-#### 4.2.2. The Parsing Strategy
-
-The parsing logic utilizes a "Stack-based State Machine" to track the hierarchy of headers during file processing.*\[PLACEHOLDER: Describe the logic from `markdown.py`. How it iterates through tokens, maintains a stack of active parents, and creates edges dynamically.\]*
-
-#### 4.2.3. Synchronization Engine
-
-*\[PLACEHOLDER: Describe the logic in `engine.py`. How it handles Git Hooks (Pre-commit/Post-commit) to ensure the Knowledge Graph is always synchronized with the file system.\]*
-
-### **4.3. Architecture Design**
-
-#### **4.3.1. The Passive Sync Mechanism via Git Hooks**
-
-* **Công nghệ:** Git Hooks (cụ thể là `pre-commit` hoặc `post-commit`) kết hợp với `GitPython`.  
-* **Triết lý thiết kế:** **"Zero-Friction" (Không ma sát)**.  
-  * Các hệ thống RAG cũ bắt người dùng phải chạy lệnh `re-index` thủ công \-\> Người dùng hay quên \-\> Dữ liệu cũ (Stale Data).  
-  * Hệ thống của bạn dùng Git Hooks để tự động kích hoạt `sync.py` ngay khi Developer gõ `git commit`. Điều này đảm bảo Knowledge Graph **luôn luôn** đồng bộ với Codebase mà không cần sự can thiệp của con người.
-
-#### **4.3.2. CLI Architecture & Gemini Extensions**
-
-* **Typer (Python):** Được chọn vì khả năng tạo CLI modern, có type-checking (giúp code an toàn) và auto-completion (tăng trải nghiệm Dev).  
-* **Gemini CLI Extensions:** Đây là cách "đóng gói" tool của bạn để Gemini gọi được.  
-  * Bạn cần giải thích rằng: Gemini CLI không chạy code Python trực tiếp của bạn. Nó gọi Extension (CoreText) như một **"Tool Use"** (Function Calling). Gemini gửi câu hỏi \-\> CoreText tra Graph \-\> Trả về kết quả \-\> Gemini tổng hợp câu trả lời.
-
-**The "Thick Tool, Thin Prompt" Architecture**
-
-Instead of exposing raw database query languages (SurrealQL) to the LLM, which increases token usage and hallucination risks, CoreText implements a **Natural Language Interface** via the MCP Server.
-
-**Workflow:**
-
-1. **Intent Capture:** The Agent invokes the tool `query_knowledge(natural_query: str, depth: int = 1)`.  
-2. **Vectorization:** The MCP server embeds the `natural_query` into a high-dimensional vector using a local embedding model.  
-3. **Hybrid Execution (SurrealDB):** The system executes a specialized SurrealQL query that combines:  
-   * `vector::similarity()` to identify relevant entry nodes (Semantic Anchor).  
-   * `SELECT ->edge->node` to traverse the topology from those anchors (Structural Context).  
-4. **Abstraction:** This encapsulates the complexity of Hybrid Retrieval within the tool layer, allowing the Agent's system instructions (Prompt) to remain minimal and focused on reasoning rather than database syntax.
-
-The system follows a layered architecture:
-
-1. **CLI/Hook Layer:** Entry point for file events.  
-2. **Core Domain Layer:** Contains the Graph Logic and Parser.  
-3. **Database Layer:** SurrealDB instance holding the persistent graph.  
-4. **Interface Layer:** MCP Server exposing tools (`read_graph`, `search_nodes`) to external Agents.
+#### **4.3.4. Synchronization Mechanism (Git Hooks)**
+To ensure the graph never drifts from the codebase, **Git Hooks** (`pre-commit` / `post-commit`) are utilized.
+-   **Event-Driven:** The `sync.py` hook triggers on every commit.
+-   **Fail-Open Policy:** If the sync process fails (e.g., DB lock), it logs the error but *does not block* the commit, ensuring developer workflow continuity.
+-   **Async Detachment:** For large commits (>10 files), the hook automatically detects potential latency and "detaches" the sync process to run in the background, keeping the commit operation instantaneous (<1s).
 
 ---
 
@@ -525,7 +506,7 @@ The system follows a layered architecture:
 
 ### **5.4. Discussion & Future Work**
 
-- The success of Experiment 1 relied heavily on the author acting as a **"Human Orchestrator"**—manually selecting the correct documentation artifacts for the Agent. The Knowledge Graph acts as a **"Digital Orchestrator"**. Although currently in a "Proof-of-Concept" stage with performance overheads, it successfully demonstrates that an Agent *can* navigate project topology programmatically.  
+- The success of Experiment 1 relied heavily on the human operator acting as a **"Human Orchestrator"**—manually selecting the correct documentation artifacts for the Agent. The Knowledge Graph acts as a **"Digital Orchestrator"**. Although currently in a "Proof-of-Concept" stage with performance overheads, it successfully demonstrates that an Agent *can* navigate project topology programmatically.  
 - **Research Verdict:** The Knowledge Graph is not an immediate optimization tool for *assisted* coding (where tools like Cursor/Claude excel), but a **foundational enabling technology** for *autonomous* software engineering (where the human is absent).  
 
 **Future Work:**
@@ -534,13 +515,13 @@ This research positions CoreText not merely as a static retrieval tool, but as t
 
 1. **Phase 1 (Achieved):** CoreText functions as a **Utility**, offering structural retrieval commands (`grep` for graphs) to human developers via a CLI tool.  
 2. **Phase 2 (Current Implementation):** CoreText acts as a **Driver** for existing agent frameworks (BMAD). It injects precise context via MCP, enabling agents to navigate complex documentation without "context dumping."  
-3. **Phase 3 (Future Vision \- "Swallowing"):** We envision CoreText evolving into the **Native State Machine** for a Multi-Agent System (e.g., using frameworks like **Agno**).  
+3. **Phase 3 (Future Vision \- "Swallowing"):** It is envisioned that CoreText evolves into the **Native State Machine** for a Multi-Agent System (e.g., using frameworks like **Agno**).  
    * In this phase, the monolithic workflow files of BMAD are "ingested" into the Graph logic.  
    * This enables a clean separation of concerns: The **Multimodal Graph** manages the "Who, What, and Why" (Strategy & State), while specialized **Autonomous Agents** manage the "How" (Execution).  
    * This decoupling allows for smaller, faster, and highly reusable specialized agents, orchestrated dynamically by an stateful agentic framework via the graph's topology rather than static instruction files.  
 
-Also, this has the potential to implement in a lot of other domain, coding agent is just the easiest.
+Finally, while this research utilizes software engineering as a primary case study due to the high structural integrity of code artifacts, the proposed Knowledge Graph architecture possesses significant transferability. It offers a viable template for any domain requiring autonomous agents to navigate complex, interdependent documentation systems, such as legal analysis, medical research, or regulatory compliance.
 
 ### **5.5. Conclusion**
 
-The integration of a Knowledge Graph into the BMad framework shifts the paradigm from "Document-Centric" to "Knowledge-Centric" development. This abstraction allows AI agents to operate with a structural understanding of the software, paving the way for more autonomous and accurate software engineering workflows.  
+The integration of a Knowledge Graph into the BMad framework shifts the paradigm from "Document-Centric" to "Knowledge-Centric" development. This abstraction allows AI agents to operate with a structural understanding of the software, paving the way for more autonomous and accurate software engineering workflows.
