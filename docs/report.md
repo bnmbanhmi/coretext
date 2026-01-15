@@ -510,13 +510,7 @@ The system follows a layered architecture:
 
 ### **5.2. Experiment 2: Application Case Study (Project Nhaminhbach)**
 
-We applied this methodology to the "Nhaminhbach" (Rental Finding Platform) project.
-
-- **Input:** A set of Markdown files describing User Stories and Database Schemas.  
-- **Graph Construction:** The system generated a graph containing nodes and edges.  
-- **Visualization:**
-
-**The "Performance Dip" Phenomenon:** Initial integration of the Knowledge Graph into the workflow introduced noticeable overhead. Compared to the streamlined CLI approach in Experiment 1, the Graph-based retrieval method currently requires more computational steps and system complexity.
+(Not Effective) 
 
 **Why imply this? (The Research Justification):** This trade-off is intentional and represents a **Paradigm Shift from "Efficiency" to "Autonomy"**.
 
@@ -525,28 +519,27 @@ We applied this methodology to the "Nhaminhbach" (Rental Finding Platform) proje
 
 ### **5.3. Evaluation Metrics**
 
-*\[PLACEHOLDER: Compare the "Old BMad" way vs. the "New Graph" way.\]*
-
 - **Context Precision:** (Theoretical) Graph retrieval provides higher signal-to-noise ratio than file dumping.  
 - **Token Efficiency:** Reduced token usage per query due to targeted node retrieval.  
 - **Scalability:** The system maintains performance as file count increases, whereas standard context windows degrade.
 
 ### **5.4. Discussion & Future Work**
 
-- The success of Experiment 1 relied heavily on the author acting as a **"Human Router"**—manually selecting the correct documentation artifacts for the Agent. The Knowledge Graph in Experiment 2 acts as a **"Digital Router"**. Although currently in a "Proof-of-Concept" stage with performance overheads, it successfully demonstrates that an Agent *can* navigate project topology programmatically.  
+- The success of Experiment 1 relied heavily on the author acting as a **"Human Orchestrator"**—manually selecting the correct documentation artifacts for the Agent. The Knowledge Graph acts as a **"Digital Orchestrator"**. Although currently in a "Proof-of-Concept" stage with performance overheads, it successfully demonstrates that an Agent *can* navigate project topology programmatically.  
 - **Research Verdict:** The Knowledge Graph is not an immediate optimization tool for *assisted* coding (where tools like Cursor/Claude excel), but a **foundational enabling technology** for *autonomous* software engineering (where the human is absent).  
-- **Current Limitation:** Handling file deletions and renames (Ghost Nodes).  
-- **Future Work:**
+
+**Future Work:**
 
 This research positions CoreText not merely as a static retrieval tool, but as the first step in a "Progressive Assimilation" strategy for autonomous software engineering.
 
-1. **Phase 1 (Achieved):** CoreText functions as a **Utility**, offering structural retrieval commands (`grep` for graphs) to human developers.  
+1. **Phase 1 (Achieved):** CoreText functions as a **Utility**, offering structural retrieval commands (`grep` for graphs) to human developers via a CLI tool.  
 2. **Phase 2 (Current Implementation):** CoreText acts as a **Driver** for existing agent frameworks (BMAD). It injects precise context via MCP, enabling agents to navigate complex documentation without "context dumping."  
-3. **Phase 3 (Future Vision \- The "Swallow" Strategy):** We envision CoreText evolving into the **Native State Machine** for a Multi-Agent System (e.g., using frameworks like **Agno**).  
+3. **Phase 3 (Future Vision \- "Swallowing"):** We envision CoreText evolving into the **Native State Machine** for a Multi-Agent System (e.g., using frameworks like **Agno**).  
    * In this phase, the monolithic workflow files of BMAD are "ingested" into the Graph logic.  
-   * This enables a clean separation of concerns: The **Multimodal Graph** manages the "Who, What, and Why" (Strategy & State), while specialized **Agent Skills** manage the "How" (Execution).  
-   * This decoupling allows for smaller, faster, and highly reusable specialized agents, orchestrated dynamically by the graph's topology rather than static instruction files.  
-- Also, this has the potential to implement in a lot of other domain, coding agent is just the easiest.
+   * This enables a clean separation of concerns: The **Multimodal Graph** manages the "Who, What, and Why" (Strategy & State), while specialized **Autonomous Agents** manage the "How" (Execution).  
+   * This decoupling allows for smaller, faster, and highly reusable specialized agents, orchestrated dynamically by an stateful agentic framework via the graph's topology rather than static instruction files.  
+
+Also, this has the potential to implement in a lot of other domain, coding agent is just the easiest.
 
 ### **5.5. Conclusion**
 
