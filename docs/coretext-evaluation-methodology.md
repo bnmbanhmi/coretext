@@ -91,36 +91,52 @@ Post-build evaluation of the final artifact.
 
 ## 5. Operational Setup
 
-### 5.1 Repository & Branching Strategy
-The experiment utilizes a single git repository with a "Multiverse" branching model to isolate experimental runs while maintaining a common history.
+### 5.1 Repository & Worktree Strategy
+The experiment utilizes **Git Worktrees** to maintain parallel, isolated workspaces for each subject. This allows for side-by-side comparison and prevents dependency/environment pollution between runs.
 
-**Branch Structure:**
-1. **`main`**: Contains the CoreText source code, `experiments/specs/` (Frozen Phase 1 output), and documentation.
-2. **`experiment/baseline-human`**: Forked from `main`. Subject A builds the artifact here.
-3. **`experiment/subject-b-standard`**: Forked from `main`. Subject B builds the artifact here.
-4. **`experiment/subject-c-coretext`**: Forked from `main`. Subject C builds the artifact here.
+**Worktree Structure:**
+Experimental worktrees are created as **sibling directories** under a common parent (e.g., `~/Git/`) to ensure absolute isolation and clear path management.
 
-**Workflow:**
-- Fork experimental branch from `main`.
-- Perform the run.
-- Commit the final artifact (source code of the Rental App).
-- Merge *only* the `experiments/results/` folder back to `main` (if needed) or keep artifacts in branch.
-- Use `git diff experiment/subject-b-standard experiment/subject-c-coretext` for code quality comparison.
+1. **`~/Git/coretext`**: The main repository (`main` branch).
+2. **`~/Git/coretext-exp-01-human`**: Checked out to `experiment/baseline-human`.
+3. **`~/Git/coretext-exp-02-std`**: Checked out to `experiment/subject-b-standard`.
+4. **`~/Git/coretext-exp-03-ctx`**: Checked out to `experiment/subject-c-coretext`.
 
-### 5.2 Directory Structure
+**Implementation Commands:**
+```bash
+cd ~/Git/coretext
+
+# Setup branches
+git branch experiment/baseline-human main
+git branch experiment/subject-b-standard main
+git branch experiment/subject-c-coretext main
+
+# Create Worktrees as siblings
+git worktree add ../coretext-exp-01-human experiment/baseline-human
+git worktree add ../coretext-exp-02-std experiment/subject-b-standard
+git worktree add ../coretext-exp-03-ctx experiment/subject-c-coretext
+```
+
+**Maintenance:**
+- **Bugfixes:** If a bug is fixed in `main`, navigate to each sibling directory (e.g., `cd ../coretext-exp-03-ctx`) and run `git merge main`.
+- **Comparison:** Open each directory as a separate window in your IDE or use `diff -r ../coretext-exp-02-std ../coretext-exp-03-ctx`.
+
+**⚠️ CRITICAL: Environment Isolation**
+- **Virtual Envs:** Each directory MUST have its own local `.venv`.
+- **Temp Directories:** Explicitly set `GEMINI_TMP_DIR` for each session to prevent cross-worktree cache pollution.
+
+### 5.2 Directory Structure (Visualized)
 ```text
-/
-├── _bmad/ ...              # Standard Agent configs
-├── coretext/ ...           # CoreText tool source
-├── experiments/
-│   ├── specs/              # FROZEN Phase 1 Output (PRD.md, Stories.md)
-│   ├── agents/             # Experimental Agent Configs
-│   │   ├── subject-b.csv   # Manifest for Standard Agent
-│   │   └── subject-c.csv   # Manifest for CoreText Agent
-│   └── results/            # Data Collection
-│       ├── run-1-human/    # Chat logs, stats.txt, time logs
-│       ├── run-2-standard/
-│       └── run-3-coretext/
+~/Git/
+├── coretext/                  # Main Project & Tool Source
+│   ├── coretext/              # Source code
+│   ├── experiments/
+│   │   ├── specs/             # FROZEN Specs (Phase 1)
+│   │   └── results/           # Unified Data Collection
+│   └── docs/                  # Methodology & Reports
+├── coretext-exp-01-human/     # Isolated Worktree 1
+├── coretext-exp-02-std/       # Isolated Worktree 2
+└── coretext-exp-03-ctx/       # Isolated Worktree 3
 ```
 
 ### 5.3 Model Selection
