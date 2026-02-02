@@ -133,14 +133,14 @@ To prevent contamination, we use **Git Worktrees** to create sibling directories
 cd ~/Git/coretext
 
 # Create experimental branches
-git branch experiment/exp-a-human main
-git branch experiment/exp-b-control main
-git branch experiment/exp-c-coretext main
+git branch experiment/exp-a main
+git branch experiment/exp-b main
+git branch experiment/exp-c main
 
 # Create Worktrees as siblings
-git worktree add ../exp-a-human experiment/exp-a-human
-git worktree add ../exp-b-control experiment/exp-b-control
-git worktree add ../exp-c-coretext experiment/exp-c-coretext
+git worktree add ../coretext-exp-a experiment/exp-a
+git worktree add ../coretext-exp-b experiment/exp-b
+git worktree add ../coretext-exp-c experiment/exp-c
 ```
 
 ### 5.3 Strict Isolation (The .geminiignore Rule)
