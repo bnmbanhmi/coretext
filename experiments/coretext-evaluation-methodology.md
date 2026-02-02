@@ -171,13 +171,14 @@ This checklist guides the facilitator through the full experiment lifecycle.
 
 ### 6.1 Preparation Phase
 - [ ] **Specs Finalized:** Verify `experiments/trore/_bmad-output/` contains complete PRD, Architecture, and Stories.
+- [ ] **Install BMad:** Run `npx bmad-method install` in `experiments/trore`.
+- [ ] **Worktrees Created:** Execute the git worktree commands from Section 5.2.
+- [ ] **Isolation Applied:** Create the `.geminiignore` file in `exp-c-coretext`.
+- [ ] **Log File Created:** Verify `experiments/results/evaluation_log.csv` exists.
 - [ ] **CoreText Indexing:**
     - [ ] Run `coretext init` (if needed).
     - [ ] Configure `coretext` to index `experiments/trore/_bmad-output`.
     - [ ] Run `coretext sync`.
-- [ ] **Worktrees Created:** Execute the git worktree commands from Section 5.2.
-- [ ] **Isolation Applied:** Create the `.geminiignore` file in `exp-c-coretext`.
-- [ ] **Log File Created:** Verify `experiments/results/evaluation_log.csv` exists.
 
 ### 6.2 Execution Loop (Repeat for each Story 1.1 -> 1.5)
 
