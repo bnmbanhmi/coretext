@@ -28,15 +28,17 @@ The project is a hybrid multi-cloud SPA (React 19 + FastAPI + GCP Refinery).
 - **Goal:** Establish the "Gold Standard" for logic and execution time.
 
 ### Subject B: Standard BMad Agent (Control 2)
-- **Agent:** Standard `bmad-developer`.
+- **Workflow:** Standard `create-story` and `dev-story`.
 - **Retrieval Method:** **File-Based**. Agent reads full Markdown files from `experiments/trore/_bmad-output/planning-artifacts/` into context.
 - **Workflow:** Standard ReAct loop (Read File -> Plan -> Write Code).
 
 ### Subject C: CoreText Integrated Agent (Test)
-- **Agent:** Modified `coretext-developer` agent, including files:
+- **Workflow:** Modified `create-story` and `coretext-dev-story`, including modified files:
     -  _bmad/bmm/workflows/4-implementation/dev-story
+    -  _bmad/bmm/workflows/4-implementation/create-story
     - _bmad/bmm/config.yaml
     - .gemini/commands/bmad-workflow-bmm-dev-story.toml
+    - .gemini/commands/bmad-workflow-bmm-create-story.toml
     - _bmad/core/tasks/workflow.xml
 - **Retrieval Method:** **Graph-Based**. Agent uses `coretext` MCP tools (`query_knowledge`, `get_dependencies`) to query specific requirements.
 - **Constraint:** **Strict Knowledge Isolation**.
@@ -87,7 +89,7 @@ Post-build evaluation of the final artifact.
 - [ ] **Subject C Only:** Verify `.geminiignore` is active in the worktree.
 
 **Workflow Enforcement:**
-- Use the `dev-story` workflow.
+- Use the `create-story` and `dev-story` workflows.
 - **Subject B:** Prompt explicitly points to `planning-artifacts/prd.md` etc.
 - **Subject C:** Prompt explicitly forbids reading `planning-artifacts` and instructs to use `query_knowledge` for "How do I implement X?" or "What is the schema for Y?".
 
@@ -190,7 +192,7 @@ This checklist guides the facilitator through the full experiment lifecycle.
 1.  **Navigate:** `cd ../exp-b-control`
 2.  **Reset:** Ensure clean state.
 3.  **Start Timer:** Note start time.
-4.  **Execute:** Run BMad `dev-story` workflow.
+4.  **Execute:** Run BMad `create-story` and `dev-story` workflow.
     - *Prompt:* "Implement Story X.X. Read `planning-artifacts` for context."
 5.  **Finish:** When Agent declares "Story Complete".
 6.  **Stop Timer:** Note end time.
@@ -201,7 +203,7 @@ This checklist guides the facilitator through the full experiment lifecycle.
 1.  **Navigate:** `cd ../exp-c-coretext`
 2.  **Verify Isolation:** Check `.geminiignore` exists.
 3.  **Start Timer:** Note start time.
-4.  **Execute:** Run BMad `dev-story` workflow.
+4.  **Execute:** Run modified BMad `create-story` and `dev-story` workflow.
     - *Prompt:* "Implement Story X.X. Do NOT read planning files. Use `query_knowledge` tool."
 5.  **Finish:** When Agent declares "Story Complete".
 6.  **Stop Timer:** Note end time.
