@@ -1,1 +1,5 @@
-Run Date,Subject,Story ID,Wall Time (min),Input Tokens,Output Tokens,Interventions,Pass/Fail,Notes
+Run Date,Subject,Story ID,Input Tokens,Output Tokens, Context Utility, Wall Time (min),AI Compute Time (min),Human Action Time (min),Interventions,Pass/Fail,Notes
+0201,A,1-1,,,,,,,,,
+0201,B,1-1,,,,,,,,,
+0201,C,1-1,,,,,,,,,
+,,,,,,,,,,,

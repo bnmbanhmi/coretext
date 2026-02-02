@@ -13,7 +13,7 @@ This study evaluates whether CoreText's knowledge-graph retrieval method reduces
 
 **Complexity Requirements:**
 The project is a hybrid multi-cloud SPA (React 19 + FastAPI + GCP Refinery).
-- **User Roles:** Admin (Minh), Seeker (Hương), Landlord (Cô Hiền).
+- **User Roles:** Admin, Seeker, Landlord.
 - **Architecture:** Monorepo (Turborepo) with Web, API, and Scraper packages.
 - **Data:** Supabase (PostgreSQL) with SCD Type 2 history.
 - **Volume:** The `_bmad-output` folder contains extensive PRD, Architecture, and UX specifications.
@@ -33,7 +33,11 @@ The project is a hybrid multi-cloud SPA (React 19 + FastAPI + GCP Refinery).
 - **Workflow:** Standard ReAct loop (Read File -> Plan -> Write Code).
 
 ### Subject C: CoreText Integrated Agent (Test)
-- **Agent:** Modified `coretext-developer` agent.
+- **Agent:** Modified `coretext-developer` agent, including files:
+    -  _bmad/bmm/workflows/4-implementation/dev-story
+    - _bmad/bmm/config.yaml
+    - .gemini/commands/bmad-workflow-bmm-dev-story.toml
+    - _bmad/core/tasks/workflow.xml
 - **Retrieval Method:** **Graph-Based**. Agent uses `coretext` MCP tools (`query_knowledge`, `get_dependencies`) to query specific requirements.
 - **Constraint:** **Strict Knowledge Isolation**.
     - **Blocked:** Access to `experiments/trore/_bmad-output/planning-artifacts/**` is blocked via `.geminiignore`.
@@ -73,7 +77,7 @@ Post-build evaluation of the final artifact.
 ### Phase 1: Specification Ingestion
 1. **Source:** `experiments/trore/_bmad-output/`.
 2. **Indexing:** Run `coretext sync` targeting this directory to populate the Knowledge Graph.
-3. **Verification:** Ensure `coretext inspect` can retrieve nodes like "Smart Search Bar" or "GeoID".
+3. **Verification:** Ensure `coretext inspect` can retrieve nodes.
 
 ### Phase 2: Experiment Execution (Run 3 Times)
 **Pre-Flight Checklist:**
@@ -105,7 +109,7 @@ This structure represents the internal layout of the `coretext` repository. Each
 │       │   ├── planning-artifacts/        # READ-DENIED for Subject C via .geminiignore
 │       │   └── implementation-artifacts/  # READ-ALLOWED (Status tracking)
 │       ├── apps/                # Generated Code (Web/API) - Reset per run
-│       └── packages/            # Generated Code (Scraper) - Reset per run
+│       └── packages/            # Generated Code (Importer) - Reset per run
 └── docs/                        # Methodology & Reports
 ```
 
@@ -145,9 +149,6 @@ To physically prevent Subject C from "cheating" (reading files), a `.geminiignor
 ```text
 # BLOCK access to the source of truth (Planning Artifacts)
 _bmad-output/planning-artifacts/
-
-# ALLOW access to implementation tracking
-!_bmad-output/implementation-artifacts/
 ```
 
 ### 5.4 Data Logging & Export
