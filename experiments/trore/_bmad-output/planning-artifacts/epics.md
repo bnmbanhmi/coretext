@@ -10,272 +10,330 @@ inputDocuments:
 
 ## Overview
 
-This document provides the complete epic and story breakdown for TroRe, decomposing the requirements from the PRD and Architecture requirements into implementable generic listing platform stories.
+This document provides the detailed epic and story breakdown for **TroRe**, the verified rental listing platform. This document serves as the **Single Source of Truth** for the development team. All implementation details must adhere strictly to the acceptance criteria defined herein.
 
 ## Epic List
 
 ### Epic 1: The MVP (Core Listing & Viewing)
-Build the essential manual platform where Admins can create listings by hand and Seekers can discover and view them. Validates the core data model and user experience.
+**Goal:** Build the foundational platform enabling manual listing creation by Admins and public discovery by Seekers.
+**Scope:** Project scaffolding, Database initialization, Admin Dashboard (Basic), Public Listing Grid, Detail Views.
+**Key Success Metric:** System can successfully store and retrieve a listing with 100% data fidelity.
 
 ### Epic 2: Advanced Search & Filtering
-Implement robust ID-based lookup and advanced filtering capabilities for power users.
+**Goal:** Implement robust, high-performance search capabilities catering to both power users (ID Lookup) and browsers (Filtering).
+**Scope:** UUID Lookup Service, Multi-faceted Filter Logic, Deep Linking, Map View.
+**Key Success Metric:** <300ms latency for ID resolution.
 
 ### Epic 3: Data Import & Normalization
-Implement a system to bulk import listings from external sources (CSV) and normalize their descriptions using simple AI summarization.
+**Goal:** Implement a scalable ingestion pipeline to bulk-import listings from legacy systems (CSV) and normalize unstructured text.
+**Scope:** CSV Parsing Service, Validation Layer, AI Summarization Integration, Duplicate Detection.
+**Key Success Metric:** 100% successful import of valid CSV rows; 100% rejection of invalid rows with detailed error reports.
 
-### Epic 4: Audit Logging
-Implement comprehensive audit logging for sensitive data changes, specifically price updates.
+### Epic 4: Audit Logging & Compliance
+**Goal:** Implement a comprehensive audit trail for all sensitive data modifications to ensure system integrity and accountability.
+**Scope:** Price Change Logging, Status Change Logging, Admin Activity Dashboard.
+**Key Success Metric:** Every `UPDATE` operation on the `listings` table triggers an immutable log entry.
+
+---
 
 ## Epic 1: The MVP (Core Listing & Viewing)
 
-Build the essential manual platform where Admins can create listings by hand and Seekers can discover and view them.
-
 ### Story 1.1: Project Scaffolding & Database Foundation
 
-As a Developer,
-I want to set up the monorepo and core database schema,
-So that I have a solid foundation for implementing features.
+**As a** Lead Developer,
+**I want to** initialize the monorepo structure and core database schema,
+**So that** the development team has a standardized, type-safe environment for feature implementation.
 
 **Acceptance Criteria:**
 
-**Given** a clean project directory
-**When** I run the initialization commands
-**Then** a Turborepo monorepo is created with apps/web (Vite/React), apps/api (FastAPI), and packages/importer
-**And** pnpm and uv are configured for dependency management
-**And** the project directory structure matches the architectural design document
+**Scenario 1: Monorepo Initialization**
+*   **Given** a clean working directory
+*   **When** the initialization script is executed
+*   **Then** a `Turborepo` workspace is created containing:
+    *   `apps/web`: React 19 + Vite + TypeScript
+    *   `apps/api`: FastAPI + Python 3.12 + Pydantic v2
+    *   `packages/importer`: Python 3.12 + Pandas (Dockerized)
+    *   `packages/types`: Shared TypeScript definitions
+*   **And** `pnpm` workspace constraints are configured correctly
+*   **And** `uv` is initialized for Python dependency management
 
-**Given** a Supabase project
-**When** I apply the initial Alembic migrations
-**Then** the listings and rooms tables are created with standard UUID primary keys and JSONB attributes
+**Scenario 2: Database Schema Migration**
+*   **Given** a connection to the Supabase PostgreSQL instance
+*   **When** `alembic upgrade head` is run
+*   **Then** the `listings` table is created with the following schema:
+    *   `id`: UUID (Primary Key, Default: `uuid_generate_v4()`)
+    *   `title`: String (Not Null)
+    *   `description`: Text
+    *   `price`: Integer (Not Null, Check: `price >= 0`)
+    *   `area_sqm`: Float (Not Null, Check: `area_sqm > 0`)
+    *   `address`: String (Not Null)
+    *   `status`: Enum ('DRAFT', 'AVAILABLE', 'RENTED', 'ARCHIVED')
+    *   `attributes`: JSONB (Default: `{}`)
+    *   `created_at`: Timestamptz (Default: `now()`)
+    *   `updated_at`: Timestamptz (Default: `now()`)
+
+**Scenario 3: Developer Experience**
+*   **Given** the repo is cloned
+*   **When** a developer runs `pnpm dev`
+*   **Then** both the Frontend (localhost:5173) and Backend (localhost:8000) start concurrently
+*   **And** Hot Module Replacement (HMR) is active for the frontend
 
 ### Story 1.2: Admin Manual Listing Creation
 
-As an Admin,
-I want to manually input a new property listing,
-So that I can start building the platform's data.
+**As an** Admin,
+**I want to** manually input a new property listing via a form,
+**So that** I can seed the platform with high-quality, verified data.
 
 **Acceptance Criteria:**
 
-**Given** I am logged into the Admin interface
-**When** I enter a property address and details
-**Then** the system assigns a standard UUID
-**And** creates a new Listing record in the database
-**And** the new listing is saved with status "Available"
+**Scenario 1: Successful Creation**
+*   **Given** I am authenticated as an Admin
+*   **When** I fill out the "New Listing" form with valid data:
+    *   Title: "Sunny Studio in D1"
+    *   Price: 5,000,000
+    *   Area: 30
+    *   Address: "123 Le Loi"
+*   **And** click "Create"
+*   **Then** the system validates the input via Pydantic
+*   **And** a new record is inserted into `listings`
+*   **And** I am redirected to the "Listing Detail" page
+*   **And** a success toast "Listing Created Successfully" appears
 
-### Story 1.3: Seeker Discovery Grid & Keyword Search
+**Scenario 2: Validation Failure**
+*   **Given** I am on the "New Listing" form
+*   **When** I enter a negative price (e.g., -100)
+*   **Then** the form submission is blocked
+*   **And** an inline error message "Price must be a positive number" is displayed
+*   **And** no API request is sent
 
-As a Seeker,
-I want to browse available listings and search by keywords,
-So that I can find properties that match my criteria.
+**Scenario 3: Server Error Handling**
+*   **Given** the database is temporarily unreachable
+*   **When** I submit a valid form
+*   **Then** the API returns a 503 Service Unavailable
+*   **And** the UI displays a generic error "System is currently busy, please try again later"
+*   **And** the form data is NOT cleared (so I don't lose my work)
+
+### Story 1.3: Seeker Discovery Grid
+
+**As a** Seeker,
+**I want to** view a grid of available listings,
+**So that** I can scan for properties that interest me.
 
 **Acceptance Criteria:**
 
-**Given** I am on the home page
-**When** I enter a keyword or select filters
-**Then** the grid updates to show matching "Available" listings
-**And** each card displays the Price, Location, and key specs
+**Scenario 1: Default View**
+*   **Given** there are 50 "AVAILABLE" listings and 10 "RENTED" listings in the DB
+*   **When** I load the home page
+*   **Then** I see the 50 "AVAILABLE" listings displayed in a responsive grid
+*   **And** the "RENTED" listings are hidden
+*   **And** the grid uses infinite scroll or pagination (limit 20 per page)
+
+**Scenario 2: Card Content**
+*   **Given** a listing card is rendered
+*   **Then** it must display:
+    *   Primary Image (or placeholder)
+    *   Title (Truncated to 2 lines)
+    *   Price (Formatted as "X.X million/month")
+    *   Area (Formatted as "XX m²")
+    *   Location (District only)
 
 ### Story 1.4: Property Detail View
 
-As a Seeker,
-I want to view the full details of a property,
-So that I can make an informed decision.
+**As a** Seeker,
+**I want to** see the full details of a property,
+**So that** I can decide whether to contact the landlord.
 
 **Acceptance Criteria:**
 
-**Given** I click on a listing card
-**When** the detail page loads
-**Then** I see the full address, specs, and images
-**And** the URL is shareable
+**Scenario 1: Full Data Rendering**
+*   **Given** I click on a listing with UUID `123e4567-e89b...`
+*   **When** the detail page loads
+*   **Then** all fields from the `listings` table are rendered
+*   **And** the `attributes` JSONB data is parsed and displayed as a "Features" list (e.g., "AC: Yes", "Balcony: No")
 
-### Story 1.5: Admin Listing Management
+**Scenario 2: Invalid ID**
+*   **Given** I navigate to `/listing/invalid-uuid-string`
+*   **Then** the system detects the malformed UUID
+*   **And** redirects me to a 404 Not Found page
+*   **And** suggests "Return to Home"
 
-As an Admin,
-I want to edit existing listing attributes and manage their status,
-So that I can keep the platform data accurate.
-
-**Acceptance Criteria:**
-
-**Given** I am viewing a listing in the Admin interface
-**When** I update a field or toggle status
-**Then** the change is saved immediately to the database
+---
 
 ## Epic 2: Advanced Search & Filtering
 
-Implement robust ID-based lookup and advanced filtering capabilities.
-
 ### Story 2.1: ID Lookup Service
 
-As a User,
-I want to paste a listing UUID to find a specific property,
-So that I can quickly access a known listing.
+**As a** Power User,
+**I want to** paste a specific Listing UUID into the search bar,
+**So that** I can navigate directly to that listing without browsing.
 
 **Acceptance Criteria:**
 
-**Given** I paste a valid UUID in the search bar
-**When** I submit
-**Then** the system redirects me to the specific listing page
+**Scenario 1: Valid UUID Match**
+*   **Given** the listing `a1b2c3d4...` exists and is "AVAILABLE"
+*   **When** I paste `a1b2c3d4...` into the search bar and hit Enter
+*   **Then** the system bypasses the search results page
+*   **And** immediately redirects me to `/listings/a1b2c3d4...`
+
+**Scenario 2: UUID Not Found**
+*   **Given** the UUID `non-existent-id` is syntactically valid but not in the DB
+*   **When** I search for it
+*   **Then** the UI displays a "Listing Not Found" error state
+*   **And** offers a button to "Search for similar listings"
+
+**Scenario 3: Archived/Rented Listing**
+*   **Given** listing `old-listing-id` is marked "RENTED"
+*   **When** I search for it by ID
+*   **Then** I am taken to the detail page
+*   **But** a prominent "THIS PROPERTY IS NO LONGER AVAILABLE" banner is displayed
+*   **And** the "Contact" buttons are disabled
 
 ### Story 2.2: Advanced Filtering UI
 
-As a User,
-I want to filter by multiple criteria simultaneously,
-So that I can narrow down results effectively.
+**As a** Seeker,
+**I want to** filter results by multiple criteria,
+**So that** I can narrow down the list to my specific needs.
 
 **Acceptance Criteria:**
 
-**Given** I am on the search page
-**When** I select multiple filters (Price, Area, Rooms)
-**Then** the results update to match the intersection of all filters
+**Scenario 1: Multi-Select Logic**
+*   **Given** I am on the search results page
+*   **When** I set:
+    *   Min Price: 3m
+    *   Max Price: 5m
+    *   District: "District 1" OR "District 3"
+*   **Then** the results update to show listings that match (Price >= 3m AND Price <= 5m) AND (District IN [D1, D3])
 
-### Story 2.3: Direct Link Navigation
-
-As a User,
-I want deep links to specific searches or listings,
-So that I can bookmark or share them.
-
-**Acceptance Criteria:**
-
-**Given** I have a URL with query parameters
-**When** I load the page
-**Then** the search state is restored exactly
-
-### Story 2.4: Secure Contact Gate
-
-As an Admin,
-I want to require login before viewing owner contact info,
-So that I can prevent unauthorized access.
-
-**Acceptance Criteria:**
-
-**Given** I am viewing a listing
-**When** I click "Show Contact"
-**Then** I am prompted to log in if not authenticated
-
-### Story 2.5: Contact Rate Limiting
-
-As a System,
-I want to limit how many contacts a user can view per day,
-So that I can prevent abuse.
-
-**Acceptance Criteria:**
-
-**Given** a user views contact info
-**When** they exceed the daily limit (e.g., 10)
-**Then** they are blocked from viewing more until the next day
+**Scenario 2: Empty Result State**
+*   **Given** I apply a filter combo that yields 0 results
+*   **Then** the UI displays an illustration of an empty house
+*   **And** displays text "No homes found matching your criteria"
+*   **And** provides a "Clear Filters" button
 
 ### Story 2.6: Basic Map View
 
-As a User,
-I want to see listings on a map,
-So that I can judge their location.
+**As a** Visual User,
+**I want to** see listing pins on a map,
+**So that** I can understand the geographic distribution of rentals.
 
 **Acceptance Criteria:**
 
-**Given** listings have coordinates
-**When** I switch to map view
-**Then** pins are displayed for each listing
+**Scenario 1: Pin Rendering**
+*   **Given** 20 listings with valid `lat/long` coordinates
+*   **When** I toggle "Map View"
+*   **Then** a map interface loads (Mapbox/Google Maps/Leaflet)
+*   **And** 20 pins are rendered at the correct coordinates
+
+**Scenario 2: Interaction**
+*   **Given** I am on the Map View
+*   **When** I click a pin
+*   **Then** a "Mini Card" popover appears showing the Listing Title and Price
+*   **And** clicking the popover navigates to the Detail View
+
+---
 
 ## Epic 3: Data Import & Normalization
 
-Implement a system to bulk import listings and normalize descriptions.
-
 ### Story 3.1: Bulk CSV Importer Service
 
-As an Admin,
-I want to upload a CSV of listings,
-So that I can populate the database quickly.
+**As an** Admin,
+**I want to** upload a CSV file containing multiple listings,
+**So that** I can populate the database in bulk from legacy Excel sheets.
 
 **Acceptance Criteria:**
 
-**Given** a CSV file matching the schema
-**When** I upload it via the Admin panel
-**Then** the system parses the rows and creates pending listings
+**Scenario 1: Valid CSV Structure**
+*   **Given** I upload a CSV file.
+*   **Then** the system MUST validate the file against the following strict schema:
+
+| Column Header | Data Type | Requirement | Validation Rule |
+| :--- | :--- | :--- | :--- |
+| `ref_id` | String | Optional | Max 50 chars |
+| `title` | String | **Required** | Min 10, Max 200 chars |
+| `raw_price` | String | **Required** | Must contain digits |
+| `raw_area` | String | **Required** | Must contain digits |
+| `address_full` | String | **Required** | Min 10 chars |
+| `description` | String | Optional | Max 2000 chars |
+| `contact_phone`| String | **Required** | Vietnamese phone regex |
+| `owner_name` | String | Optional | Alphabetic only |
+
+**Scenario 2: Row-Level Validation**
+*   **Given** a CSV with 100 rows
+*   **And** Row 50 is missing the `raw_price` field
+*   **When** the import runs
+*   **Then** the system imports 99 valid rows
+*   **And** generates an "Import Error Report" flagging Row 50 with "Missing Required Field: raw_price"
+
+**Scenario 3: Large File Handling**
+*   **Given** a CSV file with 10,000 rows (~5MB)
+*   **When** I upload it
+*   **Then** the request does not time out (processing happens asynchronously)
+*   **And** I receive a "Processing ID" to track status
 
 ### Story 3.2: Listing Description Normalizer
 
-As an Admin,
-I want the system to standardize listing descriptions,
-So that the tone is consistent.
+**As an** Admin,
+**I want** the system to automatically summarize and standardize the listing descriptions,
+**So that** the public feed has a consistent, professional tone.
 
 **Acceptance Criteria:**
 
-**Given** a raw description from the CSV
-**When** the normalizer runs (using a simple LLM prompt)
-**Then** a standardized summary is generated
+**Scenario 1: AI Integration**
+*   **Given** a raw description: "ROOM 4 RENT CHEAP!!! call me 090xxx full AC"
+*   **When** the normalizer runs
+*   **Then** it calls the LLM service (Gemini Flash) with a system prompt to "Summarize and Professionalize"
+*   **And** outputs: "Affordable room available for rent. Features full air conditioning. Contact for details."
 
-### Story 3.3: Duplicate Detection (Basic)
+**Scenario 2: PII Stripping**
+*   **Given** a description containing a phone number or email
+*   **When** the normalizer runs
+*   **Then** the output MUST NOT contain the phone number or email (as these should be stored in structured fields, not the text)
 
-As a System,
-I want to flag potential duplicates during import,
-So that I avoid redundant listings.
+---
 
-**Acceptance Criteria:**
-
-**Given** a new import row
-**When** the address matches an existing listing
-**Then** it is flagged as a potential duplicate
-
-### Story 3.4: Address Verification Service
-
-As a System,
-I want to verify addresses exist,
-So that listings are accurate.
-
-**Acceptance Criteria:**
-
-**Given** an address string
-**When** the service runs
-**Then** it queries a standard map API to confirm existence
-
-### Story 3.5: Data Review Dashboard
-
-As an Admin,
-I want to review imported data before publishing,
-So that I can ensure quality.
-
-**Acceptance Criteria:**
-
-**Given** pending imported listings
-**When** I open the dashboard
-**Then** I can approve or reject them
-
-### Story 3.6: Bot Access Protection
-
-As a System,
-I want to block automated scrapers,
-So that the data remains exclusive.
-
-**Acceptance Criteria:**
-
-**Given** a known bot user agent
-**When** it requests a page
-**Then** access is denied
-
-## Epic 4: Audit Logging
-
-Implement comprehensive audit logging.
+## Epic 4: Audit Logging & Compliance
 
 ### Story 4.1: Price Change Logging
 
-As a System,
-I want to log every price change,
-So that there is an audit trail.
+**As a** Compliance Officer,
+**I want** to track every modification to a listing's price,
+**So that** we can resolve disputes and analyze market trends.
 
 **Acceptance Criteria:**
 
-**Given** a price update
-**When** it is saved
-**Then** a record is written to the audit log with timestamp and user ID
+**Scenario 1: Log Trigger**
+*   **Given** listing `L1` has a price of 5,000,000
+*   **When** Admin `A1` updates the price to 5,500,000 via the API
+*   **Then** a new row is inserted into `listing_audit_logs`
+*   **And** the row contains:
+    *   `listing_id`: `L1`
+    *   `actor_id`: `A1`
+    *   `action`: 'UPDATE_PRICE'
+    *   `old_value`: '5000000'
+    *   `new_value`: '5500000'
+    *   `timestamp`: UTC Now
+
+**Scenario 2: Immutability**
+*   **Given** an audit log record exists
+*   **When** any user (including Admin) attempts to DELETE or UPDATE the log record via the API
+*   **Then** the system returns 403 Forbidden
+*   **And** the record remains unchanged (enforced via Database RLS or API Policy)
 
 ### Story 4.2: Audit Log Viewer
 
-As an Admin,
-I want to view the history of changes for a listing,
-So that I can track its evolution.
+**As an** Admin,
+**I want to** view the history of a listing,
+**So that** I can see who changed what and when.
 
 **Acceptance Criteria:**
 
-**Given** a listing
-**When** I view its logs
-**Then** I see a chronological list of changes
+**Scenario 1: Chronological Display**
+*   **Given** a listing has 5 historical changes
+*   **When** I view the "History" tab in the Admin Dashboard
+*   **Then** I see a timeline sorted from Newest to Oldest
+*   **And** each entry shows the Actor Name, Action Type, and the Diff (Old -> New)
+
+**Scenario 2: Filter by User**
+*   **Given** the audit log contains changes from multiple admins
+*   **When** I filter by "Actor: Sarah"
+*   **Then** I only see changes made by Sarah

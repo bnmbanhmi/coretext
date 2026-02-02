@@ -69,6 +69,20 @@ Full-Stack / Hybrid Cloud (Custom Monorepo) based on project requirements analys
 2. **`create-t3-app`**: Excellent type-safety but lacks native Python integration and is Next.js-centric.
 3. **Custom Turborepo Construction**: Using `pnpm` workspaces to manually wire React (Vite), FastAPI, and a standalone Docker importer. *Selected* as it perfectly fits your specific multi-deployment needs.
 
+### Rejected Alternatives & Rationale
+
+**1. Next.js (Full Stack)**
+*   **Evaluation:** Considered for its integrated API routes and Server Components.
+*   **Rejection Reason:** While powerful, the "App Router" model introduces complexity for a Python-heavy team. We need the backend logic (Importer/Normalizer) to be in Python to leverage Pandas and LangChain/Gemini SDKs natively. Splitting Next.js (Frontend) and Python (Backend) often leads to "two monorepos" anti-pattern unless orchestrated by Turborepo.
+
+**2. Django (Backend)**
+*   **Evaluation:** The "batteries-included" standard for Python web apps.
+*   **Rejection Reason:** Too heavy for serverless. Django's startup time is suboptimal for Vercel functions (cold starts). FastAPI provides the necessary Pydantic validation speed and async support required for our high-throughput importer.
+
+**3. Go (Golang)**
+*   **Evaluation:** Excellent for the high-throughput importer service.
+*   **Rejection Reason:** Team expertise constraint. Introducing a third language (TS, Python, Go) complicates the build pipeline and cognitive load. Python 3.12 is sufficiently performant for our I/O-bound tasks.
+
 ### Selected Starter: TroRe Hybrid Monorepo (Custom Construction)
 
 **Rationale for Selection:**
@@ -119,6 +133,33 @@ mkdir packages/importer
 - `packages/importer`: VPS Deployment (Docker Container)
 
 ## Core Architectural Decisions
+
+### Component Anatomy & Responsibility
+
+**1. The Importer Service (`packages/importer`)**
+*   **Type:** Long-running Docker Container (Daemon).
+*   **Runtime:** Python 3.12 Slim on Debian Bookworm.
+*   **Responsibility:** Monitors a filesystem or S3 bucket for new `.csv` files. Validates headers against a schema. Emits processing events to the API.
+*   **Key Libraries:** `pandas` (ETL), `tenacity` (Retry Logic), `httpx` (API Communication).
+*   **Resource Constraints:** 512MB RAM Limit (Hard), 1 vCPU.
+
+**2. The API Gateway (`apps/api`)**
+*   **Type:** Serverless Function (Vercel).
+*   **Runtime:** Python 3.12 (AWS Lambda / Vercel Runtime).
+*   **Responsibility:** Authenticates users, validates Pydantic schemas, routes requests to Supabase, and serves as the bridge to the LLM.
+*   **Key Libraries:** `fastapi`, `pydantic`, `sqlalchemy`, `google-cloud-aiplatform`.
+
+**3. The Frontend App (`apps/web`)**
+*   **Type:** Static SPA (Vercel Edge).
+*   **Runtime:** Browser (ES2022+).
+*   **Responsibility:** Renders the UI, manages client state (Zustand), handles routing (React Router), and caches server data (TanStack Query).
+
+### Security Compliance Checklist
+
+*   **[S-01] TLS Enforcement:** All internal service-to-service communication (Importer -> API) must occur over HTTPS, even within the same VPC, validating certificates.
+*   **[S-02] Secrets Management:** No secrets in code. All credentials (DB URLs, API Keys) must be injected via `process.env` (Node) or `os.environ` (Python) at runtime.
+*   **[S-03] Input Sanitization:** All user inputs must be stripped of HTML tags to prevent XSS. All SQL parameters must be bound to prevent SQL Injection (handled by SQLAlchemy).
+*   **[S-04] Dependency Scanning:** CI/CD pipeline must run `pip-audit` and `npm audit` to block known CVEs.
 
 ### Decision Priority Analysis
 
