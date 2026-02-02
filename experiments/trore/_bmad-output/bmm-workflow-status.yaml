@@ -1,0 +1,64 @@
+# Workflow Status Template
+
+# This tracks progress through BMM methodology Analysis, Planning, and Solutioning phases.
+# Implementation phase is tracked separately in sprint-status.yaml
+
+# STATUS DEFINITIONS:
+# ==================
+# Initial Status (before completion):
+#   - required: Must be completed to progress
+#   - optional: Can be completed but not required
+#   - recommended: Strongly suggested but not required
+#   - conditional: Required only if certain conditions met (e.g., if_has_ui)
+#
+# Completion Status:
+#   - {file-path}: File created/found (e.g., "docs/product-brief.md")
+#   - skipped: Optional/conditional workflow that was skipped
+
+generated: "2025-12-29"
+project: "trore"
+project_type: "brownfield"
+selected_track: "BMad Method"
+field_type: "brownfield"
+workflow_path: "_bmad/bmm/workflows/workflow-status/paths/method-brownfield.yaml"
+workflow_status:
+  - id: document-project
+    phase: "Prerequisite"
+    status: docs/project-overview.md
+    agent: analyst
+    description: "Comprehensive project documentation"
+  - id: prd
+    phase: "Planning"
+    status: _bmad-output/planning-artifacts/prd.md
+    agent: pm
+    description: "PRD focused on new features/changes"
+  - id: create-ux-design
+    phase: "Planning"
+    status: _bmad-output/planning-artifacts/ux-design-specification.md
+    agent: ux-designer
+    description: "UX Design"
+  - id: create-architecture
+    phase: "Solutioning"
+    status: recommended
+    agent: architect
+    description: "Integration architecture"
+  - id: create-epics-and-stories
+    phase: "Solutioning"
+    status: required
+    agent: pm
+    description: "Break down PRD into epics/stories"
+  - id: test-design
+    phase: "Solutioning"
+    status: recommended
+    agent: tea
+    description: "System-level testability review"
+  - id: implementation-readiness
+    phase: "Solutioning"
+    status: required
+    agent: architect
+    description: "Validates PRD + Architecture + Epics + UX"
+  - id: sprint-planning
+    phase: "Implementation"
+    status: required
+    agent: sm
+    description: "Creates sprint plan with stories"

@@ -180,12 +180,12 @@ This research utilizes the **Labeled Property Graph** model (implemented via Sur
 
 To justify the architectural choice, we compare the dominant retrieval method (Vector RAG) with the proposed Graph approach:
 
-| Feature | Vector Search (Semantic RAG) | Knowledge Graph (Structural RAG) |
-| :---- | :---- | :---- |
-| **Mechanism** | Probabilistic Similarity (Embeddings) | Deterministic Connectivity (Edges) |
-| **Query Type** | *"Find code that looks like login logic"* | *"Find the exact User Story linked to this Function"* |
-| **Strength** | Fuzzy matching, handling unstructured intent. | Traceability, Dependency mapping, Impact analysis. |
-| **Weakness** | **Context Flattening:** Loses the hierarchical structure; prone to hallucinations when concepts overlap. | **Construction Cost:** Requires strict parsing and maintenance of the graph structure. |
+| Feature        | Vector Search (Semantic RAG)                                                                             | Knowledge Graph (Structural RAG)                                                       |
+| :------------- | :------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------- |
+| **Mechanism**  | Probabilistic Similarity (Embeddings)                                                                    | Deterministic Connectivity (Edges)                                                     |
+| **Query Type** | *"Find code that looks like login logic"*                                                                | *"Find the exact User Story linked to this Function"*                                  |
+| **Strength**   | Fuzzy matching, handling unstructured intent.                                                            | Traceability, Dependency mapping, Impact analysis.                                     |
+| **Weakness**   | **Context Flattening:** Loses the hierarchical structure; prone to hallucinations when concepts overlap. | **Construction Cost:** Requires strict parsing and maintenance of the graph structure. |
 
 While Vector Search is superior for "Discovery" (finding unknown items), Knowledge Graph is essential for "Navigation" (understanding complex systems). This research aims to leverage the deterministic nature of Graphs to reduce the hallucination rate in coding tasks.
 
@@ -230,12 +230,12 @@ SurrealDB natively supports all three models within a single entity (Record), el
 
 While Neo4j is the industry standard for Graph Databases, applying it to "Agentic Context" problems reveals significant **Architectural Impedance Mismatch**:
 
-| Feature Criteria | Neo4j (Traditional Graph) | SurrealDB (Selected) |
-| :---- | :---- | :---- |
-| **Document Storage** | **Weak.** Storing large text bodies (Markdown) in Node properties degrades performance and complicates management. | **Native.** Each Record acts as both a graph Node and a complete JSON Document. Ideal for Markdown files. |
-| **Vector Search** | Requires plugins (Graph Data Science Lib) or complex configurations for Vector Index integration. | **Native.** Supports Vector Embeddings and distance functions (Cosine/Euclidean) directly in the database core. |
-| **Deployment** | Heavy (Java-based); resource-intensive for local execution (Local-first constraint). | **Ultra-lightweight.** Single binary written in Rust. Perfectly fits CoreText’s "Local-First" and CLI tool architecture. |
-| **Query Complexity** | Cypher is powerful for graphs but cumbersome when combining Full-text and Vector search. | **SurrealQL** allows combining all three query types in a single, simple SQL-like statement. |
+| Feature Criteria     | Neo4j (Traditional Graph)                                                                                          | SurrealDB (Selected)                                                                                                     |
+| :------------------- | :----------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------- |
+| **Document Storage** | **Weak.** Storing large text bodies (Markdown) in Node properties degrades performance and complicates management. | **Native.** Each Record acts as both a graph Node and a complete JSON Document. Ideal for Markdown files.                |
+| **Vector Search**    | Requires plugins (Graph Data Science Lib) or complex configurations for Vector Index integration.                  | **Native.** Supports Vector Embeddings and distance functions (Cosine/Euclidean) directly in the database core.          |
+| **Deployment**       | Heavy (Java-based); resource-intensive for local execution (Local-first constraint).                               | **Ultra-lightweight.** Single binary written in Rust. Perfectly fits CoreText’s "Local-First" and CLI tool architecture. |
+| **Query Complexity** | Cypher is powerful for graphs but cumbersome when combining Full-text and Vector search.                           | **SurrealQL** allows combining all three query types in a single, simple SQL-like statement.                             |
 
 **Conclusion:** Selecting SurrealDB eliminates the need to maintain two separate databases (Graph \+ Vector), reducing **Operational Complexity** by an estimated 50%. This choice prioritizes truth in efficiency over the flattery of following "industry standards" that don't fit the specific use case.
 
@@ -301,11 +301,11 @@ In the AI era, selecting a document format is no longer just a matter of prefere
 
 Software development documentation must serve two distinct audiences: **Humans** (for comprehension and creativity) and **AI Agents** (for analysis and code generation). Markdown represents the optimal equilibrium that other formats fail to achieve:
 
-| Format | Human Readability | AI Readability | Disadvantages in Agentic Workflow |
-| :---- | :---- | :---- | :---- |
-| **Docx / PDF / LaTeX** | High (Visual) | Low / Medium | Contains excessive presentation metadata (layout, fonts). AI wastes tokens processing formatting "noise" without understanding logical structure. |
-| **JSON / YAML / XML** | Low (Cluttered) | High (Strict Structure) | Difficult for long-form human writing. Unsuitable for drafting business descriptions (User Stories) or design thinking. |
-| **Markdown (Selected)** | **High** | **High** | Lightweight syntax. AI easily identifies structure through symbols like `#`, `*`, and `>` without being distracted by noise. |
+| Format                  | Human Readability | AI Readability          | Disadvantages in Agentic Workflow                                                                                                                 |
+| :---------------------- | :---------------- | :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Docx / PDF / LaTeX**  | High (Visual)     | Low / Medium            | Contains excessive presentation metadata (layout, fonts). AI wastes tokens processing formatting "noise" without understanding logical structure. |
+| **JSON / YAML / XML**   | Low (Cluttered)   | High (Strict Structure) | Difficult for long-form human writing. Unsuitable for drafting business descriptions (User Stories) or design thinking.                           |
+| **Markdown (Selected)** | **High**          | **High**                | Lightweight syntax. AI easily identifies structure through symbols like `#`, `*`, and `>` without being distracted by noise.                      |
 
 #### **2.6.2. Markdown as a Pre-Graph Structure**
 
@@ -489,7 +489,7 @@ To ensure the graph never drifts from the codebase, **Git Hooks** (`pre-commit` 
 
 **Conclusion:** This proves that **Structure is Key**. Current Coding Agents are powerful enough to handle complex logic *if* provided with the correct, isolated context by a human.
 
-### **5.2. Experiment 2: Application Case Study (Project Nhaminhbach)**
+### **5.2. Experiment 2: Application Case Study (Project trore)**
 
 (Not Effective) 
 

@@ -7,9 +7,9 @@
 This study evaluates whether CoreText's knowledge-graph retrieval method reduces token consumption and latency while maintaining code quality compared to standard file-based context retrieval methods.
 
 ### 1.1 The Task (Workload)
-**Subject:** `nhaminhbach` (Rental House Listing Platform).
-**Specs Location:** `experiments/nhaminhbach/_bmad-output/`
-**Target Implementation:** `experiments/nhaminhbach/`
+**Subject:** `trore` (Rental House Listing Platform).
+**Specs Location:** `experiments/trore/_bmad-output/`
+**Target Implementation:** `experiments/trore/`
 
 **Complexity Requirements:**
 The project is a hybrid multi-cloud SPA (React 19 + FastAPI + GCP Refinery).
@@ -29,15 +29,15 @@ The project is a hybrid multi-cloud SPA (React 19 + FastAPI + GCP Refinery).
 
 ### Subject B: Standard BMad Agent (Control 2)
 - **Agent:** Standard `bmad-developer`.
-- **Retrieval Method:** **File-Based**. Agent reads full Markdown files from `experiments/nhaminhbach/_bmad-output/planning-artifacts/` into context.
+- **Retrieval Method:** **File-Based**. Agent reads full Markdown files from `experiments/trore/_bmad-output/planning-artifacts/` into context.
 - **Workflow:** Standard ReAct loop (Read File -> Plan -> Write Code).
 
 ### Subject C: CoreText Integrated Agent (Test)
 - **Agent:** Modified `coretext-developer` agent.
 - **Retrieval Method:** **Graph-Based**. Agent uses `coretext` MCP tools (`query_knowledge`, `get_dependencies`) to query specific requirements.
 - **Constraint:** **Strict Knowledge Isolation**.
-    - **Blocked:** Access to `experiments/nhaminhbach/_bmad-output/planning-artifacts/**` is blocked via `.geminiignore`.
-    - **Allowed:** `experiments/nhaminhbach/_bmad-output/implementation-artifacts/**` (to track sprint/story status).
+    - **Blocked:** Access to `experiments/trore/_bmad-output/planning-artifacts/**` is blocked via `.geminiignore`.
+    - **Allowed:** `experiments/trore/_bmad-output/implementation-artifacts/**` (to track sprint/story status).
     - **Mandate:** Must use CoreText to retrieve architectural patterns, data models, and business rules defined in the hidden planning artifacts.
 
 ---
@@ -71,7 +71,7 @@ Post-build evaluation of the final artifact.
 ## 4. Execution Protocol
 
 ### Phase 1: Specification Ingestion
-1. **Source:** `experiments/nhaminhbach/_bmad-output/`.
+1. **Source:** `experiments/trore/_bmad-output/`.
 2. **Indexing:** Run `coretext sync` targeting this directory to populate the Knowledge Graph.
 3. **Verification:** Ensure `coretext inspect` can retrieve nodes like "Smart Search Bar" or "GeoID".
 
@@ -100,7 +100,7 @@ This structure represents the internal layout of the `coretext` repository. Each
 ├── coretext/                    # The Tool Source Code (Agent's Brain)
 ├── experiments/                 # Experimental Data
 │   ├── results/                 # Unified Data Collection (evaluation_log.csv)
-│   └── nhaminhbach/             # The Workstation (Specific to each Worktree)
+│   └── trore/             # The Workstation (Specific to each Worktree)
 │       ├── _bmad-output/        # The Specs (Source of Truth)
 │       │   ├── planning-artifacts/        # READ-DENIED for Subject C via .geminiignore
 │       │   └── implementation-artifacts/  # READ-ALLOWED (Status tracking)
@@ -140,7 +140,7 @@ git worktree add ../exp-c-coretext experiment/coretext
 ### 5.3 Strict Isolation (The .geminiignore Rule)
 To physically prevent Subject C from "cheating" (reading files), a `.geminiignore` file is placed **only** in the Subject C worktree.
 
-**File Location:** `../exp-c-coretext/experiments/nhaminhbach/.geminiignore`
+**File Location:** `../exp-c-coretext/experiments/trore/.geminiignore`
 **Content:**
 ```text
 # BLOCK access to the source of truth (Planning Artifacts)
@@ -166,10 +166,10 @@ _bmad-output/planning-artifacts/
 This checklist guides the facilitator through the full experiment lifecycle.
 
 ### 6.1 Preparation Phase
-- [ ] **Specs Finalized:** Verify `experiments/nhaminhbach/_bmad-output/` contains complete PRD, Architecture, and Stories.
+- [ ] **Specs Finalized:** Verify `experiments/trore/_bmad-output/` contains complete PRD, Architecture, and Stories.
 - [ ] **CoreText Indexing:**
     - [ ] Run `coretext init` (if needed).
-    - [ ] Configure `coretext` to index `experiments/nhaminhbach/_bmad-output`.
+    - [ ] Configure `coretext` to index `experiments/trore/_bmad-output`.
     - [ ] Run `coretext sync`.
 - [ ] **Worktrees Created:** Execute the git worktree commands from Section 5.2.
 - [ ] **Isolation Applied:** Create the `.geminiignore` file in `exp-c-coretext`.
