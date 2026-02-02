@@ -106,7 +106,7 @@ This structure represents the internal layout of the `coretext` repository. Each
 ├── coretext/                    # The Tool Source Code (Agent's Brain)
 ├── experiments/                 # Experimental Data
 │   ├── results/                 # Unified Data Collection (evaluation_log.csv)
-│   └── trore/             # The Workstation (Specific to each Worktree)
+│   └── trore/                   # The Workstation (Specific to each Worktree)
 │       ├── _bmad-output/        # The Specs (Source of Truth)
 │       │   ├── planning-artifacts/        # READ-DENIED for Subject C via .geminiignore
 │       │   └── implementation-artifacts/  # READ-ALLOWED (Status tracking)
@@ -133,14 +133,14 @@ To prevent contamination, we use **Git Worktrees** to create sibling directories
 cd ~/Git/coretext
 
 # Create experimental branches
-git branch experiment/human main
-git branch experiment/control main
-git branch experiment/coretext main
+git branch experiment/exp-a-human main
+git branch experiment/exp-b-control main
+git branch experiment/exp-c-coretext main
 
 # Create Worktrees as siblings
-git worktree add ../exp-a-human experiment/human
-git worktree add ../exp-b-control experiment/control
-git worktree add ../exp-c-coretext experiment/coretext
+git worktree add ../exp-a-human experiment/exp-a-human
+git worktree add ../exp-b-control experiment/exp-b-control
+git worktree add ../exp-c-coretext experiment/exp-c-coretext
 ```
 
 ### 5.3 Strict Isolation (The .geminiignore Rule)
