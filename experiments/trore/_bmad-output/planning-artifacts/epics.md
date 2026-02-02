@@ -12,22 +12,77 @@ inputDocuments:
 
 This document provides the detailed epic and story breakdown for **TroRe**, the verified rental listing platform. This document serves as the **Single Source of Truth** for the development team. All implementation details must adhere strictly to the acceptance criteria defined herein.
 
+## Requirements Inventory
+
+### Functional Requirements
+
+FR1: Seekers can navigate directly to a specific property using a unique UUID.
+FR2: Seekers can filter property results by multiple criteria (Price, Area, Location).
+FR3: Seekers can perform standard keyword searches across property descriptions.
+FR4: Seekers can view a map representation of property locations.
+FR9: Seekers can initiate contact with the Platform Admin regarding a specific property.
+FR11: Users can view property contact information only after passing a "Login Wall".
+FR13: The System can bulk ingest listings from CSV sources.
+FR14: The System can normalize unstructured text into structured property data.
+FR16: The System can automatically assign unique UUIDs for new properties.
+FR18: The System can summarize descriptions using AI.
+FR19: Admins can review imported data in a dashboard.
+FR20: Admins can manually override and edit any attribute of a listing before approval.
+FR21: Admins can approve or reject pending listings.
+FR24: The System can block known bot user agents.
+FR25: The System can rate-limit the viewing of sensitive contact information per user.
+FR26: The System can enforce a "Login Wall" for accessing owner/admin contact details.
+FR27: Admins can manually input new listings via the admin interface.
+
+### NonFunctional Requirements
+
+NFR1: ID Resolution: Entering a UUID in the search bar must resolve to the property page in < 300ms.
+NFR2: First Contentful Paint (FCP): The public landing page must load in < 1.5s on a standard 4G connection.
+NFR3: Data Protection: Owner contact information must be protected behind a rate-limiting gate.
+NFR4: Admin Security: Admin access must be secured via robust authentication and RBAC.
+NFR5: Horizontal Processing: The GCP pipeline must support scaling to handle large CSV files without degradation.
+NFR6: Storage Strategy: Supabase storage must handle up to 100,000 active listings without query performance impact.
+NFR7: Transactional Consistency: 100% of listing creations must be Atomic to prevent partial data states.
+
+### FR Coverage Map
+
+FR1: Epic 2 - Seekers can navigate directly via UUID.
+FR2: Epic 2 - Seekers can filter by Price, Area, Location.
+FR3: Epic 1 - Seekers can perform standard keyword searches.
+FR4: Epic 2 - Seekers can view property map.
+FR9: Epic 2 - Seekers can initiate contact.
+FR11: Epic 2 - Users must pass a Login Wall for contact info.
+FR13: Epic 3 - System ingests listings from CSV.
+FR14: Epic 3 - System normalizes unstructured text.
+FR16: Epic 1 - System automatically assigns unique UUIDs.
+FR18: Epic 3 - System summarizes descriptions using AI.
+FR19: Epic 3 - Admins can review imported data.
+FR20: Epic 1 - Admins can manually override and edit attributes.
+FR21: Epic 3 - Admins can approve or reject pending listings.
+FR24: Epic 3 - System can block known bot user agents.
+FR25: Epic 2 - System rate-limits contact information views.
+FR26: Epic 2 - System enforces login wall for owner details.
+FR27: Epic 1 - Admins can manually input listings.
+
 ## Epic List
 
 ### Epic 1: The MVP (Core Listing & Viewing)
 **Goal:** Build the foundational platform enabling manual listing creation by Admins and public discovery by Seekers.
 **Scope:** Project scaffolding, Database initialization, Admin Dashboard (Basic), Public Listing Grid, Detail Views.
 **Key Success Metric:** System can successfully store and retrieve a listing with 100% data fidelity.
+**FRs covered:** FR3, FR16, FR20, FR27.
 
 ### Epic 2: Advanced Search & Filtering
 **Goal:** Implement robust, high-performance search capabilities catering to both power users (ID Lookup) and browsers (Filtering).
 **Scope:** UUID Lookup Service, Multi-faceted Filter Logic, Deep Linking, Map View.
 **Key Success Metric:** <300ms latency for ID resolution.
+**FRs covered:** FR1, FR2, FR4, FR9, FR11, FR25, FR26.
 
 ### Epic 3: Data Import & Normalization
 **Goal:** Implement a scalable ingestion pipeline to bulk-import listings from legacy systems (CSV) and normalize unstructured text.
 **Scope:** CSV Parsing Service, Validation Layer, AI Summarization Integration, Duplicate Detection.
 **Key Success Metric:** 100% successful import of valid CSV rows; 100% rejection of invalid rows with detailed error reports.
+**FRs covered:** FR13, FR14, FR18, FR19, FR21, FR24.
 
 ### Epic 4: Audit Logging & Compliance
 **Goal:** Implement a comprehensive audit trail for all sensitive data modifications to ensure system integrity and accountability.
