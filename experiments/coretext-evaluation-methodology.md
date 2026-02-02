@@ -107,6 +107,7 @@ This structure represents the internal layout of the `coretext` repository. Each
 ├── experiments/                 # Experimental Data
 │   ├── results/                 # Unified Data Collection (evaluation_log.csv)
 │   └── trore/                   # The Workstation (Specific to each Worktree)
+│       ├── _bmad/               # BMad installation (For Subject C, modified)
 │       ├── _bmad-output/        # The Specs (Source of Truth)
 │       │   ├── planning-artifacts/        # READ-DENIED for Subject C via .geminiignore
 │       │   └── implementation-artifacts/  # READ-ALLOWED (Status tracking)
