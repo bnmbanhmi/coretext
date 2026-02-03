@@ -178,13 +178,23 @@
     <critical>🔬 EXHAUSTIVE ARTIFACT ANALYSIS - This is where you prevent future developer fuckups!</critical>
 
     <!-- Load all available content through discovery protocol -->
-    <invoke-protocol
-      name="discover_inputs" />
+    <check if="{retrieval_method} == 'coretext'">
+        <invoke-protocol name="discover_inputs_coretext" />
+        <note>Context loaded via CoreText Graph Retrieval. Content variables contain node summaries/IDs.</note>
+    </check>
+    <check if="{retrieval_method} != 'coretext'">
+        <invoke-protocol name="discover_inputs" />
+    </check>
+
     <note>Available content: {epics_content}, {prd_content}, {architecture_content}, {ux_content},
     {project_context}</note>
 
     <!-- Analyze epics file for story foundation -->
-    <action>From {epics_content}, extract Epic {{epic_num}} complete context:</action> **EPIC ANALYSIS:** - Epic
+    <check if="{retrieval_method} == 'coretext'">
+        <action>If {epics_content} is insufficient, use `query_knowledge` to fetch details for Epic {{epic_num}}</action>
+        <action>Query: "Requirements and stories for Epic {{epic_num}}"</action>
+    </check>
+    <action>From {epics_content} (or query results), extract Epic {{epic_num}} complete context:</action> **EPIC ANALYSIS:** - Epic
     objectives and business value - ALL stories in this epic for cross-story context - Our specific story's requirements, user story
     statement, acceptance criteria - Technical requirements and constraints - Dependencies on other stories/epics - Source hints pointing to
     original documents <!-- Extract specific story requirements -->
@@ -192,7 +202,13 @@
     (As a, I want, so that) - Detailed acceptance criteria (already BDD formatted) - Technical requirements specific to this story -
     Business context and value - Success criteria <!-- Previous story analysis for context continuity -->
     <check if="story_num > 1">
-      <action>Load previous story file: {{story_dir}}/{{epic_num}}-{{previous_story_num}}-*.md</action> **PREVIOUS STORY INTELLIGENCE:** -
+      <check if="{retrieval_method} == 'coretext'">
+          <action>Use `get_dependencies` or `query_knowledge` to find the previous story node: {{epic_num}}-{{previous_story_num}}</action>
+      </check>
+      <check if="{retrieval_method} != 'coretext'">
+          <action>Load previous story file: {{story_dir}}/{{epic_num}}-{{previous_story_num}}-*.md</action>
+      </check>
+       **PREVIOUS STORY INTELLIGENCE:** -
     Dev notes and learnings from previous story - Review feedback and corrections needed - Files that were created/modified and their
     patterns - Testing approaches that worked/didn't work - Problems encountered and solutions found - Code patterns established <action>Extract
     all learnings that could impact current story implementation</action>
@@ -218,11 +234,19 @@
     analyze architecture content for story-relevant requirements:</action>
 
     <!-- Load architecture - single file or sharded -->
-    <check if="architecture file is single file">
-      <action>Load complete {architecture_content}</action>
+    <check if="{retrieval_method} == 'coretext'">
+        <action>Use `search_topology` or `query_knowledge` to find specific architecture sections relevant to the story</action>
+        <action>Query: "Architecture patterns for {{story_title}}"</action>
+        <action>Query: "Tech stack and coding standards"</action>
+        <action>Query: "Database schema for {{story_title}}"</action>
     </check>
-    <check if="architecture is sharded to folder">
-      <action>Load architecture index and scan all architecture files</action>
+    <check if="{retrieval_method} != 'coretext'">
+        <check if="architecture file is single file">
+        <action>Load complete {architecture_content}</action>
+        </check>
+        <check if="architecture is sharded to folder">
+        <action>Load architecture index and scan all architecture files</action>
+        </check>
     </check> **CRITICAL ARCHITECTURE EXTRACTION:** <action>For
     each architecture section, determine if relevant to this story:</action> - **Technical Stack:** Languages, frameworks, libraries with
     versions - **Code Structure:** Folder organization, naming conventions, file patterns - **API Patterns:** Service structure, endpoint

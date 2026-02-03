@@ -13,4 +13,9 @@ CRITICAL: This is a structured YAML workflow. Follow these steps precisely:
 4. VALIDATE outputs before proceeding to next step
 
 WORKFLOW FILE: {project-root}/_bmad/bmm/workflows/4-implementation/create-story/workflow.yaml
+
+Subject C Constraint (CoreText Mode):
+- You are BLOCKED from reading files in `_bmad-output/planning-artifacts/`.
+- You MUST use the CoreText MCP tools (`query_knowledge`, `search_topology`, `get_dependencies`) to retrieve context.
+- The workflow has been updated to use the `discover_inputs_coretext` protocol. Ensure you follow it.
 """

@@ -135,90 +135,107 @@
   </supported-tags>
 
   <protocols desc="Reusable workflow protocols that can be invoked via invoke-protocol tag">
-    <protocol name="discover_inputs" desc="Smart file discovery and loading based on input_file_patterns">
-      <objective>Intelligently load project files (whole or sharded) based on workflow's input_file_patterns configuration</objective>
-
-      <critical>Only execute if workflow.yaml contains input_file_patterns section</critical>
-
-      <flow>
-        <step n="1" title="Parse Input File Patterns">
-          <action>Read input_file_patterns from loaded workflow.yaml</action>
-          <action>For each pattern group (prd, architecture, epics, etc.), note the load_strategy if present</action>
-        </step>
-
-        <step n="2" title="Load Files Using Smart Strategies">
-          <iterate>For each pattern in input_file_patterns:</iterate>
-
-          <substep n="2a" title="Try Sharded Documents First">
-            <check if="sharded pattern exists">
-              <action>Determine load_strategy from pattern config (defaults to FULL_LOAD if not specified)</action>
-
-              <strategy name="FULL_LOAD">
-                <desc>Load ALL files in sharded directory - used for PRD, Architecture, UX, brownfield docs</desc>
-                <action>Use glob pattern to find ALL .md files (e.g., "{output_folder}/*architecture*/*.md")</action>
-                <action>Load EVERY matching file completely</action>
-                <action>Concatenate content in logical order (index.md first if exists, then alphabetical)</action>
-                <action>Store in variable: {pattern_name_content}</action>
-              </strategy>
-
-              <strategy name="SELECTIVE_LOAD">
-                <desc>Load specific shard using template variable - example: used for epics with {{epic_num}}</desc>
-                <action>Check for template variables in sharded_single pattern (e.g., {{epic_num}})</action>
-                <action>If variable undefined, ask user for value OR infer from context</action>
-                <action>Resolve template to specific file path</action>
-                <action>Load that specific file</action>
-                <action>Store in variable: {pattern_name_content}</action>
-              </strategy>
-
-              <strategy name="INDEX_GUIDED">
-                <desc>Load index.md, analyze structure and description of each doc in the index, then intelligently load relevant docs</desc>
-                <mandate>DO NOT BE LAZY - use best judgment to load documents that might have relevant information, even if only a 5% chance</mandate>
-                <action>Load index.md from sharded directory</action>
-                <action>Parse table of contents, links, section headers</action>
-                <action>Analyze workflow's purpose and objective</action>
-                <action>Identify which linked/referenced documents are likely relevant</action>
-                <example>If workflow is about authentication and index shows "Auth Overview", "Payment Setup", "Deployment" → Load auth
-                  docs, consider deployment docs, skip payment</example>
-                <action>Load all identified relevant documents</action>
-                <action>Store combined content in variable: {pattern_name_content}</action>
-                <note>When in doubt, LOAD IT - context is valuable, being thorough is better than missing critical info</note>
-              </strategy>
-              <action>Mark pattern as RESOLVED, skip to next pattern</action>
-            </check>
-          </substep>
-
-          <substep n="2b" title="Try Whole Document if No Sharded Found">
-            <check if="no sharded matches found OR no sharded pattern exists">
-              <action>Attempt glob match on 'whole' pattern (e.g., "{output_folder}/*prd*.md")</action>
-              <check if="matches found">
-                <action>Load ALL matching files completely (no offset/limit)</action>
-                <action>Store content in variable: {pattern_name_content} (e.g., {prd_content})</action>
-                <action>Mark pattern as RESOLVED, skip to next pattern</action>
-              </check>
-            </check>
-          </substep>
-
-          <substep n="2c" title="Handle Not Found">
-            <check if="no matches for sharded OR whole">
-              <action>Set {pattern_name_content} to empty string</action>
-              <action>Note in session: "No {pattern_name} files found" (not an error, just unavailable, offer use change to provide)</action>
-            </check>
-          </substep>
-        </step>
-
-        <step n="3" title="Report Discovery Results">
-          <action>List all loaded content variables with file counts</action>
-          <example>
-            ✓ Loaded {prd_content} from 5 sharded files: prd/index.md, prd/requirements.md, ...
-            ✓ Loaded {architecture_content} from 1 file: Architecture.md
-            ✓ Loaded {epics_content} from selective load: epics/epic-3.md
-            ○ No ux_design files found
-          </example>
-          <note>This gives workflow transparency into what context is available</note>
-        </step>
-      </flow>
-
-    </protocol>
+        <protocol name="discover_inputs" desc="Smart file discovery and loading based on input_file_patterns">
+          <objective>Intelligently load project files (whole or sharded) based on workflow's input_file_patterns configuration</objective>
+    
+          <critical>Only execute if workflow.yaml contains input_file_patterns section</critical>
+    
+          <flow>
+            <step n="1" title="Parse Input File Patterns">
+              <action>Read input_file_patterns from loaded workflow.yaml</action>
+              <action>For each pattern group (prd, architecture, epics, etc.), note the load_strategy if present</action>
+            </step>
+    
+            <step n="2" title="Load Files Using Smart Strategies">
+              <iterate>For each pattern in input_file_patterns:</iterate>
+    
+              <substep n="2a" title="Try Sharded Documents First">
+                <check if="sharded pattern exists">
+                  <action>Determine load_strategy from pattern config (defaults to FULL_LOAD if not specified)</action>
+    
+                  <strategy name="FULL_LOAD">
+                    <desc>Load ALL files in sharded directory - used for PRD, Architecture, UX, brownfield docs</desc>
+                    <action>Use glob pattern to find ALL .md files (e.g., "{output_folder}/*architecture*/*.md")</action>
+                    <action>Load EVERY matching file completely</action>
+                    <action>Concatenate content in logical order (index.md first if exists, then alphabetical)</action>
+                    <action>Store in variable: {pattern_name_content}</action>
+                  </strategy>
+    
+                  <strategy name="SELECTIVE_LOAD">
+                    <desc>Load specific shard using template variable - example: used for epics with {{epic_num}}</desc>
+                    <action>Check for template variables in sharded_single pattern (e.g., {{epic_num}})</action>
+                    <action>If variable undefined, ask user for value OR infer from context</action>
+                    <action>Resolve template to specific file path</action>
+                    <action>Load that specific file</action>
+                    <action>Store in variable: {pattern_name_content}</action>
+                  </strategy>
+    
+                  <strategy name="INDEX_GUIDED">
+                    <desc>Load index.md, analyze structure and description of each doc in the index, then intelligently load relevant docs</desc>
+                    <mandate>DO NOT BE LAZY - use best judgment to load documents that might have relevant information, even if only a 5% chance</mandate>
+                    <action>Load index.md from sharded directory</action>
+                    <action>Parse table of contents, links, section headers</action>
+                    <action>Analyze workflow's purpose and objective</action>
+                    <action>Identify which linked/referenced documents are likely relevant</action>
+                    <example>If workflow is about authentication and index shows "Auth Overview", "Payment Setup", "Deployment" → Load auth
+                      docs, consider deployment docs, skip payment</example>
+                    <action>Load all identified relevant documents</action>
+                    <action>Store combined content in variable: {pattern_name_content}</action>
+                    <note>When in doubt, LOAD IT - context is valuable, being thorough is better than missing critical info</note>
+                  </strategy>
+                  <action>Mark pattern as RESOLVED, skip to next pattern</action>
+                </check>
+              </substep>
+    
+              <substep n="2b" title="Try Whole Document if No Sharded Found">
+                <check if="no sharded matches found OR no sharded pattern exists">
+                  <action>Attempt glob match on 'whole' pattern (e.g., "{output_folder}/*prd*.md")</action>
+                  <check if="matches found">
+                    <action>Load ALL matching files completely (no offset/limit)</action>
+                    <action>Store content in variable: {pattern_name_content} (e.g., {prd_content})</action>
+                    <action>Mark pattern as RESOLVED, skip to next pattern</action>
+                  </check>
+                </check>
+              </substep>
+    
+              <substep n="2c" title="Handle Not Found">
+                <check if="no matches for sharded OR whole">
+                  <action>Set {pattern_name_content} to empty string</action>
+                  <action>Note in session: "No {pattern_name} files found" (not an error, just unavailable, offer use change to provide)</action>
+                </check>
+              </substep>
+            </step>
+    
+            <step n="3" title="Report Discovery Results">
+              <action>List all loaded content variables with file counts</action>
+              <example>
+                ✓ Loaded {prd_content} from 5 sharded files: prd/index.md, prd/requirements.md, ...
+                ✓ Loaded {architecture_content} from 1 file: Architecture.md
+                ✓ Loaded {epics_content} from selective load: epics/epic-3.md
+                ○ No ux_design files found
+              </example>
+              <note>This gives workflow transparency into what context is available</note>
+            </step>
+          </flow>
+        </protocol>
+    
+        <protocol name="discover_inputs_coretext" desc="Context discovery using CoreText Knowledge Graph">
+          <objective>Retrieve context using semantic search and graph traversal instead of direct file reads. Used when file access is blocked.</objective>
+          <critical>Only execute if workflow.yaml contains input_file_patterns section</critical>
+          <flow>
+            <step n="1" title="CoreText Discovery">
+              <iterate>For each pattern in input_file_patterns:</iterate>
+              <action>Extract 'description' from pattern config to use as the base for the natural_query (e.g. "PRD", "Architecture")</action>
+              <action>Derive a regex_filter from the 'whole' or 'sharded' path (extract the parent directory, e.g. "^.*planning-artifacts.*")</action>
+              <action>Execute tool: query_knowledge(natural_query=description, regex_filter=derived_regex, top_k=5, depth=1)</action>
+              <action>Store the structured graph result (nodes + edges) in variable: {pattern_name_content}</action>
+              <note>The content is now a Graph Subgraph, not a text blob. Subsequent steps must parse nodes.</note>
+            </step>
+            <step n="2" title="Report">
+              <action>List retrieved nodes for each pattern to confirm context availability</action>
+            </step>
+          </flow>
+        </protocol>
   </protocols>
 
   <llm final="true">

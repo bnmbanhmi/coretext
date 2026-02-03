@@ -137,7 +137,15 @@
   <step n="2" goal="Load project context and story information">
     <critical>Load all available context to inform implementation</critical>
 
-    <action>Load {project_context} for coding standards and project-wide patterns (if exists)</action>
+    <check if="{retrieval_method} == 'coretext'">
+        <action>Use `query_knowledge` to retrieve coding standards and project-wide patterns</action>
+        <action>Query: "Coding standards and project patterns"</action>
+        <action>Query: "Testing standards"</action>
+    </check>
+    <check if="{retrieval_method} != 'coretext'">
+        <action>Load {project_context} for coding standards and project-wide patterns (if exists)</action>
+    </check>
+
     <action>Parse sections: Story, Acceptance Criteria, Tasks/Subtasks, Dev Notes, Dev Agent Record, File List, Change Log, Status</action>
     <action>Load comprehensive context from story file's Dev Notes section</action>
     <action>Extract developer guidance from Dev Notes: architecture requirements, previous learnings, technical specifications</action>
