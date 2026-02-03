@@ -1,0 +1,11 @@
+{
+  "name": "importer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'No build for Importer'",
+    "test": "echo 'No tests yet'",
+    "lint": "uv run ruff check .",
+    "dev": "echo 'No dev server'"
+  }
+}

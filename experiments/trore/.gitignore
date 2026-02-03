@@ -1,0 +1,10 @@
+node_modules
+.pnpm-debug.log
+.DS_Store
+dist
+.env
+.venv
+__pycache__
+.pytest_cache
+coverage
+.turbo
