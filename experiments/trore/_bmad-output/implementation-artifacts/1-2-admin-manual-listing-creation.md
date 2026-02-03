@@ -1,6 +1,6 @@
 # Story 1.2: Admin Manual Listing Creation
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -41,21 +41,21 @@ so that I can seed the platform with high-quality, verified data.
 
 ## Tasks / Subtasks
 
-- [ ] **Backend: Implement Listing Creation API** (AC: 1, 3)
-  - [ ] Create Pydantic schema `ListingCreate` in `apps/api/app/schemas.py` (or similar) with validation for `price` (>0) and `area` (>0).
-  - [ ] Implement DB model changes if `listings` table is missing (check `alembic` versions).
-  - [ ] Create API endpoint `POST /listings` in `apps/api/app/main.py` (or routers).
-  - [ ] Handle DB insertion and error cases (return 503 on DB connect failure).
-- [ ] **Frontend: Implement New Listing Page** (AC: 1, 2, 3)
-  - [ ] Create `apps/web/src/pages/NewListingPage.tsx`.
-  - [ ] Create UI form with fields: Title, Price, Area, Address.
-  - [ ] Implement client-side validation (Price > 0) to prevent submission.
-  - [ ] Integrate with API `POST /listings`.
-  - [ ] Implement redirection to Detail page on success.
-  - [ ] Implement Toast notification on success.
-  - [ ] Implement Error display without clearing form.
-- [ ] **Integration Testing**
-  - [ ] Verify flow from Form -> API -> DB -> UI Response.
+- [x] **Backend: Implement Listing Creation API** (AC: 1, 3)
+  - [x] Create Pydantic schema `ListingCreate` in `apps/api/app/schemas.py` (or similar) with validation for `price` (>0) and `area` (>0).
+  - [x] Implement DB model changes if `listings` table is missing (check `alembic` versions).
+  - [x] Create API endpoint `POST /listings` in `apps/api/app/main.py` (or routers).
+  - [x] Handle DB insertion and error cases (return 503 on DB connect failure).
+- [x] **Frontend: Implement New Listing Page** (AC: 1, 2, 3)
+  - [x] Create `apps/web/src/pages/NewListingPage.tsx`.
+  - [x] Create UI form with fields: Title, Price, Area, Address.
+  - [x] Implement client-side validation (Price > 0) to prevent submission.
+  - [x] Integrate with API `POST /listings`.
+  - [x] Implement redirection to Detail page on success.
+  - [x] Implement Toast notification on success.
+  - [x] Implement Error display without clearing form.
+- [x] **Integration Testing**
+  - [x] Verify flow from Form -> API -> DB -> UI Response.
 
 ## Dev Notes
 
@@ -98,7 +98,23 @@ Gemini 2.0 Flash (Simulated)
 
 ### Completion Notes List
 
-- None
+- Implemented `POST /listings` endpoint in `apps/api/app/routers/listings.py`.
+- Created Pydantic models in `apps/api/app/schemas.py`.
+- Created SQLAlchemy model in `apps/api/app/models.py`.
+- Added unit tests for backend in `apps/api/tests/test_listings.py`.
+- Configured backend with `CORSMiddleware` in `apps/api/app/main.py`.
+- Implemented frontend page `apps/web/src/pages/NewListingPage.tsx`.
+- Added frontend tests in `apps/web/src/pages/NewListingPage.test.tsx`.
+- Updated `apps/web/src/App.tsx` to include navigation.
 
 ### File List
+- `apps/api/app/models.py`
+- `apps/api/app/schemas.py`
+- `apps/api/app/routers/listings.py`
+- `apps/api/app/main.py`
+- `apps/api/tests/test_listings.py`
+- `apps/web/src/pages/NewListingPage.tsx`
+- `apps/web/src/pages/NewListingPage.test.tsx`
+- `apps/web/src/App.tsx`
+- `apps/web/src/App.test.tsx`
 - `_bmad-output/implementation-artifacts/1-2-admin-manual-listing-creation.md`
