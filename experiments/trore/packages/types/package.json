@@ -1,0 +1,9 @@
+{
+  "name": "@trore/types",
+  "version": "0.1.0",
+  "main": "index.d.ts",
+  "types": "index.d.ts",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

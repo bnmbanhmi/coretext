@@ -1,0 +1,11 @@
+node_modules
+.pnpm-store
+dist
+.next
+.env
+__pycache__
+.venv
+.pytest_cache
+.coverage
+htmlcov
+.DS_Store

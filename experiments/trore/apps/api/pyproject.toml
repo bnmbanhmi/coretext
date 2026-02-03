@@ -1,0 +1,14 @@
+[project]
+name = "api"
+version = "0.1.0"
+description = "FastAPI Backend"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]",
+    "pydantic>=2.5.0",
+    "sqlalchemy",
+    "alembic",
+    "psycopg2-binary",
+    "python-dotenv"
+]

@@ -1,6 +1,6 @@
 # Story 1.1: Project Scaffolding & Database Foundation
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -46,34 +46,34 @@ Status: ready-for-dev
 
 ## Tasks / Subtasks
 
-- [ ] Initialize Monorepo Root
-  - [ ] Create `package.json`, `turbo.json`, `pnpm-workspace.yaml`.
-  - [ ] Initialize `uv` workspace (`pyproject.toml`) and lockfile.
-  - [ ] Configure `git` (ignore files).
-- [ ] Scaffold `apps/web` (Frontend)
-  - [ ] Initialize Vite + React 19 + TypeScript.
-  - [ ] Install & Configure Tailwind CSS.
-  - [ ] Install Zustand, TanStack Query, React Router.
-  - [ ] Setup folder structure (`features/`, `components/`, `lib/`).
-- [ ] Scaffold `apps/api` (Backend)
-  - [ ] Create directory structure (`app/core`, `app/db`, `app/models`, `app/schemas`, `app/api`).
-  - [ ] Install FastAPI, Pydantic v2, SQLAlchemy, Alembic via `uv`.
-  - [ ] Configure `main.py` entry point.
-  - [ ] Setup `vercel.json` for deployment.
-- [ ] Scaffold `packages/importer` (Data Ingestion)
-  - [ ] Create `Dockerfile` (Python 3.12 Slim).
-  - [ ] Create `main.py` skeleton and `src/` structure.
-  - [ ] Install Pandas, Tenacity, HTTPX via `uv`.
-- [ ] Scaffold `packages/types` (Shared)
-  - [ ] Initialize generic TS package.
-  - [ ] Create placeholder `index.d.ts`.
-- [ ] Database & Migrations
-  - [ ] Initialize Alembic in `apps/api`.
-  - [ ] Define `listings` table model in SQLAlchemy.
-  - [ ] Generate and verify initial migration script.
-- [ ] Developer Experience
-  - [ ] Configure `turbo dev` to run web and api concurrently.
-  - [ ] Verify `pnpm dev` starts everything correctly.
+- [x] Initialize Monorepo Root
+  - [x] Create `package.json`, `turbo.json`, `pnpm-workspace.yaml`.
+  - [x] Initialize `uv` workspace (`pyproject.toml`) and lockfile.
+  - [x] Configure `git` (ignore files).
+- [x] Scaffold `apps/web` (Frontend)
+  - [x] Initialize Vite + React 19 + TypeScript.
+  - [x] Install & Configure Tailwind CSS.
+  - [x] Install Zustand, TanStack Query, React Router.
+  - [x] Setup folder structure (`features/`, `components/`, `lib/`).
+- [x] Scaffold `apps/api` (Backend)
+  - [x] Create directory structure (`app/core`, `app/db`, `app/models`, `app/schemas`, `app/api`).
+  - [x] Install FastAPI, Pydantic v2, SQLAlchemy, Alembic via `uv`.
+  - [x] Configure `main.py` entry point.
+  - [x] Setup `vercel.json` for deployment.
+- [x] Scaffold `packages/importer` (Data Ingestion)
+  - [x] Create `Dockerfile` (Python 3.12 Slim).
+  - [x] Create `main.py` skeleton and `src/` structure.
+  - [x] Install Pandas, Tenacity, HTTPX via `uv`.
+- [x] Scaffold `packages/types` (Shared)
+  - [x] Initialize generic TS package.
+  - [x] Create placeholder `index.d.ts`.
+- [x] Database & Migrations
+  - [x] Initialize Alembic in `apps/api`.
+  - [x] Define `listings` table model in SQLAlchemy.
+  - [x] Generate and verify initial migration script.
+- [x] Developer Experience
+  - [x] Configure `turbo dev` to run web and api concurrently.
+  - [x] Verify `pnpm dev` starts everything correctly.
 
 ## Developer Context
 
@@ -132,3 +132,58 @@ Gemini Pro
 ### Completion Notes List
 - Comprehensive tasks derived from Architecture and Epics.
 - Tech stack locked to Architecture decisions.
+- Initialized Monorepo with Turborepo and pnpm.
+- Scaffolder React 19 Frontend with Vite and Tailwind CSS.
+- Scaffolder FastAPI Backend with Pydantic v2, SQLAlchemy, and Alembic.
+- Created Importer package with Dockerfile.
+- Created Types package for shared definitions.
+- Set up SQLite for local development migrations.
+- Added comprehensive scaffolding tests.
+
+## File List
+
+### New Files
+- package.json
+- pnpm-workspace.yaml
+- turbo.json
+- pyproject.toml
+- .gitignore
+- apps/web/package.json
+- apps/web/vite.config.ts
+- apps/web/tailwind.config.js
+- apps/web/postcss.config.js
+- apps/web/src/index.css
+- apps/api/pyproject.toml
+- apps/api/package.json
+- apps/api/vercel.json
+- apps/api/alembic.ini
+- apps/api/app/main.py
+- apps/api/app/db/base.py
+- apps/api/app/models/listings.py
+- apps/api/migrations/env.py
+- packages/importer/Dockerfile
+- packages/importer/pyproject.toml
+- packages/importer/main.py
+- packages/types/package.json
+- packages/types/tsconfig.json
+- packages/types/index.d.ts
+- tests/scaffolding/test_root_structure.py
+- tests/scaffolding/test_web_scaffold.py
+- tests/scaffolding/test_api_scaffold.py
+- tests/scaffolding/test_importer_scaffold.py
+- tests/scaffolding/test_types_scaffold.py
+- tests/scaffolding/test_db_migration.py
+- tests/scaffolding/test_dev_experience.py
+
+### Modified Files
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+
+## Change Log
+
+### 2026-02-03
+- Initialized monorepo structure.
+- Scaffolded `apps/web` with React, Vite, Tailwind.
+- Scaffolded `apps/api` with FastAPI, SQLAlchemy, Alembic.
+- Scaffolded `packages/importer` and `packages/types`.
+- Generated initial database migration for `listings` table.
+- Added scaffolding verification tests.
