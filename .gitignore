@@ -16,3 +16,6 @@ env/
 # BMaD
 # _bmad/
 _coretext/
+
+
+.turbo

@@ -1,3 +1,11 @@
 Run Date,Subject,Story ID,Workflow,Requests,Input Tokens,Cache Reads,Output Tokens,Code Changes +,Code Changes -,AI API Time (sec),AI Tool Time (sec),Human Action Time (min),Interventions,Notes
-20250201,b,1-1,cs,5,31276,67122,2375,136,2,71,135,0,0,
-20250201,b,1-1,ds,82 pro 20 flashlite 3 flash,275167 pro 4307 flashlite 12640 flash,1874329,11535 pro 10 flashlite 357 flash,580,102,459,748,1,1,
+20250203,b,1-1,cs,5,31276,67122,2375,136,2,71,135,0,0,
+20250203,b,1-1,ds,82 pro 20 lite 3 flash,275167 pro 4307 lite 12640 flash,1874329,11535 pro 10 lite 357 flash,580,102,459,748,1,1,
+20250203,c-1,1-1,cs,13 pro 3 flash,39849 pro 12604 flash,206380,2449 pro 2815 flash,114,2,160,140,0,0,"agent làm thừa bước search web và check git. format query trả về vẫn quá dài, chứa quá nhiều thông tin thừa. chưa kể nội dung bị lặp lại giữa các node. instruction vẫn chưa đủ tốt để agent thực hiện được tốt các tính năng có sẵn của tool, các file template có sẵn của bmad cũng không được thiết kế để phục vụ graph một cách tối ưu, mà dùng để phục vụ file read"
+20250203,c-2,1-1,cs,13 pro 1 flash,45236 pro 511 flash,152203 pro 3763 flash,2489 pro 300 flash,115,2,135,25.2,0,0,
+20250203,b,1-2,cs,11 pro 1 lite,73811 pro 1110 lite,165052,1870 pro 11 lite,99,1,100,10.9,0,0,
+20250203,c-2,1-1,ds,59 pro 1 flash 10 lite,182148 pro 5782 flash 5576 lite,1267873 pro 3062 lite,9161 pro 168 flash 16 lite,449,30,423,790,0.5,2,
+20250203,b,1-2,ds,71 pro 2 flash,236140 pro 9221 flash,1265366,10998 pro 223 flash,514,63,666,13091,0,0,
+20250203,c-2,1-2,cs,16 pro 1 lite,40950 pro 1080 lite,218677,1990 pro 11 lite,105,1,185,176,0,0,"lần đầu agent biết dùng ngay tool query knowledge, có sửa các tham số top_k và depth. không trình bày bằng text dài dòng. khi commit thì git hook phát hiện ra link lỗi, có phải chạy coretext lint, check ra lỗi trỏ đến file khác bị sai (3 lỗi), liên quan đến vị trí file (phải dùng ../ khi khác thư mục mẹ) phải sửa lại manually"
+20250203,c-2,1-2,ds,,,,,,,,,,,
+20250203,b,1-3,cs,,,,,,,,,,,
