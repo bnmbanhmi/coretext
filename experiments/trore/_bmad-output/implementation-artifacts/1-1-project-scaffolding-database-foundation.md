@@ -1,6 +1,6 @@
 # Story 1.1: Project Scaffolding & Database Foundation
 
-Status: review
+Status: done
 
 ## Story
 
