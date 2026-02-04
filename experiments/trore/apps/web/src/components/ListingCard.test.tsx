@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { ListingCard } from './ListingCard'
 import { describe, it, expect } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 
 describe('ListingCard', () => {
   const mockListing = {
@@ -13,7 +14,11 @@ describe('ListingCard', () => {
   }
 
   it('renders listing details correctly', () => {
-    render(<ListingCard listing={mockListing} />)
+    render(
+      <MemoryRouter>
+        <ListingCard listing={mockListing} />
+      </MemoryRouter>
+    )
     
     expect(screen.getByText('Test Listing')).toBeInTheDocument()
     expect(screen.getByText('5.0 million/month')).toBeInTheDocument()

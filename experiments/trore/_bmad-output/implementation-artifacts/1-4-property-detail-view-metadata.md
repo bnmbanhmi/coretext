@@ -26,24 +26,24 @@ so that I can decide whether to contact the landlord.
 
 ## Tasks / Subtasks
 
-- [ ] Backend: Verify `GET /listings/{id}` endpoint functionality (AC: 1)
-  - [ ] Ensure `attributes` JSONB column is included in response schema
-  - [ ] Ensure proper error handling for non-existent IDs (404)
-- [ ] Frontend: Create Listing Detail Route & Page (AC: 1)
-  - [ ] Add route `/listing/:id` in React Router
-  - [ ] Create `ListingDetailPage` component
-- [ ] Frontend: Implement Data Fetching (AC: 1)
-  - [ ] Create or update `useListing` hook to fetch by ID
-  - [ ] Handle loading and error states
-- [ ] Frontend: Implement Features List Component (AC: 1)
-  - [ ] Create `FeaturesList` component to parse and display `attributes` JSONB
-  - [ ] Style using Tailwind CSS (Grid/Flex)
-- [ ] Frontend: Implement Error Handling (AC: 2)
-  - [ ] Catch 404 errors from API
-  - [ ] Redirect or show 404 UI with "Return to Home" link
-- [ ] Testing (AC: 1, 2)
-  - [ ] Unit tests for `FeaturesList` parsing logic
-  - [ ] Integration test for `ListingDetailPage` rendering
+- [x] Backend: Verify `GET /listings/{id}` endpoint functionality (AC: 1)
+  - [x] Ensure `attributes` JSONB column is included in response schema
+  - [x] Ensure proper error handling for non-existent IDs (404)
+- [x] Frontend: Create Listing Detail Route & Page (AC: 1)
+  - [x] Add route `/listing/:id` in React Router
+  - [x] Create `ListingDetailPage` component
+- [x] Frontend: Implement Data Fetching (AC: 1)
+  - [x] Create or update `useListing` hook to fetch by ID
+  - [x] Handle loading and error states
+- [x] Frontend: Implement Features List Component (AC: 1)
+  - [x] Create `FeaturesList` component to parse and display `attributes` JSONB
+  - [x] Style using Tailwind CSS (Grid/Flex)
+- [x] Frontend: Implement Error Handling (AC: 2)
+  - [x] Catch 404 errors from API
+  - [x] Redirect or show 404 UI with "Return to Home" link
+- [x] Testing (AC: 1, 2)
+  - [x] Unit tests for `FeaturesList` parsing logic
+  - [x] Integration test for `ListingDetailPage` rendering
 
 ## Dev Notes
 
@@ -54,7 +54,7 @@ so that I can decide whether to contact the landlord.
   - `apps/api/app/routers/listings.py` (Verify/Update)
 - **Styling:** Tailwind CSS. Use `grid` for feature list.
 - **JSONB Attributes:** The `attributes` field is a flexible JSON object. The UI should robustly handle various keys/values.
-- **Source:** [Story 1.4 in Epics](_bmad-output/planning-artifacts/epics.md#story-1-4-property-detail-view)
+- **Source:** [Story 1.4 in Epics](../planning-artifacts/epics.md#story-1-4-property-detail-view)
 
 ### Project Structure Notes
 
@@ -63,8 +63,8 @@ so that I can decide whether to contact the landlord.
 
 ### References
 
-- [Epics - Story 1.4](_bmad-output/planning-artifacts/epics.md#story-1-4-property-detail-view)
-- [UX Design - Transferable Patterns](_bmad-output/planning-artifacts/ux-design-specification.md#transferable-ux-patterns)
+- [Epics - Story 1.4](../planning-artifacts/epics.md#story-1-4-property-detail-view)
+- [UX Design - Transferable Patterns](../planning-artifacts/ux-design-specification.md#transferable-ux-patterns)
 
 ## Dev Agent Record
 
@@ -79,7 +79,33 @@ Gemini-Pro-2.0-Flash
 ### Completion Notes List
 
 - Story file created based on Epics and UX Context.
+- Implemented `GET /listings/{id}` endpoint in `apps/api/app/routers/listings.py` with `attributes` support.
+- Updated `ListingResponse` schema in `apps/api/app/schemas.py`.
+- Added backend tests in `apps/api/tests/test_listings.py`.
+- Installed `react-router-dom` and `tailwindcss` (v3) in `apps/web`.
+- Refactored `App.tsx` to use `BrowserRouter`.
+- Created `FeaturesList` component with Tailwind styling.
+- Created `useListing` hook for fetching data.
+- Created `ListingDetailPage` with error handling and loading states.
+- Updated `ListingCard` to link to detail page.
+- Added comprehensive unit and integration tests for frontend components and pages.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/1-4-property-detail-view-metadata.md`
+- `apps/api/app/schemas.py`
+- `apps/api/app/routers/listings.py`
+- `apps/api/tests/test_listings.py`
+- `apps/web/package.json`
+- `apps/web/src/App.tsx`
+- `apps/web/src/components/FeaturesList.tsx`
+- `apps/web/src/components/FeaturesList.test.tsx`
+- `apps/web/src/hooks/useListing.ts`
+- `apps/web/src/pages/ListingDetailPage.tsx`
+- `apps/web/src/pages/ListingDetailPage.test.tsx`
+- `apps/web/src/components/ListingCard.tsx`
+- `apps/web/src/components/ListingCard.test.tsx`
+- `apps/web/src/pages/HomePage.test.tsx`
+- `apps/web/tailwind.config.js`
+- `apps/web/src/index.css`
+- `apps/web/postcss.config.js`

@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import HomePage from './HomePage'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 
 describe('HomePage', () => {
   beforeEach(() => {
@@ -14,7 +15,11 @@ describe('HomePage', () => {
         json: async () => []
     })
     
-    render(<HomePage />)
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    )
     
     expect(screen.getByPlaceholderText('Search listings...')).toBeInTheDocument()
     // Wait for load
@@ -43,7 +48,11 @@ describe('HomePage', () => {
         json: async () => mockListings
      })
 
-     render(<HomePage />)
+     render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+     )
      
      await waitFor(() => expect(screen.getByText('Nice House')).toBeInTheDocument())
      

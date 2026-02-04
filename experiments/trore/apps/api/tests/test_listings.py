@@ -125,3 +125,37 @@ def test_get_listings_pagination():
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 5
+
+def test_get_listing_detail_success():
+    db = TestingSessionLocal()
+    from app.models import Listing, ListingStatus
+    import uuid
+    
+    lid = uuid.uuid4()
+    l1 = Listing(
+        id=lid,
+        title="Detail View",
+        description="Full details",
+        price=200,
+        area_sqm=50,
+        address="Detail St",
+        status=ListingStatus.AVAILABLE,
+        attributes={"wifi": "yes", "balcony": "no"}
+    )
+    db.add(l1)
+    db.commit()
+    db.close()
+
+    response = client.get(f"/listings/{lid}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == str(lid)
+    assert data["title"] == "Detail View"
+    assert data["description"] == "Full details"
+    assert data["attributes"] == {"wifi": "yes", "balcony": "no"}
+
+def test_get_listing_detail_not_found():
+    import uuid
+    random_id = uuid.uuid4()
+    response = client.get(f"/listings/{random_id}")
+    assert response.status_code == 404

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export interface Listing {
     id: string
     title: string
@@ -19,7 +21,7 @@ export function ListingCard({ listing }: ListingCardProps) {
     }
 
     return (
-        <div className="listing-card">
+        <Link to={`/listing/${listing.id}`} className="listing-card block text-inherit no-underline">
             <img 
                 src="https://placehold.co/600x400?text=Property" 
                 alt={listing.title} 
@@ -30,6 +32,6 @@ export function ListingCard({ listing }: ListingCardProps) {
                 <p className="price">{formatPrice(listing.price)}</p>
                 <p className="meta">{listing.area_sqm} m² • {listing.address}</p>
             </div>
-        </div>
+        </Link>
     )
 }

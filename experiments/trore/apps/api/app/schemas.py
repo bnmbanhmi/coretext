@@ -30,11 +30,11 @@ class ListingCreate(BaseModel):
 class ListingResponse(BaseModel):
     id: UUID
     title: str
+    description: Optional[str] = None
     price: int
-    area_sqm: float # Response matches DB column usually, or API contract. I'll output `area_sqm` to be precise, or `area`.
-    # Let's check test: `assert "id" in data`. It didn't check `area`. 
-    # I'll output `area_sqm` as per DB model for now to keep it simple.
+    area_sqm: float
     address: str
+    attributes: Optional[dict] = {}
     status: Optional[ListingStatus] = None
     created_at: Optional[datetime] = None
     
