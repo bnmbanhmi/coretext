@@ -138,3 +138,38 @@ def test_get_listings_pagination_and_filtering():
     assert len(data) == 5
     for item in data:
         assert item["status"] == "RENTED"
+
+def test_get_listing_by_id_success():
+    # Create a listing
+    create_response = client.post(
+        "/api/v1/listings/",
+        json={
+            "title": "Specific Listing",
+            "price": 123456,
+            "area_sqm": 50.0,
+            "address": "Specific St",
+            "attributes": {"wifi": True, "pets": False}
+        },
+    )
+    assert create_response.status_code == 201
+    created_id = create_response.json()["id"]
+
+    # Get the listing
+    response = client.get(f"/api/v1/listings/{created_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == created_id
+    assert data["title"] == "Specific Listing"
+    assert data["attributes"] == {"wifi": True, "pets": False}
+
+def test_get_listing_by_id_not_found():
+    # Use a random UUID that likely doesn't exist
+    import uuid
+    random_uuid = str(uuid.uuid4())
+    response = client.get(f"/api/v1/listings/{random_uuid}")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Listing not found"
+
+def test_get_listing_by_id_invalid_uuid():
+    response = client.get("/api/v1/listings/not-a-uuid")
+    assert response.status_code == 422

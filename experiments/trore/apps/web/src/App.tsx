@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { NewListingPage } from './features/admin/pages/NewListingPage';
 import { ListingListPage } from './features/listing/pages/ListingListPage';
+import { ListingDetailPage } from './features/listing/pages/ListingDetailPage';
 import { AdminRoute } from './lib/auth';
 import './App.css';
 
@@ -21,6 +22,7 @@ function App() {
               </AdminRoute>
             } 
           />
+          <Route path="/listings/:id" element={<ListingDetailPage />} />
           <Route path="/" element={<ListingListPage />} />
         </Routes>
         <Toaster />

@@ -1,4 +1,5 @@
 from typing import List, Optional
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.db.session import get_db
@@ -6,6 +7,13 @@ from app.schemas.listing import Listing, ListingCreate
 from app.models.listings import Listing as ListingModel, ListingStatus
 
 router = APIRouter()
+
+@router.get("/{id}", response_model=Listing)
+def get_listing(id: UUID, db: Session = Depends(get_db)):
+    listing = db.query(ListingModel).filter(ListingModel.id == id).first()
+    if not listing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listing not found")
+    return listing
 
 @router.get("/", response_model=List[Listing])
 def get_listings(

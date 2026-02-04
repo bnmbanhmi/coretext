@@ -1,6 +1,6 @@
 # Story 1.4: Property Detail View Metadata
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,34 +26,34 @@ Status: ready-for-dev
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Backend - Listing Detail Endpoint** (AC: 1, 2)
-    - [ ] Update `apps/api/app/schemas/listing.py`: Ensure `Listing` (or new `ListingDetail`) schema covers `attributes` (JSONB) and all DB fields.
-    - [ ] Implement `GET /api/v1/listings/{id}` in `apps/api/app/api/v1/listings.py`.
+- [x] **Task 1: Backend - Listing Detail Endpoint** (AC: 1, 2)
+    - [x] Update `apps/api/app/schemas/listing.py`: Ensure `Listing` (or new `ListingDetail`) schema covers `attributes` (JSONB) and all DB fields.
+    - [x] Implement `GET /api/v1/listings/{id}` in `apps/api/app/api/v1/listings.py`.
         -   Use `UUID` type hint for `id` to auto-validate format (FastAPI feature).
         -   Query DB by ID.
         -   Raise `HTTPException(status_code=404, detail="Listing not found")` if missing.
-    - [ ] Add tests in `apps/api/tests/api/v1/test_listings.py` for valid ID, invalid ID (422), and non-existent ID (404).
+    - [x] Add tests in `apps/api/tests/api/v1/test_listings.py` for valid ID, invalid ID (422), and non-existent ID (404).
 
-- [ ] **Task 2: Shared - Sync Types** (AC: 1)
-    - [ ] Manually update `packages/types/index.d.ts` to include the exact `Listing` interface matching the API response.
-    - [ ] Ensure `attributes` is typed as `Record<string, any>` or specific shape if known.
+- [x] **Task 2: Shared - Sync Types** (AC: 1)
+    - [x] Manually update `packages/types/index.d.ts` to include the exact `Listing` interface matching the API response.
+    - [x] Ensure `attributes` is typed as `Record<string, any>` or specific shape if known.
 
-- [ ] **Task 3: Frontend - API & State** (AC: 1)
-    - [ ] Create `useListing` hook in `apps/web/src/features/listing/api/useListing.ts`.
+- [x] **Task 3: Frontend - API & State** (AC: 1)
+    - [x] Create `useListing` hook in `apps/web/src/features/listing/api/useListing.ts`.
         -   Use `useQuery` with key `['listings', id]`.
         -   Fetcher function should call `/api/v1/listings/{id}`.
 
-- [ ] **Task 4: Frontend - Components & Page** (AC: 1, 2)
-    - [ ] Create `ListingDetail` component in `apps/web/src/features/listing/components/ListingDetail.tsx`.
+- [x] **Task 4: Frontend - Components & Page** (AC: 1, 2)
+    - [x] Create `ListingDetail` component in `apps/web/src/features/listing/components/ListingDetail.tsx`.
         -   Display Title, Price, Area, Address, Description.
         -   Iterate over `attributes` to display "Features" list.
         -   Handle styling (Tailwind).
-    - [ ] Create `ListingDetailPage` in `apps/web/src/features/listing/pages/ListingDetailPage.tsx`.
+    - [x] Create `ListingDetailPage` in `apps/web/src/features/listing/pages/ListingDetailPage.tsx`.
         -   Use `useListing` hook.
         -   Handle `isLoading` (Skeleton).
         -   Handle `isError`: Check if error is 404 or invalid UUID -> Render `NotFoundPage` (or simple 404 component).
-    - [ ] Create/Ensure `NotFoundPage` exists (or simple component).
-    - [ ] Update `apps/web/src/App.tsx`: Add route `/listings/:id` pointing to `ListingDetailPage`.
+    - [x] Create/Ensure `NotFoundPage` exists (or simple component).
+    - [x] Update `apps/web/src/App.tsx`: Add route `/listings/:id` pointing to `ListingDetailPage`.
 
 ## Developer Context & Guardrails
 
@@ -93,6 +93,29 @@ Status: ready-for-dev
 
 ### Git Intelligence
 -   Follow existing patterns in `apps/web/src/features/listing/`.
+
+## File List
+- apps/api/app/api/v1/listings.py
+- apps/api/tests/api/v1/test_listings.py
+- packages/types/index.d.ts
+- apps/web/src/features/listing/api/useListing.ts
+- apps/web/src/features/listing/components/ListingDetail.tsx
+- apps/web/src/features/listing/components/ListingDetail.test.tsx
+- apps/web/src/features/listing/pages/ListingDetailPage.tsx
+- apps/web/src/components/NotFound.tsx
+- apps/web/src/App.tsx
+
+## Dev Agent Record
+- **Implementation Plan**: Followed strict red-green-refactor for backend. Implemented frontend with new components and route.
+- **Completion Notes**:
+  - Backend `GET /listings/{id}` implemented with UUID validation and 404 handling.
+  - Types synced: `BaseEntity` updated to snake_case to match Python backend.
+  - Frontend `ListingDetail` renders all fields including attributes (Title Case formatted).
+  - `NotFoundPage` added for invalid IDs.
+  - Tests passing: Backend (Pytest) and Frontend (Vitest).
+
+## Change Log
+- 2026-02-04: Implemented story 1.4.
 
 ## Story Completion Status
 - [x] Story created
