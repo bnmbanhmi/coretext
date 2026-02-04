@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import NewListingPage from './pages/NewListingPage'
+import HomePage from './pages/HomePage'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home')
@@ -23,10 +24,7 @@ function App() {
 
       <main>
         {currentPage === 'home' && (
-          <div className="home-page">
-            <h2>Welcome to Trore</h2>
-            <p>Select an option from the menu.</p>
-          </div>
+          <HomePage />
         )}
         {currentPage === 'new-listing' && (
           <NewListingPage onSuccess={handleSuccess} />

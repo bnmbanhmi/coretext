@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import OperationalError
+from sqlalchemy import or_
 from typing import Any
 from .. import schemas, models
 from ..database import get_db
@@ -9,6 +10,30 @@ router = APIRouter(
     prefix="/listings",
     tags=["listings"]
 )
+
+@router.get("", response_model=list[schemas.ListingResponse])
+def get_listings(
+    skip: int = 0,
+    limit: int = 20,
+    q: str | None = None,
+    db: Session = Depends(get_db)
+) -> Any:
+    query = db.query(models.Listing).filter(models.Listing.status == models.ListingStatus.AVAILABLE)
+    
+    if q:
+        search = f"%{q}%"
+        query = query.filter(
+            or_(
+                models.Listing.title.ilike(search),
+                models.Listing.description.ilike(search)
+            )
+        )
+    
+    # Sort by created_at desc
+    query = query.order_by(models.Listing.created_at.desc())
+    
+    listings = query.offset(skip).limit(limit).all()
+    return listings
 
 @router.post("", response_model=schemas.ListingResponse, status_code=status.HTTP_201_CREATED)
 def create_listing(listing: schemas.ListingCreate, db: Session = Depends(get_db)) -> Any:

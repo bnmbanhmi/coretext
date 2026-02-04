@@ -38,8 +38,8 @@ story_location: /Users/mac/Git/coretext/experiments/trore/_bmad-output/implement
 development_status:
   epic-1: in-progress
   1-1-project-scaffolding-database-foundation: done
-  1-2-admin-manual-listing-creation: review
-  1-3-seeker-discovery-grid-keyword-search: backlog
+  1-2-admin-manual-listing-creation: done
+  1-3-seeker-discovery-grid-keyword-search: review
   1-4-property-detail-view-metadata: backlog
   1-5-admin-listing-management: backlog
   epic-1-retrospective: optional
