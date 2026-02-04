@@ -173,3 +173,88 @@ def test_get_listing_by_id_not_found():
 def test_get_listing_by_id_invalid_uuid():
     response = client.get("/api/v1/listings/not-a-uuid")
     assert response.status_code == 422
+
+def test_update_listing_success():
+    # Create listing
+    create_res = client.post(
+        "/api/v1/listings/",
+        json={
+            "title": "To Update",
+            "price": 100,
+            "area_sqm": 10,
+            "address": "123"
+        }
+    )
+    listing_id = create_res.json()["id"]
+
+    # Update listing
+    update_res = client.patch(
+        f"/api/v1/listings/{listing_id}",
+        json={
+            "title": "Updated Title",
+            "price": 200,
+            "status": "AVAILABLE"
+        }
+    )
+    assert update_res.status_code == 200
+    data = update_res.json()
+    assert data["title"] == "Updated Title"
+    assert data["price"] == 200
+    assert data["status"] == "AVAILABLE"
+    # Check if other fields are preserved
+    assert data["address"] == "123"
+
+def test_update_listing_not_found():
+    import uuid
+    random_id = str(uuid.uuid4())
+    res = client.patch(f"/api/v1/listings/{random_id}", json={"title": "New"})
+    assert res.status_code == 404
+
+def test_update_listing_validation_error():
+    # Create listing
+    create_res = client.post(
+        "/api/v1/listings/",
+        json={
+            "title": "To Fail",
+            "price": 100,
+            "area_sqm": 10,
+            "address": "123"
+        }
+    )
+    listing_id = create_res.json()["id"]
+
+    # Try setting negative price
+    res = client.patch(f"/api/v1/listings/{listing_id}", json={"price": -50})
+    assert res.status_code == 422
+
+def test_update_listing_status_change_reflects_in_search():
+    # Create AVAILABLE listing
+    create_res = client.post(
+        "/api/v1/listings/",
+        json={
+            "title": "Will be rented",
+            "price": 500,
+            "area_sqm": 50,
+            "address": "123",
+            "status": "AVAILABLE"
+        }
+    )
+    listing_id = create_res.json()["id"]
+
+    # Verify it is in default list
+    res = client.get("/api/v1/listings/")
+    assert any(l["id"] == listing_id for l in res.json())
+
+    # Update to RENTED
+    client.patch(
+        f"/api/v1/listings/{listing_id}",
+        json={"status": "RENTED"}
+    )
+
+    # Verify it is NOT in default list (AVAILABLE)
+    res = client.get("/api/v1/listings/")
+    assert not any(l["id"] == listing_id for l in res.json())
+
+    # Verify it IS in RENTED list
+    res = client.get("/api/v1/listings/?status=RENTED")
+    assert any(l["id"] == listing_id for l in res.json())

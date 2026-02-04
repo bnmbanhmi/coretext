@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.db.session import get_db
-from app.schemas.listing import Listing, ListingCreate
+from app.schemas.listing import Listing, ListingCreate, ListingUpdate
 from app.models.listings import Listing as ListingModel, ListingStatus
 
 router = APIRouter()
@@ -42,6 +42,21 @@ def create_listing(listing: ListingCreate, db: Session = Depends(get_db)):
         attributes=listing.attributes
     )
     db.add(db_listing)
+    db.commit()
+    db.refresh(db_listing)
+    return db_listing
+
+@router.patch("/{id}", response_model=Listing)
+def update_listing(id: UUID, listing_update: ListingUpdate, db: Session = Depends(get_db)):
+    db_listing = db.query(ListingModel).filter(ListingModel.id == id).first()
+    if not db_listing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listing not found")
+    
+    update_data = listing_update.model_dump(exclude_unset=True)
+    
+    for key, value in update_data.items():
+        setattr(db_listing, key, value)
+    
     db.commit()
     db.refresh(db_listing)
     return db_listing

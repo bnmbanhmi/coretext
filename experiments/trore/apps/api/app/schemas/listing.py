@@ -16,6 +16,15 @@ class ListingBase(BaseModel):
 class ListingCreate(ListingBase):
     pass
 
+class ListingUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = None
+    price: Optional[int] = Field(None, gt=0)
+    area_sqm: Optional[float] = Field(None, gt=0)
+    address: Optional[str] = Field(None, min_length=1)
+    status: Optional[ListingStatus] = None
+    attributes: Optional[Dict[str, Any]] = None
+
 class Listing(ListingBase):
     id: UUID
     created_at: datetime

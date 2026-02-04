@@ -1,6 +1,6 @@
 # Story 1.5: Admin Listing Management
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -46,24 +46,24 @@ Status: ready-for-dev
 
 ## Tasks / Subtasks
 
-- [ ] **Frontend: Edit Listing Feature**
-    - [ ] Create `EditListingPage` component in `apps/web/src/features/dashboard`
-    - [ ] Create `useListingDetails` hook (if not exists) to fetch single listing data by ID
-    - [ ] Create `useUpdateListing` mutation hook using TanStack Query
-    - [ ] Reuse `ListingForm` component (refactor from Story 1.2 to be reusable for Create/Edit)
-    - [ ] Implement form population logic
-    - [ ] Add "Edit" button to Admin Dashboard row actions or Listing Detail view
+- [x] **Frontend: Edit Listing Feature**
+    - [x] Create `EditListingPage` component in `apps/web/src/features/dashboard`
+    - [x] Create `useListingDetails` hook (if not exists) to fetch single listing data by ID
+    - [x] Create `useUpdateListing` mutation hook using TanStack Query
+    - [x] Reuse `ListingForm` component (refactor from Story 1.2 to be reusable for Create/Edit)
+    - [x] Implement form population logic
+    - [x] Add "Edit" button to Admin Dashboard row actions or Listing Detail view
 
-- [ ] **Backend: Update API Endpoint**
-    - [ ] Implement `PATCH /api/v1/listings/{id}` endpoint in `apps/api/app/api/v1/listings.py`
-    - [ ] Create `ListingUpdate` Pydantic schema (all fields optional) in `apps/api/app/schemas`
-    - [ ] Add service logic to handle partial updates in `apps/api/app/services`
-    - [ ] Ensure `updated_at` timestamp is refreshed automatically
+- [x] **Backend: Update API Endpoint**
+    - [x] Implement `PATCH /api/v1/listings/{id}` endpoint in `apps/api/app/api/v1/listings.py`
+    - [x] Create `ListingUpdate` Pydantic schema (all fields optional) in `apps/api/app/schemas`
+    - [x] Add service logic to handle partial updates in `apps/api/app/services`
+    - [x] Ensure `updated_at` timestamp is refreshed automatically
 
-- [ ] **Integration & Testing**
-    - [ ] Verify Pydantic validation catches invalid inputs on update
-    - [ ] Verify status changes reflect immediately in public views (Seeker Grid)
-    - [ ] Add unit tests for `PATCH` endpoint
+- [x] **Integration & Testing**
+    - [x] Verify Pydantic validation catches invalid inputs on update
+    - [x] Verify status changes reflect immediately in public views (Seeker Grid)
+    - [x] Add unit tests for `PATCH` endpoint
 
 ## Dev Notes
 
@@ -94,3 +94,25 @@ Gemini 2.0 Flash
 ### Completion Notes List
 - Validated against FR20 and FR27.
 - Aligned with Architecture constraints for React/FastAPI/Supabase.
+- Implemented `EditListingPage` with `ListingForm` refactored for reuse.
+- Added `PATCH` endpoint for listing updates with partial update support (`ListingUpdate` schema).
+- Implemented `useListingDetails` and `useUpdateListing` hooks using TanStack Query.
+- Added "Edit Listing" button to `ListingDetail` view.
+- Added comprehensive backend tests for update scenarios including validation, 404, and search index updates (status change).
+- Refactored `NewListingPage` to use updated form component.
+
+### File List
+- apps/web/src/features/dashboard/pages/EditListingPage.tsx
+- apps/web/src/features/admin/api/useListingDetails.ts
+- apps/web/src/features/admin/api/useUpdateListing.ts
+- apps/web/src/features/admin/components/ListingForm.tsx
+- apps/web/src/features/admin/components/ListingForm.test.tsx
+- apps/web/src/features/admin/api/useCreateListing.ts
+- apps/web/src/features/admin/pages/NewListingPage.tsx
+- apps/web/src/features/listing/components/ListingDetail.tsx
+- apps/web/src/features/listing/pages/ListingDetailPage.tsx
+- apps/web/src/App.tsx
+- apps/api/app/schemas/listing.py
+- apps/api/app/api/v1/listings.py
+- apps/api/tests/api/v1/test_listings.py
+- apps/web/src/lib/api.ts

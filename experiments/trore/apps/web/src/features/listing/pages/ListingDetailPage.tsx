@@ -1,11 +1,12 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useListing } from '../api/useListing';
 import { ListingDetail } from '../components/ListingDetail';
 import { NotFound } from '../../../components/NotFound';
 
 export const ListingDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { data: listing, isLoading, isError, error } = useListing(id || '');
 
   if (!id) {
@@ -27,8 +28,6 @@ export const ListingDetailPage: React.FC = () => {
   }
 
   if (isError) {
-    const status = (error as any)?.message?.includes('404') ? 404 : (error as any)?.response?.status;
-    
     // API client throws "API Error: Not Found" (404 usually)
     // Checking exact error object depends on axios/fetch setup.
     // In lib/api.ts: throw new Error(`API Error: ${response.statusText}`);
@@ -58,7 +57,10 @@ export const ListingDetailPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <ListingDetail listing={listing} />
+      <ListingDetail 
+        listing={listing} 
+        onEdit={() => navigate(`/admin/listings/edit/${listing.id}`)}
+      />
     </div>
   );
 };

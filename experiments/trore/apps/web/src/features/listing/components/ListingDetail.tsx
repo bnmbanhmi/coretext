@@ -4,12 +4,22 @@ import { formatPrice, formatArea } from '../../../lib/format';
 
 interface ListingDetailProps {
   listing: Listing;
+  onEdit?: () => void;
 }
 
-export const ListingDetail: React.FC<ListingDetailProps> = ({ listing }) => {
+export const ListingDetail: React.FC<ListingDetailProps> = ({ listing, onEdit }) => {
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6 max-w-4xl mx-auto">
-       <h1 className="text-3xl font-bold mb-4 text-gray-900">{listing.title}</h1>
+    <div className="bg-white rounded-lg shadow-sm border p-6 max-w-4xl mx-auto relative">
+       {onEdit && (
+         <button 
+           onClick={onEdit}
+           className="absolute top-6 right-6 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 border transition-colors"
+         >
+           Edit Listing
+         </button>
+       )}
+       
+       <h1 className="text-3xl font-bold mb-4 text-gray-900 pr-32">{listing.title}</h1>
        
        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-6 border-b pb-6">
          <div>
@@ -38,7 +48,7 @@ export const ListingDetail: React.FC<ListingDetailProps> = ({ listing }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                {Object.entries(listing.attributes).map(([key, value]) => (
                  <div key={key} className="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-100">
-                   <span className="font-medium text-gray-700">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                   <span className="font-medium text-gray-700 capitalize">{key.replace(/_/g, ' ')}</span>
                    <span className="text-gray-900 font-semibold">
                      {value === true ? 'Yes' : value === false ? 'No' : String(value)}
                    </span>
