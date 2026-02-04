@@ -1,31 +1,21 @@
 import { useState } from 'react'
+import ListingForm, { ListingFormData } from '../components/ListingForm';
 
 interface NewListingPageProps {
   onSuccess?: () => void
 }
 
 export default function NewListingPage({ onSuccess }: NewListingPageProps) {
-  const [formData, setFormData] = useState({
-    title: '',
-    price: '',
-    area: '',
-    address: ''
-  })
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (data: ListingFormData) => {
     setError(null)
     setToast(null)
 
-    const price = parseInt(formData.price)
-    const area = parseFloat(formData.area)
+    const price = Number(data.price)
+    const area = Number(data.area)
 
     if (isNaN(price) || price <= 0) {
       setError("Price must be a positive number")
@@ -37,6 +27,7 @@ export default function NewListingPage({ onSuccess }: NewListingPageProps) {
     }
 
     setLoading(true)
+
     try {
       const response = await fetch('http://localhost:8000/listings', {
         method: 'POST',
@@ -44,10 +35,10 @@ export default function NewListingPage({ onSuccess }: NewListingPageProps) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          title: formData.title,
-          price: price,
-          area: area,
-          address: formData.address
+          title: data.title,
+          price: Number(data.price),
+          area: Number(data.area),
+          address: data.address
         })
       })
 
@@ -70,59 +61,16 @@ export default function NewListingPage({ onSuccess }: NewListingPageProps) {
   }
 
   return (
-    <div className="new-listing-page">
-      <h2>New Listing</h2>
-      {toast && <div className="toast success">{toast}</div>}
-      {error && <div className="error-message">{error}</div>}
+    <div className="new-listing-page max-w-lg mx-auto p-6">
+      <h2 className="text-2xl font-bold mb-6">New Listing</h2>
+      {toast && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">{toast}</div>}
+      {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
       
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="title">Title</label>
-          <input
-            id="title"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="price">Price</label>
-          <input
-            id="price"
-            name="price"
-            type="number"
-            value={formData.price}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="area">Area (sqm)</label>
-          <input
-            id="area"
-            name="area"
-            type="number"
-            step="0.1"
-            value={formData.area}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="address">Address</label>
-          <input
-            id="address"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <button type="submit" disabled={loading}>
-          {loading ? 'Creating...' : 'Create'}
-        </button>
-      </form>
+      <ListingForm 
+        onSubmit={handleSubmit} 
+        submitLabel="Create"
+        isLoading={loading}
+      />
     </div>
   )
 }

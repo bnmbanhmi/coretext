@@ -159,3 +159,89 @@ def test_get_listing_detail_not_found():
     random_id = uuid.uuid4()
     response = client.get(f"/listings/{random_id}")
     assert response.status_code == 404
+
+def test_update_listing_success():
+    db = TestingSessionLocal()
+    from app.models import Listing, ListingStatus
+    import uuid
+    
+    lid = uuid.uuid4()
+    l1 = Listing(
+        id=lid,
+        title="Old Title",
+        price=100,
+        area_sqm=10,
+        address="Old Addr",
+        status=ListingStatus.DRAFT
+    )
+    db.add(l1)
+    db.commit()
+    db.close()
+
+    payload = {
+        "title": "New Title",
+        "price": 200,
+        "status": "AVAILABLE"
+    }
+    response = client.put(f"/listings/{lid}", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["title"] == "New Title"
+    assert data["price"] == 200
+    assert data["status"] == "AVAILABLE"
+    # Fields not updated should remain
+    assert data["address"] == "Old Addr"
+
+def test_update_listing_not_found():
+    import uuid
+    random_id = uuid.uuid4()
+    payload = {"title": "New Title"}
+    response = client.put(f"/listings/{random_id}", json=payload)
+    assert response.status_code == 404
+
+def test_delete_listing_success():
+    db = TestingSessionLocal()
+    from app.models import Listing, ListingStatus
+    import uuid
+    
+    lid = uuid.uuid4()
+    l1 = Listing(title="To Delete", price=100, area_sqm=10, address="Addr")
+    l1.id = lid
+    db.add(l1)
+    db.commit()
+    db.close()
+
+    response = client.delete(f"/listings/{lid}")
+    assert response.status_code == 204
+    
+    # Verify it's gone
+    response = client.get(f"/listings/{lid}")
+    assert response.status_code == 404
+
+def test_delete_listing_not_found():
+    import uuid
+    random_id = uuid.uuid4()
+    response = client.delete(f"/listings/{random_id}")
+    assert response.status_code == 404
+
+def test_get_listings_admin_all():
+    db = TestingSessionLocal()
+    from app.models import Listing, ListingStatus
+    
+    l1 = Listing(title="Avail", price=100, area_sqm=10, address="A1", status=ListingStatus.AVAILABLE)
+    l2 = Listing(title="Draft", price=100, area_sqm=10, address="A2", status=ListingStatus.DRAFT)
+    db.add(l1)
+    db.add(l2)
+    db.commit()
+    db.close()
+
+    # Default only AVAILABLE
+    response = client.get("/listings")
+    data = response.json()
+    assert len(data) == 1
+    
+    # Admin view - ALL
+    response = client.get("/listings?admin_view=true")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2

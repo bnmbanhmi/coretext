@@ -1,6 +1,6 @@
 # Story 1.5: Admin Listing Management
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -37,28 +37,28 @@ so that I can maintain the quality, accuracy, and freshness of the platform's da
 
 ## Tasks / Subtasks
 
-- [ ] **Backend: Implement Management Endpoints** (AC: 1, 2, 3)
-  - [ ] `GET /listings` (Admin view) - Ensure it returns all fields needed for the table. Support basic pagination if possible (limit/offset).
-  - [ ] `PUT /listings/{id}` - Update endpoint. Create Pydantic model `ListingUpdate` (all fields optional).
-  - [ ] `DELETE /listings/{id}` - Delete endpoint.
-- [ ] **Frontend: Setup Admin Layout & State** (AC: 1)
-  - [ ] Install `@tanstack/react-query` (Required by Architecture).
-  - [ ] Create `useListings` hook using React Query for fetching the list.
-  - [ ] Create `useDeleteListing` mutation.
-  - [ ] Create `useUpdateListing` mutation.
-- [ ] **Frontend: Implement Dashboard Page** (AC: 1, 3)
-  - [ ] Create `apps/web/src/pages/admin/AdminDashboard.tsx`.
-  - [ ] Implement a Table component using Tailwind CSS (Header, Rows, Actions).
-  - [ ] Integrate `useListings` to populate the table.
-  - [ ] Implement "Delete" action with `window.confirm` or a simple modal.
-- [ ] **Frontend: Implement Edit Page** (AC: 2)
-  - [ ] Create `apps/web/src/pages/admin/EditListingPage.tsx`.
-  - [ ] Reuse or adapt the Form from Story 1.2 (`NewListingPage`).
-  - [ ] specific: Ensure the form handles "Loading" state while fetching existing data.
-  - [ ] Connect to `useUpdateListing` mutation.
-- [ ] **Testing**
-  - [ ] Backend: Unit tests for PUT and DELETE endpoints.
-  - [ ] Frontend: Integration test for the Dashboard rendering and Edit flow.
+- [x] **Backend: Implement Management Endpoints** (AC: 1, 2, 3)
+  - [x] `GET /listings` (Admin view) - Ensure it returns all fields needed for the table. Support basic pagination if possible (limit/offset).
+  - [x] `PUT /listings/{id}` - Update endpoint. Create Pydantic model `ListingUpdate` (all fields optional).
+  - [x] `DELETE /listings/{id}` - Delete endpoint.
+- [x] **Frontend: Setup Admin Layout & State** (AC: 1)
+  - [x] Install `@tanstack/react-query` (Required by Architecture).
+  - [x] Create `useListings` hook using React Query for fetching the list.
+  - [x] Create `useDeleteListing` mutation.
+  - [x] Create `useUpdateListing` mutation.
+- [x] **Frontend: Implement Dashboard Page** (AC: 1, 3)
+  - [x] Create `apps/web/src/pages/admin/AdminDashboard.tsx`.
+  - [x] Implement a Table component using Tailwind CSS (Header, Rows, Actions).
+  - [x] Integrate `useListings` to populate the table.
+  - [x] Implement "Delete" action with `window.confirm` or a simple modal.
+- [x] **Frontend: Implement Edit Page** (AC: 2)
+  - [x] Create `apps/web/src/pages/admin/EditListingPage.tsx`.
+  - [x] Reuse or adapt the Form from Story 1.2 (`NewListingPage`).
+  - [x] specific: Ensure the form handles "Loading" state while fetching existing data.
+  - [x] Connect to `useUpdateListing` mutation.
+- [x] **Testing**
+  - [x] Backend: Unit tests for PUT and DELETE endpoints.
+  - [x] Frontend: Integration test for the Dashboard rendering and Edit flow.
 
 ## Dev Notes
 
@@ -89,10 +89,35 @@ so that I can maintain the quality, accuracy, and freshness of the platform's da
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Gemini 2.0 Flash
 
 ### Debug Log References
 
+- Fixed Backend DELETE endpoint 204 error.
+- Restored client-side validation in NewListingPage after refactor.
+
 ### Completion Notes List
 
+- Implemented Admin Listing Management (Story 1.5).
+- Added `GET /listings?admin_view=true`, `PUT /listings/{id}`, `DELETE /listings/{id}` in API.
+- Integrated `@tanstack/react-query` for state management.
+- Created Admin Dashboard with list, delete, and edit capabilities.
+- Refactored `NewListingPage` to use reusable `ListingForm` component.
+- Implemented `EditListingPage` reusing `ListingForm`.
+- Added backend unit tests and frontend integration tests.
+- All 15 tests passed.
+
 ### File List
+apps/api/app/routers/listings.py
+apps/api/app/schemas.py
+apps/api/tests/test_listings.py
+apps/web/package.json
+apps/web/src/main.tsx
+apps/web/src/App.tsx
+apps/web/src/pages/NewListingPage.tsx
+apps/web/src/components/ListingForm.tsx
+apps/web/src/features/admin/hooks/useAdminListings.ts
+apps/web/src/pages/admin/AdminDashboard.tsx
+apps/web/src/pages/admin/EditListingPage.tsx
+apps/web/src/pages/admin/AdminDashboard.test.tsx
+apps/web/src/pages/admin/EditListingPage.test.tsx

@@ -27,6 +27,15 @@ class ListingCreate(BaseModel):
     area: float = Field(..., gt=0) # Client sends "area"
     address: str
 
+class ListingUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[int] = Field(None, gt=0)
+    area: Optional[float] = Field(None, gt=0)
+    address: Optional[str] = None
+    status: Optional[ListingStatus] = None
+    attributes: Optional[dict] = None
+
 class ListingResponse(BaseModel):
     id: UUID
     title: str
