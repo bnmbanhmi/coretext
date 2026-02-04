@@ -75,3 +75,66 @@ def test_create_listing_validation_error_missing_fields():
         },
     )
     assert response.status_code == 422
+
+def test_get_listings_pagination_and_filtering():
+    # Setup data
+    # Create 15 AVAILABLE listings
+    for i in range(15):
+        client.post(
+            "/api/v1/listings/",
+            json={
+                "title": f"Available {i}",
+                "price": 1000000 * (i + 1),
+                "area_sqm": 20.0 + i,
+                "address": f"Street {i}",
+                "status": "AVAILABLE"
+            },
+        )
+    
+    # Create 5 RENTED listings
+    for i in range(5):
+        client.post(
+            "/api/v1/listings/",
+            json={
+                "title": f"Rented {i}",
+                "price": 2000000,
+                "area_sqm": 30.0,
+                "address": "Rented St",
+                "status": "RENTED"
+            },
+        )
+
+    # Test 1: Default params (status=AVAILABLE, limit=20, skip=0)
+    # Note: DB might retain data from previous tests, so we filter strictly or rely on known count
+    # Since it's in-memory static pool, previous tests ran.
+    # test_create_listing_success created 1 DRAFT.
+    
+    response = client.get("/api/v1/listings/")
+    assert response.status_code == 200
+    data = response.json()
+    
+    # We expect only AVAILABLE listings.
+    # There are 15 created here.
+    assert len(data) == 15
+    for item in data:
+        assert item["status"] == "AVAILABLE"
+
+    # Test 2: Pagination (limit=5)
+    response = client.get("/api/v1/listings/?limit=5")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 5
+
+    # Test 3: Pagination (skip=10)
+    response = client.get("/api/v1/listings/?skip=10")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 5  # 15 total - 10 skipped = 5 left
+
+    # Test 4: Filter by RENTED
+    response = client.get("/api/v1/listings/?status=RENTED")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 5
+    for item in data:
+        assert item["status"] == "RENTED"

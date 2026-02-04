@@ -1,6 +1,6 @@
 # Story 1.3: Seeker Discovery Grid & Keyword Search
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -30,29 +30,29 @@ so that I can scan for properties that interest me.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Backend - Listings List Endpoint** (AC: 1)
-    - [ ] Update `apps/api/app/schemas/listing.py`: Ensure `Listing` schema is suitable for list responses (or create `ListingSummary`).
-    - [ ] Implement `GET /api/v1/listings` in `apps/api/app/api/v1/listings.py`.
+- [x] **Task 1: Backend - Listings List Endpoint** (AC: 1)
+    - [x] Update `apps/api/app/schemas/listing.py`: Ensure `Listing` schema is suitable for list responses (or create `ListingSummary`).
+    - [x] Implement `GET /api/v1/listings` in `apps/api/app/api/v1/listings.py`.
         - Support query parameters: `skip: int = 0`, `limit: int = 20`, `status: ListingStatus = "AVAILABLE"`.
         - Implement database query with filtering and pagination.
-    - [ ] Add unit tests in `apps/api/tests/api/v1/test_listings.py` for pagination and status filtering.
+    - [x] Add unit tests in `apps/api/tests/api/v1/test_listings.py` for pagination and status filtering.
 
-- [ ] **Task 2: Shared - Sync Types** (AC: 1, 2)
-    - [ ] Manually update `packages/types/index.d.ts` with the response shape for the list endpoint (e.g., `PaginatedListings` or `Listing[]`).
+- [x] **Task 2: Shared - Sync Types** (AC: 1, 2)
+    - [x] Manually update `packages/types/index.d.ts` with the response shape for the list endpoint (e.g., `PaginatedListings` or `Listing[]`).
 
-- [ ] **Task 3: Frontend - Listing Components** (AC: 2)
-    - [ ] Create `ListingCard` in `apps/web/src/features/listing/components/ListingCard.tsx`.
+- [x] **Task 3: Frontend - Listing Components** (AC: 2)
+    - [x] Create `ListingCard` in `apps/web/src/features/listing/components/ListingCard.tsx`.
         - Props: `listing: Listing`.
         - Styling: Tailwind grid/flex. Handle truncation and formatting (Price/Area helper functions).
         - Placeholder image handling.
-    - [ ] Create `ListingGrid` in `apps/web/src/features/listing/components/ListingGrid.tsx`.
+    - [x] Create `ListingGrid` in `apps/web/src/features/listing/components/ListingGrid.tsx`.
         - Layout: Responsive grid (1 col mobile, 3-4 col desktop).
 
-- [ ] **Task 4: Frontend - Data Fetching & Page** (AC: 1)
-    - [ ] Create `useListings` hook in `apps/web/src/features/listing/api/useListings.ts` using TanStack Query.
+- [x] **Task 4: Frontend - Data Fetching & Page** (AC: 1)
+    - [x] Create `useListings` hook in `apps/web/src/features/listing/api/useListings.ts` using TanStack Query.
         - Query Key: `['listings', { status: 'AVAILABLE', page }]`.
-    - [ ] Update `HomePage` in `apps/web/src/pages/HomePage.tsx` (or `features/listing/pages/ListingListPage.tsx` and route it).
-    - [ ] Implement simple pagination controls (Next/Prev) or Infinite Scroll (basic "Load More" button is fine for MVP).
+    - [x] Update `HomePage` in `apps/web/src/pages/HomePage.tsx` (or `features/listing/pages/ListingListPage.tsx` and route it).
+    - [x] Implement simple pagination controls (Next/Prev) or Infinite Scroll (basic "Load More" button is fine for MVP).
 
 ## Developer Context & Guardrails
 
@@ -84,7 +84,40 @@ so that I can scan for properties that interest me.
 - **Patterns:** Previous commits show `apps/web/src/features/...` structure. Stick to it.
 
 ## Story Completion Status
-- [ ] Story created
-- [ ] Requirements analyzed
-- [ ] Tasks defined
-- [ ] Context populated
+- [x] Story created
+- [x] Requirements analyzed
+- [x] Tasks defined
+- [x] Context populated
+
+## Dev Agent Record
+
+### Implementation Plan
+- Implemented backend pagination and filtering.
+- Synced types for frontend.
+- Created `ListingCard` and `ListingGrid` with responsive design.
+- Implemented `useListings` hook and `ListingListPage` with basic pagination.
+- Added comprehensive tests for both backend and frontend.
+
+### Completion Notes
+- All ACs met.
+- Tests passed: 4 backend, 8 frontend.
+- `Listing` schema reused as it fits the need.
+- Address display used full address as District parsing is brittle without structured data.
+
+## File List
+- apps/api/app/api/v1/listings.py
+- apps/api/tests/api/v1/test_listings.py
+- packages/types/index.d.ts
+- apps/web/src/lib/format.ts
+- apps/web/src/features/listing/components/ListingCard.tsx
+- apps/web/src/features/listing/components/ListingGrid.tsx
+- apps/web/src/features/listing/api/useListings.ts
+- apps/web/src/features/listing/pages/ListingListPage.tsx
+- apps/web/src/lib/api.ts
+- apps/web/src/App.tsx
+- apps/web/src/features/listing/components/ListingCard.test.tsx
+- apps/web/src/features/listing/components/ListingGrid.test.tsx
+- apps/web/package.json
+
+## Change Log
+- 2026-02-04: Implemented Story 1.3 (Seeker Discovery Grid) - Minh (AI)

@@ -23,11 +23,31 @@ export interface ListingCreate {
 }
 
 export interface Listing extends BaseEntity {
+
   title: string;
+
   description?: string;
+
   price: number;
+
   area_sqm: number;
+
   address: string;
+
   status: ListingStatus;
+
   attributes: Record<string, any>;
+
+}
+
+
+
+export interface ListingSearchParams {
+
+  skip?: number;
+
+  limit?: number;
+
+  status?: ListingStatus;
+
 }
